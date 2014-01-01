@@ -75,3 +75,5 @@ defaultLocal.conf
 jmeter.log
 atlassian-ide-plugin.xml
 .target
+huge.json
+
