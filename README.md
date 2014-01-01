@@ -24,7 +24,7 @@ Similarly reading can be achieved with
 
 ```scala
 Muster.readFormatted[Person](Muster.from.Json)
-person.writeFormatted[Person](Muster.from.Protobuf[Protocol.Person])
+Muster.readFormatted[Person](Muster.from.Protobuf[Protocol.Person])
 Muster.readFormatted[Person](Muster.from.ByteString)
 Muster.readFormatted[Person](Muster.from.ByteBuffer)
 ```

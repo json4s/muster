@@ -6,9 +6,21 @@ name := "muster"
 
 organization := "com.github.casualjim"
 
-//buildInfoPackage := "com.github.casualjim"
+buildInfoSettings
 
-scalacOptions ++= Seq("-target:jvm-1.7")
+buildInfoPackage := "muster"
+
+buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
+
+sourceGenerators in Compile <+= buildInfo
+
+ideaBasePackage := Some("muster")
+
+ideaExcludeFolders += ".idea"
+
+ideaExcludeFolders += ".idea_modules"
+
+scalacOptions ++= Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-optimize", "-feature", "-Yinline-warnings")
 
 //scalacOptions += "-Ymacro-debug-lite"
 

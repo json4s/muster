@@ -69,9 +69,13 @@ class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateTimeFor
       else if (c == '\n') writer.append("\\n")
       else if (c == '\r') writer.append("\\r")
       else if (c == '\t') writer.append("\\t")
-      else if ((c >= '\u0000' && c <= '\u001f') || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100'))
-        writer.append("\\u%04x".format(c: Int))
-      else writer.append(c.toString)
+      else if ((c >= '\u0000' && c <= '\u001f') || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100')) {
+        writer.write("\\u")
+        writer.write(HexAlphabet.charAt(c >> 12 & 0x000F))
+        writer.write(HexAlphabet.charAt(c >>  8 & 0x000F))
+        writer.write(HexAlphabet.charAt(c >>  6 & 0x000F))
+        writer.write(HexAlphabet.charAt(c >>  0 & 0x000F))
+      } else writer.append(c.toString)
       i += 1
     }
   }

@@ -32,6 +32,7 @@ object StringOutputFormatter {
     val InObject = 4
   }
 
+  val HexAlphabet = "0123456789ABCDEF"
 }
 
 class DefaultStringOutputFormatter(writer: java.io.Writer, dateFormat: DateTimeFormatter) extends BaseStringOutputFormatter(writer, dateFormat) {
@@ -175,9 +176,15 @@ abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: 
       else if (c == '\n') writer.write("\\n")
       else if (c == '\r') writer.write("\\r")
       else if (c == '\t') writer.write("\\t")
-      else if ((c >= '\u0000' && c <= '\u001f') || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100'))
-        writer.write("\\u%04x".format(c: Int))
-      else writer.write(c)
+        // Reference:
+        // http://www.unicode.org/versions/Unicode5.1.0/
+      else if ((c >= '\u0000' && c <= '\u001f') || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100')) {
+        writer.write("\\u")
+        writer.write(HexAlphabet.charAt(c >> 12 & 0x000F))
+        writer.write(HexAlphabet.charAt(c >>  8 & 0x000F))
+        writer.write(HexAlphabet.charAt(c >>  6 & 0x000F))
+        writer.write(HexAlphabet.charAt(c >>  0 & 0x000F))
+      } else writer.write(c)
       i += 1
     }
   }

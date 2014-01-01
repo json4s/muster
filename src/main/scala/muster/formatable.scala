@@ -5,27 +5,40 @@ import scala.reflect.macros._
 import java.util.Date
 import org.joda.time.DateTime
 
-trait Formatable[T] {
+trait Muster[T] {
   def writeFormatted[R](value: T, outputFormat: OutputFormat[R]): R
 }
 
+trait CanRead[S] {
+  def readFormated[R](source: S, inputFormat: InputFormat[R]): R
+}
+
 object Muster {
+
+  implicit class FormattableProduct[T <: Product](p: T) {
+    def writeFormatted[R](outputFormat: OutputFormat[R])(implicit fmt: Muster[T]): R =
+      fmt.writeFormatted(p, outputFormat)
+  }
+  
   object into {
     object String extends DefaultStringFormat
     object CompactJsonString extends JsonOutput
   }
-}
 
-object Formatable {
+  object from {
 
-  implicit class FormattableProduct[T <: Product](p: T) {
-    def writeFormatted[R](outputFormat: OutputFormat[R])(implicit fmt: Formatable[T]): R =
-      fmt.writeFormatted(p, outputFormat)
   }
 
-  implicit def formatable[T]: Formatable[T] = macro formatableImpl[T]
+  // To read:
+  // 1. check primitive or not => when primitive just read the primitive
+  // 2. collect the constructor params =>
+  // 3. provide construct to instantiate object
+  // 4. collect remaining vars and use setters
+  // 5. collect remaining java bean getXxx/setXxx methods
 
-  def formatableImpl[T:c.WeakTypeTag](c: Context): c.Expr[Formatable[T]] = {
+  implicit def formatable[T]: Muster[T] = macro formatableImpl[T]
+
+  def formatableImpl[T:c.WeakTypeTag](c: Context): c.Expr[Muster[T]] = {
     import c.universe._
     import definitions._
     import Flag._
@@ -128,7 +141,7 @@ object Formatable {
 
     val Block(formatableClass::Nil, _) = {
       reify {
-        final class $anon extends Formatable[T] {
+        final class $anon extends Muster[T] {
           def writeFormatted[R](value: T, outputFormat: OutputFormat[R]): R = {
             val sw = new java.io.StringWriter()
             try {
@@ -143,7 +156,7 @@ object Formatable {
       }.tree
     }
 
-    c.Expr[Formatable[T]](
+    c.Expr[Muster[T]](
       Block(
         formatableClass,
        Apply(Select(New(Ident(newTypeName("$anon"))), nme.CONSTRUCTOR), List())
