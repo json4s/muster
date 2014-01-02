@@ -335,7 +335,7 @@ class JsonStringCursor(val iterator: JsonReader[String]) extends JsonInputCursor
 object JackonInputCursor {
 
   final class JacksonObjectNode(parent: JsonNode) extends ObjectNode(null) {
-    private[this] def readField(name: String): JsonNode = parent.get(name)
+    private[this] def readField(name: String): JsonNode = if (parent.has(name)) parent.get(name) else com.fasterxml.jackson.databind.node.NullNode.getInstance()
     def readArrayFieldOpt(fieldName: String): Option[ArrayNode] = {
       val node = readField(fieldName)
       if (node.isNull || node.isMissingNode) None

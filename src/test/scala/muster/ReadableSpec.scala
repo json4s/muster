@@ -12,7 +12,7 @@ object ReadableSpec extends Properties("Readable") {
 
   DateTimeZone.setDefault(DateTimeZone.UTC)
 
-  def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormated(source, Muster.from.JsonString)
+  def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
 
 
   def cp[T:Arbitrary:Readable:ClassTag] = {

@@ -28,7 +28,7 @@ scalacOptions ++= Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-optimiz
 
 javacOptions ++= Seq("-deprecation", "-Xlint")
 
-//scalacOptions += "-Ymacro-debug-lite"
+scalacOptions += "-Ymacro-debug-lite"
 
 //scalacOptions += "-Xlog-implicits"
 

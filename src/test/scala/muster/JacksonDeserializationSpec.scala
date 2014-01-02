@@ -16,7 +16,7 @@ class JacksonDeserializationSpec extends Specification {
   type Foo = Junk
   case class WithAlias(in: Foo)
 
-  def read[T](value: String)(implicit rdr: Readable[T]) = rdr.readFormated(value, Muster.from.JsonString)
+  def read[T](value: String)(implicit rdr: Readable[T]) = rdr.readFormatted(value, Muster.from.JsonString)
 
   "Muster.from.JsonString" should {
     "read a dateTime" in {
@@ -38,6 +38,41 @@ class JacksonDeserializationSpec extends Specification {
       val dict = Map("one" -> List(1), "two" -> List(3, null, 4), "three" -> List(394))
       val json = org.json4s.jackson.Serialization.write(dict)
       read[Map[String, List[Option[Int]]]](json) must_== Map("one" -> List(Some(1)), "two" -> List(Some(3),None, Some(4)), "three" -> List(Some(394)))
+    }
+
+    "read a very simple case class" in {
+      val js = """{"id":1,"name":"Tom"}"""
+      read[Friend](js) must_== Friend(1, "Tom")
+    }
+
+    "read a very simple case class" in {
+      val js = """{"one":1,"two":"Tom"}"""
+      read[Simple](js) must_== Simple(1, "Tom")
+    }
+
+    "read a very simple case class with an option field with the value provided" in {
+      val js = """{"one":1,"two":"Tom"}"""
+      read[WithOption](js) must_== WithOption(1, Some("Tom"))
+    }
+
+    "read a very simple case class with an option field with null" in {
+      val js = """{"one":1,"two":null}"""
+      read[WithOption](js) must_== WithOption(1, None)
+    }
+
+    "read a very simple case class with an option field omitted" in {
+      val js = """{"one":1}"""
+      read[WithOption](js) must_== WithOption(1, None)
+    }
+
+    "read list of simple case classes" in {
+      val js = """[{"one":1,"two":"hello"}, {"one":2,"two":"world"}]"""
+      read[List[Simple]](js) must_== List(Simple(1, "hello"), Simple(2, "world"))
+    }
+
+    "read a case class with a single list" in {
+      val js = """{"lst":[1,2,3]}"""
+      read[WithList](js) must_== WithList(List(1,2,3))
     }
 
   }

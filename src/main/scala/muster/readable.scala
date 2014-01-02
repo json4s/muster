@@ -7,7 +7,7 @@ import org.joda.time.DateTime
 import scala.collection.{GenMap, mutable, generic}
 
 trait Readable[S] {
-  def readFormated[R](source: R, inputFormat: InputFormat[R]): S
+  def readFormatted[R](source: R, inputFormat: InputFormat[R]): S
 }
 
 object Readable {
@@ -20,17 +20,6 @@ object Readable {
     import Flag._
     val helper = new Helper[c.type](c)
 
-
-
-    val thisType = weakTypeOf[T]
-    val collTpe = weakTypeOf[Seq[T]]
-    val thisSymbol = thisType.typeSymbol
-    //     val companionSymbol = thisSymbol.companionSymbol
-    //     val companionType = companionSymbol.typeSignature
-
-    //     val cursor = c.Expr[InputCursor[_]](Ident(newTermName("cursor")))
-    val inputFormat = c.Expr[InputFormat[_]](Ident(newTermName("inputFormat")))
-
     val primitiveMap =
       Map[Type, String](
         typeOf[java.math.BigDecimal] -> "JBigDecimal",
@@ -41,8 +30,18 @@ object Readable {
         typeOf[java.lang.Double] -> "JDouble",
         typeOf[java.util.Date] -> "String",
         typeOf[org.joda.time.DateTime] -> "DateTime",
-        typeOf[java.util.Date] -> "Date"
+        typeOf[java.util.Date] -> "Date",
+        typeOf[java.sql.Timestamp] -> "Date"
       ).withDefault(_.typeSymbol.name.decoded)
+
+    val thisType = weakTypeOf[T]
+    val collTpe = weakTypeOf[Seq[T]]
+    val thisSymbol = thisType.typeSymbol
+    //     val companionSymbol = thisSymbol.companionSymbol
+    //     val companionType = companionSymbol.typeSignature
+
+    //     val cursor = c.Expr[InputCursor[_]](Ident(newTermName("cursor")))
+    val inputFormat = c.Expr[InputFormat[_]](Ident(newTermName("inputFormat")))
 
     def buildPrimitive(tpe: Type, cursor: c.Expr[Any], methodNameSuffix: String = "", args: List[Tree] = Nil): Tree = {
       Apply(Select(cursor.tree, newTermName(s"read${primitiveMap(tpe)}${methodNameSuffix}Value")), args)
@@ -53,12 +52,12 @@ object Readable {
       val importExpr = c.parse(s"import ${tpe.normalize.typeConstructor.typeSymbol.fullName}")
       val bldrName = c.fresh("bldr$")
 
-      val tupleType = appliedType(weakTypeOf[(Any, Any)].typeConstructor, keyTpe::valType::Nil)
+      val tupleType = appliedType(weakTypeOf[(Any, Any)].typeConstructor, keyTpe :: valType :: Nil)
 
       val bldrTree = ValDef(
         Modifiers(),
         newTermName(bldrName),
-        AppliedTypeTree(Ident(weakTypeOf[mutable.Builder[(Any, Any), Map[Any, Any]]].typeSymbol), List(TypeTree(tupleType), TypeTree(tpe))),
+        AppliedTypeTree(Ident(weakTypeOf[mutable.Builder[(Any, Any), TT]].typeSymbol), List(TypeTree(tupleType), TypeTree(tpe))),
         TypeApply(Select(Ident(newTermName(tpe.typeSymbol.name.decoded)), newTermName("newBuilder")), List(TypeTree(keyTpe), TypeTree(valType)))
       )
       val builder = c.Expr[mutable.Builder[(Any, Any), Map[Any, Any]]](Ident(newTermName(bldrName)))
@@ -83,7 +82,7 @@ object Readable {
         c.Expr(bldrTree).splice
         c.Expr(cursorTree).splice
         val iter = cursorExpr.splice.keysIterator
-        while(iter.hasNext) {
+        while (iter.hasNext) {
           val k = iter.next()
           val v = c.Expr[Any](readFieldTree).splice
           builder.splice += (k -> v)
@@ -119,32 +118,172 @@ object Readable {
     }
 
     def buildOption(tpe: Type, reader: c.Expr[Any], methodSuffix: String = "", args: List[Tree] = Nil): Tree = {
-      val TypeRef(_, _, argTpe::Nil) = tpe
+      val TypeRef(_, _, argTpe :: Nil) = tpe
       val pref = if (methodSuffix == "Field") methodSuffix else ""
       buildSingle(argTpe, reader, s"${pref}Opt", args)
+    }
+
+
+
+    def buildObject(_tpe: Type, reader: c.Expr[Any], methodSuffix: String = "", args: List[Tree] = Nil): Tree = {
+      val tpe = _tpe.normalize
+      if (helper.isCaseClass(tpe)) {
+        val TypeRef(_, sym, tpeArgs) = tpe
+        val newObjTypeTree = helper.typeArgumentTree(tpe)
+
+        val cn = c.fresh("objReader$")
+        val ce = c.Expr[Ast.ObjectNode](Ident(newTermName(cn)))
+        val ct: Tree = ValDef(
+          Modifiers(),
+          newTermName(cn),
+          TypeTree(weakTypeOf[Ast.ObjectNode]),
+          Apply(Select(reader.tree, newTermName(s"readObject$methodSuffix")), args)
+        )
+
+        // Builds the if/else tree for checking constructor params and returning a new object
+        def pickConstructorTree(argNames: c.Expr[Set[String]]): Tree = {
+          // Makes expressions for determining of they list is satisfied by the reader
+          def ctorCheckingExpr(ctors: List[List[Symbol]]): c.Expr[Boolean] = {
+            def isRequired(item: Symbol) = {
+              val sym = item.asTerm
+              !(sym.isParamWithDefault || sym.typeSignature <:< typeOf[Option[_]])
+            }
+
+            val expr = c.Expr[Set[String]](Apply(Select(Ident("Set"), newTermName("apply")),
+              ctors.flatten.filter(isRequired).map(sym => Literal(Constant(sym.name.decoded)))
+            ))
+
+            reify(expr.splice.subsetOf(argNames.splice))
+          }
+
+          def ifElseTreeBuilder(ctorSets: List[(c.Expr[Boolean], List[List[Symbol]])]): Tree = ctorSets match {
+            case h :: Nil => buildObjFromParams(h._2)
+            case h :: t => If(h._1.tree, buildObjFromParams(h._2), ifElseTreeBuilder(t))
+          }
+
+
+
+          val ctors: List[MethodSymbol] = tpe.member(nme.CONSTRUCTOR)
+            .asTerm.alternatives // List of constructors
+            .map(_.asMethod) // method symbols
+            .sortBy(-_.paramss.flatten.size)
+          val ifExprsAndParams = ctors.map(ctor => ctorCheckingExpr(ctor.paramss)).zip(ctors.map(_.asMethod.paramss))
+
+          ifElseTreeBuilder(ifExprsAndParams)
+        }
+
+        def writeListParams()
+
+        def buildObjFromParams(ctorParams: List[List[Symbol]]): Tree = {
+
+          New(newObjTypeTree, ctorParams.map(_.zipWithIndex.map {
+            case (pSym, index) =>
+              // Change out the types if it has type parameters
+              val pTpe = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+              val fieldName = Literal(Constant(pSym.name.decoded))
+
+              // If param has defaults, try to find the val in map, or call
+              // default evaluation from its companion object
+              // TODO: is the sym.companionSymbol.isTerm the best way to check for NoSymbol?
+              // TODO: is there a way to get teh default values for the overloaded constructors?
+              if (pSym.asTerm.isParamWithDefault && helper.isPrimitive(pTpe) && sym.companionSymbol.isTerm) {
+                reify {
+                  c.Expr[Option[Any]](buildOption(pTpe, ce, "Field", List(fieldName))).splice
+                    .getOrElse(c.Expr(Select(
+                                        Ident(sym.companionSymbol),
+                                        newTermName("$lessinit$greater$default$" + (index + 1).toString))).splice)
+                }.tree
+              } else if (pSym.asTerm.isParamWithDefault && sym.companionSymbol.isTerm) {
+                reify {
+                  try {
+                    c.Expr(buildSingle(pTpe, ce, "Field", List(fieldName))).splice // splice in another obj tree
+                  } catch {
+                    case e: MappingException =>
+                      // Need to use the origional symbol.companionObj to get defaults
+                      // Would be better to find the generated TermNames if possible
+                      c.Expr(Select(Ident(sym.companionSymbol), newTermName(
+                        "$lessinit$greater$default$" + (index + 1).toString))
+                      ).splice
+                  }
+                }.tree
+              } else buildSingle(pTpe, ce, "Field", List(fieldName))
+          }))
+        }
+
+        val on = c.fresh("obj$")
+        val ot = newTermName(on)
+        val oe = c.Expr(Ident(ot))
+        val otr: Tree = ValDef(Modifiers(), ot, newObjTypeTree, pickConstructorTree(reify(ce.splice.keySet)))
+
+        // Sets fields after the instance is has been created
+        def optionalParams(pTpe: Type, varName: String, exprMaker: Tree => c.Expr[_]): Tree = {
+          val compName = Literal(Constant(varName))
+          // Use option if primitive, should be faster than exceptions.
+          reify {
+            c.Expr[Option[Any]](buildOption(pTpe, ce, "Field", List(compName))).splice match {
+              case Some(x) => exprMaker(Ident(newTermName("x"))).splice
+              case None =>
+            }
+          }.tree
+        }
+
+        val setVarsBlocks: List[Tree] =
+          helper.getNonConstructorVars(tpe).toList.map {
+            pSym =>
+              val varName = pSym.name.toTermName.toString.trim
+              val tpe = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+              optionalParams(tpe, varName,
+                tree => c.Expr(Assign(Select(Ident(ot), newTermName(varName)), tree))
+              )
+          }
+
+        val setSetterBlocks: List[Tree] =
+          helper.getJavaStyleSetters(tpe).toList.map {
+            pSym => // MethodSymbol
+              val origName = pSym.name.decoded.substring(3)
+              val name = origName.charAt(0).toLower + origName.substring(1)
+              val paramType = {
+                val tpe = pSym.asMethod.paramss(0)(0)
+                tpe.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+              }
+              optionalParams(paramType, name,
+                tree => c.Expr(Apply(Select(Ident(ot), pSym.name), tree :: Nil))
+              )
+          }
+
+        Block(ct :: otr :: setVarsBlocks ::: setSetterBlocks, Ident(ot))
+
+      } else {
+        c.abort(c.enclosingPosition, "Only case classes with a single constructor are supported")
+      }
+
     }
 
     def buildSingle(tpe: Type, reader: c.Expr[Any], methodSuffix: String = "", args: List[Tree] = Nil): Tree = {
       if (helper.isPrimitive(tpe)) {
         buildPrimitive(tpe, reader, methodSuffix, args)
-      } else if (tpe <:< weakTypeOf[scala.Option[_]])
+      } else if (helper.isOption(tpe))
         buildOption(tpe, reader, methodSuffix, args)
-      else if (tpe <:< weakTypeOf[scala.collection.GenSeq[_]])
+      else if (helper.isSeq(tpe))
         buildCollection[scala.collection.GenSeq[Any]](tpe, reader, methodSuffix, args)
-      else if (tpe <:< weakTypeOf[scala.collection.GenSet[_]])
+      else if (helper.isSet(tpe))
         buildCollection[scala.collection.GenSet[Any]](tpe, reader, methodSuffix, args)
-      else if (tpe <:< weakTypeOf[scala.collection.GenMap[_, _]])
+      else if (helper.isMap(tpe))
         buildMap[scala.collection.GenMap[Any, Any]](tpe, reader, methodSuffix, args)
+      else if (helper.isCaseClass(tpe))
+        buildObject(tpe, reader, methodSuffix, args)
       else {
         c.abort(c.enclosingPosition, s"$tpe is not supported currently")
       }
     }
 
+
     val importExpr = c.parse(s"import ${thisType.normalize.typeConstructor.typeSymbol.fullName}")
     reify {
       new Readable[T] {
         c.Expr(importExpr).splice
-        def readFormated[R](source: R, inputFormat: InputFormat[R]): T = {
+
+        def readFormatted[R](source: R, inputFormat: InputFormat[R]): T = {
           val cursor = inputFormat.createCursor(source)
           c.Expr(buildSingle(thisType, c.Expr[AstCursor](Ident(newTermName("cursor"))))).splice
         }
@@ -152,3 +291,4 @@ object Readable {
     }
   }
 }
+
