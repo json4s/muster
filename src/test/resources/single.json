@@ -1,0 +1,42 @@
+{
+  "id": 0,
+  "guid": "d117fddc-0104-441b-96c9-a32fd5609445",
+  "isActive": false,
+  "balance": "$3,657.00",
+  "picture": "http://placehold.it/32x32",
+  "age": 29,
+  "name": "Goodman Cook",
+  "gender": "male",
+  "company": "Artworlds",
+  "email": "goodmancook@artworlds.com",
+  "phone": "+1 (805) 577-2238",
+  "address": "710 Vanderbilt Avenue, Strykersville, Oregon, 7626",
+  "about": "Voluptate nisi et aliquip fugiat tempor exercitation proident ullamco anim cillum nulla adipisicing laboris sit. Ex ullamco nulla occaecat dolor. Reprehenderit ut incididunt do duis.\r\n",
+  "registered": "1989-06-20T21:27:29 +07:00",
+  "latitude": 61.896839,
+  "longitude": 126.790112,
+  "tags": [
+    "occaecat",
+    "veniam",
+    "non",
+    "incididunt",
+    "sint",
+    "aliqua",
+    "anim"
+  ],
+  "friends": [
+    {
+      "id": 0,
+      "name": "Malone Turner"
+    },
+    {
+      "id": 1,
+      "name": "Krystal Morrow"
+    },
+    {
+      "id": 2,
+      "name": "Jordan Ashley"
+    }
+  ],
+  "randomArrayItem": "lemon"
+}

@@ -1,4 +1,8 @@
 import scala.xml.Group
+import cappi.Plugin.cappiSettings
+import cappi.Keys._
+import sbtbuildinfo.Plugin._
+import org.sbtidea.SbtIdeaPlugin._
 
 scalaVersion := "2.10.3"
 
@@ -22,6 +26,8 @@ ideaExcludeFolders += ".idea_modules"
 
 scalacOptions ++= Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-optimize", "-feature", "-Yinline-warnings")
 
+javacOptions ++= Seq("-deprecation", "-Xlint")
+
 //scalacOptions += "-Ymacro-debug-lite"
 
 //scalacOptions += "-Xlog-implicits"
@@ -34,7 +40,7 @@ scalacOptions ++= Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-optimiz
 
 libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _)
 
-libraryDependencies += "com.github.axel22" %% "scalameter" % "0.4" % "test"
+//libraryDependencies += "com.github.axel22" %% "scalameter" % "0.4" % "test"
 
 libraryDependencies += "org.specs2" %% "specs2" % "2.3.7" % "test"
 
@@ -46,17 +52,30 @@ libraryDependencies += "joda-time" % "joda-time" % "2.3"
 
 libraryDependencies += "org.joda" % "joda-convert" % "1.5"
 
-testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework")
+libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.6" % "test"
 
-logBuffered := false
+libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.6" % "test"
+
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % "2.3.1"
+
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.3.1"
+
+libraryDependencies += "net.minidev" % "json-smart" % "2.0-RC3" % "test"
+
+//testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework")
+
+//logBuffered := false
 
 initialCommands in console := """
-import scala.reflect.runtime.{universe => u}
-"""
+                                |import muster._
+                                |import scala.reflect.runtime.{universe => u}
+                                |def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormated(source, Muster.from.JsonString)
+                              """.stripMargin
 
 initialCommands in (Test, console) := """
-import scala.reflect.runtime.{universe => u}
-"""
+                                        |import muster._
+                                        |import scala.reflect.runtime.{universe => u}
+                                      """.stripMargin
 
 packageOptions <+= (name, version, organization) map {
   (title, version, vendor) =>
@@ -99,3 +118,7 @@ val mavenCentralFrouFrou = Seq(
       </developers>
     )}
   )
+
+cappiSettings
+
+//caliperVersion in cappi := Some("1.0-beta-1")

@@ -1,15 +1,66 @@
 package muster
 
 import muster.Ast._
-import java.nio.{ByteBuffer, CharBuffer}
+import java.nio.CharBuffer
 import scala.annotation.{tailrec, switch}
-import scala.collection.mutable
+import com.fasterxml.jackson.databind.{DeserializationFeature, JsonNode, ObjectMapper}
+import com.fasterxml.jackson.databind.node.{ ArrayNode => JArrayNode, ObjectNode => JObjectNode }
+import org.joda.time.format.DateTimeFormatter
+import scala.collection.JavaConverters._
 
-trait JsonSourceIterator extends Iterator[Char] {
+
+trait JsonReader[R] extends Iterator[Char] {
+  def source: R
   def pos: Int
   def charAt(idx: Int): Char
   def current: Char
   def peek: Char
+  def remaining: Int
+}
+object CharBufferJsonReader {
+  def apply(source: String) = new CharBufferJsonReader(source)
+}
+final class CharBufferJsonReader(val source: String) extends JsonReader[String] {
+  val internal: CharBuffer = CharBuffer.wrap(source)
+  private[this] var curr: Char = internal.get()
+  private[this] var idx = internal.position()
+  private[this] val size = source.length
+  def pos: Int = idx - 1
+
+  def charAt(index: Int): Char = internal.charAt(index - idx)
+  def current: Char = curr
+  def peek: Char = charAt(idx)
+  def remaining: Int = size - pos
+  def hasNext: Boolean = remaining > 0
+  def next(): Char = {
+    if (internal.hasRemaining) curr = internal.get()
+    if (pos != internal.position()) idx += 1
+    curr
+  }
+}
+object StringJsonReader {
+  def apply(source: String) = new StringJsonReader(source)
+}
+
+final class StringJsonReader(val source: String) extends JsonReader[String] {
+  private[this] var curr: Char = source.charAt(0)
+  private[this] var idx = 1
+  private[this] val size = source.length
+
+  def remaining = size - pos
+  def charAt(idx: Int): Char = source.charAt(idx)
+
+  def next(): Char = {
+    if (size - idx > 0) curr = charAt(idx)
+    if (pos != size) idx += 1
+    curr
+  }
+
+  def peek: Char = charAt(idx)
+  def hasNext: Boolean = remaining > 0
+  def pos: Int = idx - 1
+  def current: Char = curr
+
 }
 
 object JsonInputCursor {
@@ -17,117 +68,121 @@ object JsonInputCursor {
   private[this] val notNextField = (c: Char) =>  { InputCursor.isWhitespace(c) || c == ',' }
   private[this] val notFieldValue = (c: Char) =>  { InputCursor.isWhitespace(c) || c == ':' }
 
+  import scala.language.existentials
   final case class JsonArrayNode(cursor: JsonInputCursor[_]) extends ArrayNode(cursor) with AstCursor {
-
     private[this] val eleName = "element"
     private[this] def iterator = cursor.iterator
-    private[this] def skipToNextValue = iterator.takeWhile(notNextField)
+    private[this] def skipToNextValue = {
+      while(notNextField(iterator.current)) { iterator.next()}
+    }
     private[this] var fields = {
-      val buf = Vector.newBuilder[AstNode]
+      val buf = Vector.newBuilder[AstNode[_]]
       if (iterator.hasNext) iterator.next()
-      else failParse(s"Unexpected character ${iterator.current} at ${iterator.pos}.")
+      skipToNextValue
       while(iterator.current != ']' && iterator.hasNext) {
         buf += cursor.nextNode()
         skipToNextValue
       }
       if (iterator.current != ']') failParse(s"Unexpected character when looking for ']' at ${iterator.pos}")
+      if (iterator.hasNext) iterator.next()
       buf.result()
     }
 
-    def nextNode(): AstNode = if (hasNext) {
+    def nextNode(): AstNode[_] = if (hasNextNode) {
       val hd = fields.head
       fields = fields.tail
       hd
     } else failStructure("No more elements in the JsonArrayNode!")
 
-    def hasNext = !fields.isEmpty
+    override def hasNextNode = !fields.isEmpty
 
-    private[this] def withNext[T <: AstNode](klass: Class[T]): T = {
-      val nxt = nextNode()
-      if (klass.isAssignableFrom(nxt.getClass)) nxt.asInstanceOf[T]
-      else err(nxt, klass.getSimpleName)
+    private[this] def withNext[T <: AstNode[_]](klass: Class[T]): Option[T] = {
+      nextNode() match {
+        case NullNode | UndefinedNode => None
+        case nxt =>
+          if (klass.isAssignableFrom(nxt.getClass)) Some(nxt.asInstanceOf[T])
+          else err(nxt, klass.getSimpleName)
+      }
     }
 
-    private[this] def err(x: AstNode, nodeType: String) =
+    private[this] def err(x: AstNode[_], nodeType: String) =
       failStructure(s"Expected to have an $nodeType $eleName but got ${x.getClass.getSimpleName}")
 
-    def readArray(): ArrayNode = withNext(classOf[JsonArrayNode])
-    def readObject(): ObjectNode = withNext(classOf[JsonObjectNode])
-    def readString(): TextNode = withNext(classOf[TextNode])
-    def readBoolean(): BoolNode = withNext(classOf[BoolNode])
-    def readNumber(): NumberNode = withNext(classOf[NumberNode])
-    def readByte(): ByteNode = withNext(classOf[ByteNode])
-    def readShort(): ShortNode = withNext(classOf[ShortNode])
-    def readInt(): IntNode = withNext(classOf[IntNode])
-    def readLong(): LongNode = withNext(classOf[LongNode])
-    def readBigInt(): BigIntNode = withNext(classOf[BigIntNode])
-    def readFloat(): FloatNode = withNext(classOf[FloatNode])
-    def readDouble(): DoubleNode = withNext(classOf[DoubleNode])
-    def readBigDecimal(): BigDecimalNode = withNext(classOf[BigDecimalNode])
+    def readArrayOpt(): Option[ArrayNode] = withNext(classOf[JsonArrayNode])
+    def readObjectOpt(): Option[ObjectNode] = withNext(classOf[JsonObjectNode])
+    def readStringOpt(): Option[TextNode] = withNext(classOf[TextNode])
+    def readBooleanOpt(): Option[BoolNode] = withNext(classOf[BoolNode])
+    def readNumberOpt(): Option[NumberNode] = withNext(classOf[NumberNode])
+
+    override def toString: String = s"JsonArrayNode($fields)"
   }
 
 
   final case class JsonObjectNode(cursor: JsonInputCursor[_]) extends ObjectNode(cursor) {
     private[this] val eleName = "field"
     private[this] def iterator = cursor.iterator
-    private[this] def skipToNextField = iterator.takeWhile(notNextField)
-    private[this] def skipToFieldValue = iterator.takeWhile(notFieldValue)
+    private[this] def skipToNextField = {
+      while (notNextField(iterator.current)) { iterator.next() }
+    }
+
+    private[this] def skipToFieldValue = {
+      if (iterator.hasNext && !notNextField(iterator.current)) iterator.next()
+      while (notFieldValue(iterator.current)) { iterator.next() }
+    }
 
     private[this] val fields = {
-      val buf = mutable.HashMap.empty[String, AstNode]
+      val buf = new java.util.HashMap[String, AstNode[_]]
       if (iterator.hasNext) iterator.next() // move past '{'
       else failParse(s"Unexpected character ${iterator.current} at ${iterator.pos}.")
+      skipToNextField
       while(iterator.current != '}' && iterator.hasNext) {
-        skipToNextField
         val field = cursor.readString()
         skipToFieldValue
-        buf += field.value.toString -> cursor.nextNode()
+        buf.put(field.value.toString, cursor.nextNode())
         skipToNextField
+
       }
       if (iterator.current != '}') failParse(s"Unexpected character or end of input when looking for '}' at ${iterator.pos}")
+      if (iterator.hasNext) iterator.next()
       buf
     }
 
-    def keys = fields.keys
-    def keySet = fields.keySet
+    def keySet = fields.keySet.asScala.toSet
+    def keysIterator = fields.keySet().asScala.toIterator
 
-    private[this] def err(x: AstNode, fieldName: String, nodeType: Class[_]) =
+    private[this] def err(x: AstNode[_], fieldName: String, nodeType: Class[_]) =
       failStructure(s"Expected to have an ${nodeType.getSimpleName} $eleName for '$fieldName' but got ${x.getClass.getSimpleName}")
 
-    private[this] def readField[T](fieldName: String, nodeType: Class[T]): T = {
+    private[this] def readField[T](fieldName: String, nodeType: Class[T]): Option[T] = {
       val fldOpt = fields.get(fieldName)
-      if (fldOpt.isDefined) {
-        val x = fldOpt.get
-        if (nodeType.isAssignableFrom(x.getClass)) x.asInstanceOf[T]
+      if (fldOpt != null) {
+        val x = fldOpt
+        if (nodeType.isAssignableFrom(x.getClass)) Some(x.asInstanceOf[T])
+        else if (nodeType.getSimpleName.startsWith("NullNode")) None
         else err(x, fieldName, nodeType)
-      } else failStructure(s"Could not find the field '$fieldName' in the json object")
+      } else None
     }
 
-    def readArrayField(fieldName: String): ArrayNode = readField(fieldName, classOf[JsonArrayNode])
-    def readObjectField(fieldName: String): ObjectNode = readField(fieldName, classOf[JsonObjectNode])
-    def readStringField(fieldName: String): TextNode = readField(fieldName, classOf[TextNode])
-    def readBooleanField(fieldName: String): BoolNode = readField(fieldName, classOf[BoolNode])
-    def readNumberField(fieldName: String): NumberNode = readField(fieldName, classOf[NumberNode])
-    def readByteField(fieldName: String): ByteNode = readField(fieldName, classOf[ByteNode])
-    def readShortField(fieldName: String): ShortNode = readField(fieldName, classOf[ShortNode])
-    def readIntField(fieldName: String): IntNode = readField(fieldName, classOf[IntNode])
-    def readLongField(fieldName: String): LongNode = readField(fieldName, classOf[LongNode])
-    def readBigIntField(fieldName: String): BigIntNode = readField(fieldName, classOf[BigIntNode])
-    def readFloatField(fieldName: String): FloatNode = readField(fieldName, classOf[FloatNode])
-    def readDoubleField(fieldName: String): DoubleNode = readField(fieldName, classOf[DoubleNode])
-    def readBigDecimalField(fieldName: String): BigDecimalNode = readField(fieldName, classOf[BigDecimalNode])
+    def readArrayFieldOpt(fieldName: String): Option[ArrayNode] = readField(fieldName, classOf[JsonArrayNode])
+    def readObjectFieldOpt(fieldName: String): Option[ObjectNode] = readField(fieldName, classOf[JsonObjectNode])
+    def readStringFieldOpt(fieldName: String): Option[TextNode] = readField(fieldName, classOf[TextNode])
+    def readBooleanFieldOpt(fieldName: String): Option[BoolNode] = readField(fieldName, classOf[BoolNode])
+    def readNumberFieldOpt(fieldName: String): Option[NumberNode] = readField(fieldName, classOf[NumberNode])
+
+
+    override def toString: String = s"JsonObjectNode($fields)"
   }
 }
 trait JsonInputCursor[R] extends InputCursor[R] {
 
   import JsonInputCursor._
   protected def size: Int
-  protected def iterator: JsonSourceIterator
+  protected def iterator: JsonReader[R]
 
-  def readArray(): ArrayNode = JsonArrayNode(this)
-  def readObject(): ObjectNode = JsonObjectNode(this)
+  def readArrayOpt(): Option[ArrayNode] = Some(JsonArrayNode(this))
+  def readObjectOpt(): Option[ObjectNode] = Some(JsonObjectNode(this))
 
-  def readString(): TextNode = {
+  def readStringOpt(): Option[TextNode] = {
     skipWhiteSpace()
     val end = iterator.current // store quote as separator
     var shouldContinue = iterator.hasNext
@@ -137,6 +192,7 @@ trait JsonInputCursor[R] extends InputCursor[R] {
       (iterator.next(): @switch) match {
         case '"' | '\'' =>
           if (end == iterator.current) {
+            if (iterator.hasNext) iterator.next()
             shouldContinue = false
             seenEnd = true
           } else sb.append(iterator.current)
@@ -169,38 +225,46 @@ trait JsonInputCursor[R] extends InputCursor[R] {
 
     }
     if (!seenEnd) throw failParse(s"Input ended too early while trying to find a closing quote for a string at ${iterator.pos}")
-    TextNode(sb.toString())
+    Some(TextNode(sb.toString()))
   }
   
-  def readBoolean(): BoolNode = {
+  def readBooleanOpt(): Option[BoolNode] = {
     skipWhiteSpace()
-    if (iterator.current == 't' &&
+    val node = if (iterator.current == 't' &&
         iterator.peek == 'r' &&
         iterator.charAt(iterator.pos + 2) == 'u' &&
-        iterator.charAt(iterator.pos + 3) == 'e') TrueNode
-    else if (iterator.current == 'f' &&
+        iterator.charAt(iterator.pos + 3) == 'e') {
+      iterator.next()
+      iterator.next()
+      iterator.next()
+      TrueNode
+    } else if (iterator.current == 'f' &&
               iterator.peek == 'a' &&
               iterator.charAt(iterator.pos + 2) == 'l' &&
               iterator.charAt(iterator.pos + 3) == 's' &&
-              iterator.charAt(iterator.pos + 4) == 'e') FalseNode
-    else throw failParse(s"Unexpected char '${iterator.current}' at ${iterator.pos}")
+              iterator.charAt(iterator.pos + 4) == 'e') {
+      iterator.next()
+      iterator.next()
+      iterator.next()
+      iterator.next()
+      FalseNode
+    } else throw failParse(s"Unexpected char '${iterator.current}' at ${iterator.pos}")
+
+    if (iterator.hasNext && iterator.current == 'e') iterator.next()
+    Some(node)
   }
   
-  def readNumber(): NumberNode = {
+  def readNumberOpt(): Option[NumberNode] = {
     skipWhiteSpace()
-    NumberNode(iterator.current + iterator.takeWhile(InputCursor.isNumberChar).toString())
+    val sb = new StringBuilder()
+    while(iterator.hasNext && InputCursor.isNumberChar(iterator.current)) {
+      sb.append(iterator.current)
+      iterator.next()
+    }
+    Some(NumberNode(sb.toString()))
   }
-  def readByte(): ByteNode = readNumber().toByteAst
-  def readShort(): ShortNode = readNumber().toShortAst
-  def readInt(): IntNode = readNumber().toIntAst
-  def readLong(): LongNode = readNumber().toLongAst
-  def readBigInt(): BigIntNode = readNumber().toBigIntAst
-  def readFloat(): FloatNode = readNumber().toFloatAst
-  def readDouble(): DoubleNode = readNumber().toDoubleAst
-  def readBigDecimal(): BigDecimalNode = readNumber().toBigDecimalAst
   def skipWhiteSpace() {
-    if (InputCursor.isWhitespace(iterator.current))
-      while(iterator.hasNext && InputCursor.isWhitespace(iterator.next())) {  }
+    while(iterator.hasNext && InputCursor.isWhitespace(iterator.current)) { iterator.next() }
   }
 
   protected def readUnicode(totalChars: Int): Char = {
@@ -219,7 +283,9 @@ trait JsonInputCursor[R] extends InputCursor[R] {
     value.asInstanceOf[Char]
   }
 
-  @tailrec final def nextNode(): AstNode = {
+  override def hasNextNode = iterator.hasNext
+
+  @tailrec final def nextNode(): AstNode[_] = {
     if (iterator.hasNext) {
       (iterator.current: @switch) match {
         case ' ' | '\r' | '\n' | '\t' =>
@@ -243,27 +309,151 @@ trait JsonInputCursor[R] extends InputCursor[R] {
   
 }
 
-trait JsonInputFormat[R] extends InputFormat[R]
+trait JsonInputFormat[R] extends InputFormat[R] {
+  type This = JsonInputFormat[R]
+}
 
-object Json extends JsonInputFormat[String] {
+object MusterJson extends JsonInputFormat[String] {
   type Cursor = JsonInputCursor[String]
-  def createCursor(in: String): Cursor = new JsonStringCursor(in)
+  def createCursor(in: String): Cursor = new JsonStringCursor(CharBufferJsonReader(in))
+
+  def withDateFormat(df: DateTimeFormatter): MusterJson.This = new JsonInputFormat[String] {
+    type Cursor = MusterJson.Cursor
+    def createCursor(in: String): Cursor = new JsonStringCursor(CharBufferJsonReader(in))
+    def withDateFormat(df: DateTimeFormatter): This = MusterJson.withDateFormat(df)
+  }: JsonInputFormat[String]
 }
 
-class JsonStringCursor(val source: String) extends JsonInputCursor[String] {
+class JsonStringCursor(val iterator: JsonReader[String]) extends JsonInputCursor[String] {
 
+  def source: String = iterator.source
   protected val size = source.length
-  protected def iterator: JsonSourceIterator = new JsonSourceIterator {
-    // TODO: is direct memory better?
-    // ByteBuffer.allocateDirect(source.length * 2).asCharBuffer().append(source) // allocate 3x the size because of UTF-8 encoding
-    private[this] val b = CharBuffer.wrap(source)
-    def charAt(idx: Int): Char = b.charAt(idx)
-    def next(): Char = b.get
-    def peek: Char = charAt(pos + 1)
-    def hasNext: Boolean = b.hasRemaining
-    def pos: Int = b.position
-    def current: Char = charAt(pos)
-  }
-  
-  
+
+
 }
+
+object JackonInputCursor {
+
+  final class JacksonObjectNode(parent: JsonNode) extends ObjectNode(null) {
+    private[this] def readField(name: String): JsonNode = parent.get(name)
+    def readArrayFieldOpt(fieldName: String): Option[ArrayNode] = {
+      val node = readField(fieldName)
+      if (node.isNull || node.isMissingNode) None
+      else if (node.isArray) Some(new JacksonArrayNode(node))
+      else throw new MappingException(s"Expected an array but found a ${node.getClass.getSimpleName}")
+    }
+
+    def readObjectFieldOpt(fieldName: String): Option[ObjectNode] = {
+      val node = readField(fieldName)
+      if (node.isNull || node.isMissingNode) None
+      else if (node.isObject) Some(new JacksonObjectNode(node))
+      else throw new MappingException(s"Expected an array but found a ${node.getClass.getSimpleName}")
+    }
+
+    def readStringFieldOpt(fieldName: String): Option[TextNode] = {
+      val node = readField(fieldName)
+      if (node.isNull || node.isMissingNode) None
+      else if (node.isTextual) Some(TextNode(node.asText()))
+      else throw new MappingException(s"Expected an array but found a ${node.getClass.getSimpleName}")
+    }
+
+    def readBooleanFieldOpt(fieldName: String): Option[BoolNode] =  {
+      val node = readField(fieldName)
+      if (node.isNull || node.isMissingNode) None
+      else if (node.isBoolean) Some(if (node.asBoolean()) TrueNode else FalseNode)
+      else throw new MappingException(s"Expected an array but found a ${node.getClass.getSimpleName}")
+    }
+
+    def readNumberFieldOpt(fieldName: String): Option[NumberNode] = {
+      val node = readField(fieldName)
+      if (node.isNull || node.isMissingNode) None
+      else if (node.isTextual) Some(NumberNode(node.asText()))
+      else if (node.isNumber) Some(NumberNode(node.asText()))
+      else throw new MappingException(s"Expected a number field but found a ${node.getClass.getSimpleName}")
+    }
+
+
+    def keySet: Set[String] = parent.fieldNames().asScala.toSet
+
+    def keysIterator: Iterator[String] = parent.fieldNames().asScala
+  }
+
+  final class JacksonArrayNode(val source: JsonNode) extends ArrayNode(null) with JacksonInputCursor[JsonNode] {
+    private[this] var idx = 0
+    protected def node = {
+      val c = source.get(idx)
+      idx += 1
+      c
+    }
+
+    override def hasNextNode: Boolean = source.asInstanceOf[JArrayNode].size() > idx
+  }
+}
+
+trait JacksonInputCursor[R] extends InputCursor[R] {
+  import JackonInputCursor._
+  protected def node: JsonNode
+  def readArrayOpt(): Option[ArrayNode] = {
+    val node = this.node
+    if (node.isNull || node.isMissingNode) None
+    else if (node.isArray) Some(new JacksonArrayNode(node))
+    else throw new MappingException(s"Expected an array but found a ${node.getClass.getSimpleName}")
+  }
+
+  def readObjectOpt(): Option[ObjectNode] =  {
+    val node = this.node
+    if (node.isNull || node.isMissingNode) None
+    else if (node.isObject) Some(new JacksonObjectNode(node))
+    else throw new MappingException(s"Expected an object but found a ${node.getClass.getSimpleName}")
+  }
+
+  def readStringOpt(): Option[TextNode] =  {
+    val node = this.node
+    if (node.isNull || node.isMissingNode) None
+    else if (node.isTextual) Some(TextNode(node.asText()))
+    else throw new MappingException(s"Expected an array but found a ${node.getClass.getSimpleName}")
+  }
+
+  def readBooleanOpt(): Option[BoolNode] =  {
+    val node = this.node
+    if (node.isNull || node.isMissingNode) None
+    else if (node.isBoolean) { Some(if (node.asBoolean()) TrueNode else FalseNode) }
+    else throw new MappingException(s"Expected a boolean but found a ${node.getClass.getSimpleName}")
+  }
+
+  def readNumberOpt(): Option[NumberNode] =  {
+    val node = this.node
+    if (node.isNull || node.isMissingNode) None
+    else if (node.isNumber) Some(NumberNode(node.asText()))
+    else if (node.isTextual) Some(NumberNode(node.asText()))
+    else throw new MappingException(s"Expected a number but found a ${node.getClass.getSimpleName}")
+  }
+
+  def nextNode(): AstNode[_] = {
+    val node = this.node
+    if (node.isNull) NullNode
+    else if (node.isMissingNode) UndefinedNode
+    else if (node.isArray) new JacksonArrayNode(node)
+    else if (node.isObject) new JacksonObjectNode(node)
+    else if (node.isTextual) Ast.TextNode(node.asText())
+    else if (node.isNumber) Ast.NumberNode(node.asText())
+    else if (node.isBoolean) {
+      if (node.asBoolean()) TrueNode else FalseNode
+    } else throw new MappingException("Unable to determine the type of this json")
+  }
+}
+
+trait JacksonInputFormat[R] extends InputFormat[R] {
+  type Cursor = JacksonInputCursor[R]
+  type This = JacksonInputFormat[R]
+  val mapper: ObjectMapper = new ObjectMapper()
+  mapper.configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
+
+  def withDateFormat(df: DateTimeFormatter): This = new JacksonInputFormat[R] {
+    def createCursor(in: R): Cursor = {
+//      mapper.setDateFormat()
+      JacksonInputFormat.this.createCursor(in)
+    }
+  }
+}
+

@@ -4,14 +4,25 @@ import scala.language.experimental.macros
 import scala.reflect.macros._
 import java.util.Date
 import org.joda.time.DateTime
+import com.fasterxml.jackson.databind.JsonNode
+import java.io.File
+import com.fasterxml.jackson.databind.node.MissingNode
 
 trait Muster[T] {
   def writeFormatted[R](value: T, outputFormat: OutputFormat[R]): R
 }
 
-trait CanRead[S] {
-  def readFormated[R](source: S, inputFormat: InputFormat[R]): R
+
+trait InputSource[T] {
+  def value: T
 }
+
+//final case class FileInputSource(value: File) extends InputSource[File]
+//final case class StringInputSource(value: String) extends InputSource[String]
+//final case class ReadeInputSource(value: java.io.Reader) extends InputSource[java.io.Reader]
+//final case class FileInputSource(value: java.io.InputStream) extends InputSource[java.io.InputStream]
+//final case class ByteArrayInputSource(value: Array[Byte]) extends InputSource[Array[Byte]]
+//final case class URLInputSource(value: java.net.URL) extends InputSource[java.net.URL]
 
 object Muster {
 
@@ -26,15 +37,47 @@ object Muster {
   }
 
   object from {
-
+     object JsonString extends JacksonInputFormat[String] {
+      def createCursor(in: String): Cursor = new JacksonInputCursor[String] {
+        val source = in
+        protected val node: JsonNode = try {
+          mapper.readTree(source)
+        } catch {
+          case _: Throwable => MissingNode.getInstance()
+        }
+      }
+    }
+    object JsonStream extends JacksonInputFormat[java.io.InputStream] {
+      def createCursor(in: java.io.InputStream): Cursor = new JacksonInputCursor[java.io.InputStream] {
+        val source: java.io.InputStream = in
+        protected val node: JsonNode = mapper.readTree(source)
+      }
+    }
+    object JsonReader extends JacksonInputFormat[java.io.Reader] {
+      def createCursor(in: java.io.Reader): Cursor = new JacksonInputCursor[java.io.Reader] {
+        val source: java.io.Reader = in
+        protected val node: JsonNode = mapper.readTree(source)
+      }
+    }
+    object JsonFile extends JacksonInputFormat[java.io.File] {
+      def createCursor(in: java.io.File): Cursor = new JacksonInputCursor[java.io.File] {
+        val source: java.io.File = in
+        protected val node: JsonNode = mapper.readTree(source)
+      }
+    }
+    object JsonByteArray extends JacksonInputFormat[Array[Byte]] {
+      def createCursor(in: Array[Byte]): Cursor = new JacksonInputCursor[Array[Byte]] {
+        val source: Array[Byte] = in
+        protected val node: JsonNode = mapper.readTree(source)
+      }
+    }
+    object JsonURL extends JacksonInputFormat[java.net.URL] {
+      def createCursor(in: java.net.URL): Cursor = new JacksonInputCursor[java.net.URL] {
+        val source: java.net.URL = in
+        protected val node: JsonNode = mapper.readTree(source)
+      }
+    }
   }
-
-  // To read:
-  // 1. check primitive or not => when primitive just read the primitive
-  // 2. collect the constructor params =>
-  // 3. provide construct to instantiate object
-  // 4. collect remaining vars and use setters
-  // 5. collect remaining java bean getXxx/setXxx methods
 
   implicit def formatable[T]: Muster[T] = macro formatableImpl[T]
 
@@ -123,8 +166,7 @@ object Muster {
         reify(formatterStack.splice.startObject(c.Expr[String](Literal(Constant(tp.typeSymbol.name.decoded))).splice)).tree ::
         fieldTrees.toList.reverse :::
         reify(formatterStack.splice.endObject()).tree ::
-        Nil:_*
-      )
+        Nil, EmptyTree)
     }
 
     def buildTpe(tp: Type, target: Tree): Tree = {
@@ -158,7 +200,7 @@ object Muster {
 
     c.Expr[Muster[T]](
       Block(
-        formatableClass,
+       List(formatableClass),
        Apply(Select(New(Ident(newTypeName("$anon"))), nme.CONSTRUCTOR), List())
       )
     )

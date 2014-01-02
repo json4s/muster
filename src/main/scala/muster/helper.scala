@@ -13,7 +13,7 @@ class Helper[C <: Context](val c: C) {
           c.typeOf[java.lang.Double], c.typeOf[java.lang.Float], c.typeOf[BigDecimal],
           c.typeOf[java.lang.Byte], c.typeOf[java.lang.Boolean], c.typeOf[Number],
           c.typeOf[java.lang.Short], c.typeOf[Date], c.typeOf[Timestamp], c.typeOf[scala.Symbol],
-          c.typeOf[java.math.BigDecimal], c.typeOf[java.math.BigInteger])
+          c.typeOf[java.math.BigDecimal], c.typeOf[java.math.BigInteger], c.typeOf[org.joda.time.DateTime])
 
   def isPrimitive(tpe: c.Type) = primitiveTypes.exists(tpe =:= _)
   def isString(tpe: c.Type) = c.typeOf[String] =:= tpe || c.typeOf[java.lang.String] =:= tpe
