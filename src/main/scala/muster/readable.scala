@@ -20,19 +20,20 @@ object Readable {
     import Flag._
     val helper = new Helper[c.type](c)
 
+    val inputFormat = c.Expr[InputFormat[_]](Ident(newTermName("inputFormat")))
+    val dateFormatTree = reify(inputFormat.splice.dateFormat).tree
     val primitiveMap =
-      Map[Type, String](
-        typeOf[java.math.BigDecimal] -> "JBigDecimal",
-        typeOf[java.lang.Byte] -> "JByte",
-        typeOf[java.lang.Short] -> "JShort",
-        typeOf[java.lang.Long] -> "JLong",
-        typeOf[java.lang.Float] -> "JFloat",
-        typeOf[java.lang.Double] -> "JDouble",
-        typeOf[java.util.Date] -> "String",
-        typeOf[org.joda.time.DateTime] -> "DateTime",
-        typeOf[java.util.Date] -> "Date",
-        typeOf[java.sql.Timestamp] -> "Date"
-      ).withDefault(_.typeSymbol.name.decoded)
+      Map[Type, (String, List[Tree])](
+        typeOf[java.math.BigDecimal] -> ("JBigDecimal", Nil),
+        typeOf[java.lang.Byte] -> ("JByte", Nil),
+        typeOf[java.lang.Short] -> ("JShort", Nil),
+        typeOf[java.lang.Long] -> ("JLong", Nil),
+        typeOf[java.lang.Float] -> ("JFloat", Nil),
+        typeOf[java.lang.Double] -> ("JDouble", Nil),
+        typeOf[java.util.Date] -> ("Date", dateFormatTree :: Nil),
+        typeOf[org.joda.time.DateTime] -> ("DateTime", dateFormatTree :: Nil),
+        typeOf[java.sql.Timestamp] -> ("Date", dateFormatTree :: Nil)
+      ).withDefault(v => (v.typeSymbol.name.decoded, Nil))
 
     val thisType = weakTypeOf[T]
     val collTpe = weakTypeOf[Seq[T]]
@@ -41,10 +42,11 @@ object Readable {
     //     val companionType = companionSymbol.typeSignature
 
     //     val cursor = c.Expr[InputCursor[_]](Ident(newTermName("cursor")))
-    val inputFormat = c.Expr[InputFormat[_]](Ident(newTermName("inputFormat")))
+
 
     def buildPrimitive(tpe: Type, cursor: c.Expr[Any], methodNameSuffix: String = "", args: List[Tree] = Nil): Tree = {
-      Apply(Select(cursor.tree, newTermName(s"read${primitiveMap(tpe)}${methodNameSuffix}Value")), args)
+      val (nm, ags) = primitiveMap(tpe)
+      Apply(Select(cursor.tree, newTermName(s"read${nm}${methodNameSuffix}Value")), args ::: ags)
     }
 
     def buildMap[TT](tpe: Type, reader: c.Expr[Any], suffix: String = "", args: List[Tree] = Nil): Tree = {
@@ -144,12 +146,12 @@ object Readable {
         def pickConstructorTree(argNames: c.Expr[Set[String]]): Tree = {
           // Makes expressions for determining of they list is satisfied by the reader
           def ctorCheckingExpr(ctors: List[List[Symbol]]): c.Expr[Boolean] = {
-            def isRequired(item: Symbol) = {
+             def isRequired(item: Symbol) = {
               val sym = item.asTerm
               !(sym.isParamWithDefault || sym.typeSignature <:< typeOf[Option[_]])
             }
 
-            val expr = c.Expr[Set[String]](Apply(Select(Ident("Set"), newTermName("apply")),
+            val expr = c.Expr[Set[String]](Apply(Select(Ident(newTermName("Set")), newTermName("apply")),
               ctors.flatten.filter(isRequired).map(sym => Literal(Constant(sym.name.decoded)))
             ))
 
@@ -172,47 +174,36 @@ object Readable {
           ifElseTreeBuilder(ifExprsAndParams)
         }
 
-        def writeListParams()
+//        def writeListParams()
 
         def buildObjFromParams(ctorParams: List[List[Symbol]]): Tree = {
-
-          New(newObjTypeTree, ctorParams.map(_.zipWithIndex.map {
+          val params = ctorParams.map(_.zipWithIndex.map {
             case (pSym, index) =>
               // Change out the types if it has type parameters
               val pTpe = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
               val fieldName = Literal(Constant(pSym.name.decoded))
+              val pTnm = newTermName(pSym.name.decoded)
 
               // If param has defaults, try to find the val in map, or call
               // default evaluation from its companion object
               // TODO: is the sym.companionSymbol.isTerm the best way to check for NoSymbol?
               // TODO: is there a way to get teh default values for the overloaded constructors?
-              if (pSym.asTerm.isParamWithDefault && helper.isPrimitive(pTpe) && sym.companionSymbol.isTerm) {
+              val tree = if (pSym.asTerm.isParamWithDefault && sym.companionSymbol.isTerm) {
                 reify {
                   c.Expr[Option[Any]](buildOption(pTpe, ce, "Field", List(fieldName))).splice
                     .getOrElse(c.Expr(Select(
                                         Ident(sym.companionSymbol),
                                         newTermName("$lessinit$greater$default$" + (index + 1).toString))).splice)
                 }.tree
-              } else if (pSym.asTerm.isParamWithDefault && sym.companionSymbol.isTerm) {
-                reify {
-                  try {
-                    c.Expr(buildSingle(pTpe, ce, "Field", List(fieldName))).splice // splice in another obj tree
-                  } catch {
-                    case e: MappingException =>
-                      // Need to use the origional symbol.companionObj to get defaults
-                      // Would be better to find the generated TermNames if possible
-                      c.Expr(Select(Ident(sym.companionSymbol), newTermName(
-                        "$lessinit$greater$default$" + (index + 1).toString))
-                      ).splice
-                  }
-                }.tree
               } else buildSingle(pTpe, ce, "Field", List(fieldName))
-          }))
+              (ValDef(Modifiers(), pTnm, TypeTree(pTpe), tree), Ident(pTnm))
+          })
+
+          Block(params.head.map(_._1), Apply(Select(New(Ident(sym)), nme.CONSTRUCTOR), params.head.map(_._2)))
         }
 
         val on = c.fresh("obj$")
         val ot = newTermName(on)
-        val oe = c.Expr(Ident(ot))
         val otr: Tree = ValDef(Modifiers(), ot, newObjTypeTree, pickConstructorTree(reify(ce.splice.keySet)))
 
         // Sets fields after the instance is has been created

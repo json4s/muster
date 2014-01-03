@@ -69,12 +69,13 @@ libraryDependencies += "net.minidev" % "json-smart" % "2.0-RC3" % "test"
 initialCommands in console := """
                                 |import muster._
                                 |import scala.reflect.runtime.{universe => u}
-                                |def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormated(source, Muster.from.JsonString)
+                                |def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
                               """.stripMargin
 
 initialCommands in (Test, console) := """
                                         |import muster._
                                         |import scala.reflect.runtime.{universe => u}
+                                        |def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
                                       """.stripMargin
 
 packageOptions <+= (name, version, organization) map {

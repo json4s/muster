@@ -27,6 +27,7 @@ case class NotSimple(one: Int, simple: Simple)
 case class WithList(lst: List[Int])
 case class ObjWithListMap(lst: List[Int], map: Map[String,Int])
 case class WithDate(date: Date)
+case class WithDateTime(date: DateTime)
 case class WithSymbol(symbol: Symbol)
 
 case class Junk(in1:Int, in2:String)
