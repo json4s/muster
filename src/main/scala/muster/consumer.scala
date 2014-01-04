@@ -258,7 +258,7 @@ object Consumer {
 
         val on = c.fresh("consumed$")
         val ot = newTermName(on)
-        val otr: Tree = ValDef(Modifiers(), ot, newObjTypeTree, pickConstructorTree(reify(reader.splice.keySet)))
+        val otr: Tree = ValDef(Modifiers(), ot, TypeTree(tpe), pickConstructorTree(reify(reader.splice.keySet)))
 
 //        // Sets fields after the instance is has been created
 //        def optionalParams(pTpe: Type, varName: String, exprMaker: Tree => c.Expr[_]): Tree = {
@@ -308,7 +308,7 @@ object Consumer {
 
     reify {
       new Consumer[T] {
-        c.Expr(importExpr).splice
+//        c.Expr(importExpr).splice
 
         def consume(node: Ast.AstNode[_]): T = {
 //          node match {

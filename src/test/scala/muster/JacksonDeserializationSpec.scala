@@ -7,7 +7,25 @@ import muster.Ast.ObjectNode
 
 object Aliased {
   type Foo = Junk
+//  object WithAlias {
+//    implicit val WithAliasConsumer = Consumer.consumer[WithAlias]
+//  }
+
   case class WithAlias(in: Foo)
+}
+
+class Ac {
+  type Foo = Junk
+  object WithAlias {
+    implicit val WithAliasConsumer = Consumer.consumer[WithAlias]
+  }
+  case class WithAlias(in: Foo)
+  case class NoAlias(in: Junk)
+}
+class Ac2 {
+  type Foo = Junk
+  case class WithAlias(in: Foo)
+  case class NoAlias(in: Junk)
 }
 
 class JacksonDeserializationSpec extends Specification {
@@ -127,9 +145,27 @@ class JacksonDeserializationSpec extends Specification {
       read[ThingWithJunk](thingWithJunkJson) must_== thingWithJunk
     }
 
-//    "read type aliased thing with junk when alias is defined in an object" in {
-//      read[Aliased.WithAlias](s"""{"in":{"in1":123,"in2":"456"}}""") must_== Aliased.WithAlias(junk)
-//    }
+    "read type aliased thing with junk when alias is defined in a package object" in {
+      read[aliasing.WithAlias](s"""{"in":{"in1":123,"in2":"456"}}""") must_== aliasing.WithAlias(junk)
+    }
+
+    "read type aliased thing with junk when alias is defined in an object" in {
+      read[Aliased.WithAlias](s"""{"in":{"in1":123,"in2":"456"}}""") must_== Aliased.WithAlias(junk)
+    }
+
+    "read type aliased thing with junk when alias is defined in this class" in {
+      read[this.WithAlias](s"""{"in":{"in1":123,"in2":"456"}}""") must_== this.WithAlias(junk)
+    }
+
+    "read type aliased thing with junk when alias is defined in another class and companion object is used to invoke the macro" in {
+      val ac = new Ac
+      read[ac.WithAlias](s"""{"in":{"in1":123,"in2":"456"}}""") must_== ac.WithAlias(junk)
+    }
+
+//    "read type aliased thing with junk when alias is defined in another class without companion object" in {
+//      val ac = new Ac2
+//      read[ac.WithAlias](s"""{"in":{"in1":123,"in2":"456"}}""") must_== ac.WithAlias(junk)
+//    }.pendingUntilFixed
 
     "read a crazy thing" in {
       val js = s"""{"name":"bar","thg":$thingWithJunkJson}"""
