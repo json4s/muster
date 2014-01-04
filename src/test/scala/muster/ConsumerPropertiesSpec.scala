@@ -154,33 +154,33 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
     read[List[Option[Int]]](i.map(_.map(_.toString).getOrElse("null")).mkString("[", ",", "]")) == i
   }
 
-  val mapOptionGen = {
-    for {
-      n <- Gen.nonEmptyListOf(Gen.alphaChar).map(_.mkString).suchThat(_.forall(_.isLetter))
-      m <- Gen.option(Gen.chooseNum(1, 999999999))
-      r <- Gen.mapOf((n, m))
-    } yield  r
-  }
-  property("option value as null in a map") = forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
-     val json = {
-       val sb = new mutable.StringBuilder()
-       sb.append('{')
-       var first = true
-       i foreach { case (k, v) =>
-         if (!first) sb.append(',')
-         else first = false
-         sb.append('"')
-         quote(k, sb)
-         sb.append('"')
-         sb.append(':')
-         if (v.isDefined) sb.append(v)
-         else sb.append("null")
-       }
-       sb.append('}')
-       sb.toString
-     }
-     read[Map[String, Option[Int]]](json) == i
-  }
+//  val mapOptionGen = {
+//    for {
+//      n <- Gen.nonEmptyListOf(Gen.alphaChar).map(_.mkString).suchThat(_.forall(_.isLetter))
+//      m <- Gen.option(Gen.chooseNum(1, 999999999))
+//      r <- Gen.mapOf((n, m))
+//    } yield  r
+//  }
+//  property("option value as null in a map") = forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
+//     val json = {
+//       val sb = new mutable.StringBuilder()
+//       sb.append('{')
+//       var first = true
+//       i foreach { case (k, v) =>
+//         if (!first) sb.append(',')
+//         else first = false
+//         sb.append('"')
+//         quote(k, sb)
+//         sb.append('"')
+//         sb.append(':')
+//         if (v.isDefined) sb.append(v)
+//         else sb.append("null")
+//       }
+//       sb.append('}')
+//       sb.toString
+//     }
+//     read[Map[String, Option[Int]]](json) == i
+//  }
 //  property("option value as missing in a map") = forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
 //     val json = {
 //       val sb = new mutable.StringBuilder()

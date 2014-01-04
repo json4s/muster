@@ -5,6 +5,11 @@ import org.json4s._
 import java.util.{TimeZone, Date}
 import muster.Ast.ObjectNode
 
+object Aliased {
+  type Foo = Junk
+  case class WithAlias(in: Foo)
+}
+
 class JacksonDeserializationSpec extends Specification {
 
   implicit val defaultFormats = DefaultFormats
@@ -49,53 +54,53 @@ class JacksonDeserializationSpec extends Specification {
       read[Map[String, List[Option[Int]]]](json) must_== Map("one" -> List(Some(1)), "two" -> List(Some(3),None, Some(4)), "three" -> List(Some(394)))
     }
 
-//    "read a very simple case class" in {
-//      val js = """{"id":1,"name":"Tom"}"""
-//      read[Friend](js) must_== Friend(1, "Tom")
-//    }
-//
-//    "read a very simple case class" in {
-//      val js = """{"one":1,"two":"Tom"}"""
-//      read[Simple](js) must_== Simple(1, "Tom")
-//    }
-//
-//    "read a very simple case class with an option field with the value provided" in {
-//      val js = """{"one":1,"two":"Tom"}"""
-//      read[WithOption](js) must_== WithOption(1, Some("Tom"))
-//    }
-//
-//    "read a very simple case class with an option field with null" in {
-//      val js = """{"one":1,"two":null}"""
-//      read[WithOption](js) must_== WithOption(1, None)
-//    }
-//
-//    "read a very simple case class with an option field omitted" in {
-//      val js = """{"one":1}"""
-//      read[WithOption](js) must_== WithOption(1, None)
-//    }
-//
-//    "read list of simple case classes" in {
-//      val js = """[{"one":1,"two":"hello"}, {"one":2,"two":"world"}]"""
-//      read[List[Simple]](js) must_== List(Simple(1, "hello"), Simple(2, "world"))
-//    }
-//
-//    "read a case class with a single list" in {
-//      val js = """{"lst":[1,2,3]}"""
-//      read[WithList](js) must_== WithList(List(1,2,3))
-//    }
-//
-//    "read an object with list and map" in {
-//      val js = """{"lst":[1,2,3], "map":{"foo":1,"bar":2}}"""
-//      read[ObjWithListMap](js) must_== ObjWithListMap(List(1,2,3), Map("foo" -> 1, "bar" -> 2))
-//    }
-//
-//    "read an object with a date" in {
-//      val date = new Date
-//      val ds = Muster.from.JsonString.dateFormat.format(date)
-//      val pd = Muster.from.JsonString.dateFormat.parse(ds)
-//      val js = s"""{"date":"$ds"}"""
-//      read[WithDate](js) must_== WithDate(pd)
-//    }
+    "read a very simple case class" in {
+      val js = """{"id":1,"name":"Tom"}"""
+      read[Friend](js) must_== Friend(1, "Tom")
+    }
+
+    "read a very simple case class" in {
+      val js = """{"one":1,"two":"Tom"}"""
+      read[Simple](js) must_== Simple(1, "Tom")
+    }
+
+    "read a very simple case class with an option field with the value provided" in {
+      val js = """{"one":1,"two":"Tom"}"""
+      read[WithOption](js) must_== WithOption(1, Some("Tom"))
+    }
+
+    "read a very simple case class with an option field with null" in {
+      val js = """{"one":1,"two":null}"""
+      read[WithOption](js) must_== WithOption(1, None)
+    }
+
+    "read a very simple case class with an option field omitted" in {
+      val js = """{"one":1}"""
+      read[WithOption](js) must_== WithOption(1, None)
+    }
+
+    "read list of simple case classes" in {
+      val js = """[{"one":1,"two":"hello"}, {"one":2,"two":"world"}]"""
+      read[List[Simple]](js) must_== List(Simple(1, "hello"), Simple(2, "world"))
+    }
+
+    "read a case class with a single list" in {
+      val js = """{"lst":[1,2,3]}"""
+      read[WithList](js) must_== WithList(List(1,2,3))
+    }
+
+    "read an object with list and map" in {
+      val js = """{"lst":[1,2,3], "map":{"foo":1,"bar":2}}"""
+      read[ObjWithListMap](js) must_== ObjWithListMap(List(1,2,3), Map("foo" -> 1, "bar" -> 2))
+    }
+
+    "read an object with a date" in {
+      val date = new Date
+      val ds = SafeSimpleDateFormat.Iso8601Formatter.format(date)
+      val pd = SafeSimpleDateFormat.Iso8601Formatter.parse(ds)
+      val js = s"""{"date":"$ds"}"""
+      read[WithDate](js) must_== WithDate(pd)
+    }
 //    "read an object with a datetime" in {
 //      val date = DateTime.now
 //      val ds = Muster.from.JsonString.dateFormat.print(date)
@@ -104,42 +109,42 @@ class JacksonDeserializationSpec extends Specification {
 //      read[WithDateTime](js) must_== WithDateTime(pd)
 //    }
 
-//    "read an object with a Symbol" in {
-//      val js = """{"symbol":"baz"}"""
-//      read[WithSymbol](js) must_== WithSymbol('baz)
-//    }
-//
-//    "read a NotSimple class" in {
-//      val js = """{"one":456,"simple":{"one":1,"two":"Tom"}}"""
-//      read[NotSimple](js) must_== NotSimple(456, Simple(1, "Tom"))
-//    }
-//
-//    val junkJson = """{"in1":123,"in2":"456"}"""
-//    val junk = Junk(123, "456")
-//    val thingWithJunkJson = s"""{"name":"foo","junk":$junkJson}"""
-//    val thingWithJunk = ThingWithJunk("foo", junk)
-//    "read a ThingWithJunk" in {
-//      read[ThingWithJunk](thingWithJunkJson) must_== thingWithJunk
-//    }
-//
-//    "read type aliased thing with junk" in {
-//      read[WithAlias](s"""{"in":$junk}""") must_== WithAlias(junk)
+    "read an object with a Symbol" in {
+      val js = """{"symbol":"baz"}"""
+      read[WithSymbol](js) must_== WithSymbol('baz)
+    }
+
+    "read a NotSimple class" in {
+      val js = """{"one":456,"simple":{"one":1,"two":"Tom"}}"""
+      read[NotSimple](js) must_== NotSimple(456, Simple(1, "Tom"))
+    }
+
+    val junkJson = """{"in1":123,"in2":"456"}"""
+    val junk = Junk(123, "456")
+    val thingWithJunkJson = s"""{"name":"foo","junk":$junkJson}"""
+    val thingWithJunk = ThingWithJunk("foo", junk)
+    "read a ThingWithJunk" in {
+      read[ThingWithJunk](thingWithJunkJson) must_== thingWithJunk
+    }
+
+//    "read type aliased thing with junk when alias is defined in an object" in {
+//      read[Aliased.WithAlias](s"""{"in":{"in1":123,"in2":"456"}}""") must_== Aliased.WithAlias(junk)
 //    }
 
-//    "read a crazy thing" in {
-//      val js = s"""{"name":"bar","thg":$thingWithJunkJson}"""
-//      read[Crazy](js) must_== Crazy("bar", thingWithJunk)
-//    }
+    "read a crazy thing" in {
+      val js = s"""{"name":"bar","thg":$thingWithJunkJson}"""
+      read[Crazy](js) must_== Crazy("bar", thingWithJunk)
+    }
 
-//    "read an option inside an option for a null" in {
-//      val js = """{"in":null}"""
-//      read[OptionOption](js) must_== OptionOption(Some(None))
-//    }
-//
-//    "read an option inside an option for a value" in {
-//      val js = """{"in":1}"""
-//      read[OptionOption](js) must_== OptionOption(Some(Some(1)))
-//    }
+    "read an option inside an option for a null" in {
+      val js = """{"in":null}"""
+      read[OptionOption](js) must_== OptionOption(None)
+    }
+
+    "read an option inside an option for a value" in {
+      val js = """{"in":1}"""
+      read[OptionOption](js) must_== OptionOption(Some(Some(1)))
+    }
 
     object ImplOverride {
       implicit object ImplOverrideReadable extends Consumer[ImplOverride] {

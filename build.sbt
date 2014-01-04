@@ -30,7 +30,7 @@ javacOptions ++= Seq("-deprecation", "-Xlint")
 
 scalacOptions += "-Ymacro-debug-lite"
 
-//scalacOptions += "-Xlog-implicits"
+scalacOptions += "-Xlog-implicits"
 
 //scalacOptions ++= Seq("-Xprint:parser", "-Ystop-after:parser", "-Yshow-trees-compact")
 
@@ -69,13 +69,13 @@ logBuffered := false
 initialCommands in console := """
                                 |import muster._
                                 |import scala.reflect.runtime.{universe => u}
-                                |def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
+                                |def read[T:Consumer](source: String) = Muster.from.JsonString.from[T](source)
                               """.stripMargin
 
 initialCommands in (Test, console) := """
                                         |import muster._
                                         |import scala.reflect.runtime.{universe => u}
-                                        |def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
+                                        |def read[T:Consumer](source: String) = Muster.from.JsonString.from[T](source)
                                       """.stripMargin
 
 packageOptions <+= (name, version, organization) map {
