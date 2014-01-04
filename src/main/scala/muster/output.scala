@@ -1,8 +1,7 @@
 package muster
 
 import java.util.Date
-import org.joda.time.{DateTimeZone, DateTime}
-import org.joda.time.format.{ISODateTimeFormat, DateTimeFormatter}
+import java.text.{SimpleDateFormat, DateFormat}
 
 trait OutputFormatter[R] extends AutoCloseable {
   def startArray(name: String = ""): Unit
@@ -20,20 +19,21 @@ trait OutputFormatter[R] extends AutoCloseable {
   def double(value: Double): Unit
   def bigDecimal(value: BigDecimal): Unit
   def date(value: Date): Unit
-  def dateTime(value: DateTime): Unit
   def startField(name: String): Unit
   def writeNull(): Unit
   def undefined(): Unit
   def result: R
-  def withDateFormat(df: DateTimeFormatter): this.type
+  def withDateFormat(df: DateFormat): this.type
   def close()
 }
 
 trait OutputFormat[R] {
   type Formatter <: OutputFormatter[R]
   type This <: OutputFormat[R]
-  def dateFormat: DateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis.withZone(DateTimeZone.UTC)
-  def withDateFormat(df: DateTimeFormatter): This
+  def dateFormat: DateFormat = SafeSimpleDateFormat.Iso8601Formatter
+  def withDateFormat(df: DateFormat): This
   def createFormatter: Formatter
   def freezeFormatter(fmt: Formatter): This
+
+  def into[T](out: T)(implicit fmt: Muster[T]): R = fmt.writeFormatted(out, this)
 }

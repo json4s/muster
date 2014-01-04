@@ -1,16 +1,15 @@
 package muster
 
-import org.joda.time.format.DateTimeFormatter
 import scala.collection.mutable
 import java.util.Date
-import org.joda.time.DateTime
+import java.text.DateFormat
 
 abstract class JsonOutput extends StringOutputFormat {
   type Formatter = CompactJsonStringFormatter
   type This = JsonOutput
 
-  def withDateFormat(df: DateTimeFormatter): This =
-    new JsonOutput { override val dateFormat: DateTimeFormatter = df }
+  def withDateFormat(df: DateFormat): This =
+    new JsonOutput { override val dateFormat: DateFormat = df }
 
   def createFormatter: Formatter = new CompactJsonStringFormatter(writer, dateFormat)
 
@@ -19,10 +18,10 @@ abstract class JsonOutput extends StringOutputFormat {
 }
 
 
-class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateTimeFormatter)  extends OutputFormatter[String] {
+class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat)  extends OutputFormatter[String] {
   import StringOutputFormatter._
 
-  def withDateFormat(df: DateTimeFormatter): this.type = new CompactJsonStringFormatter(writer, df).asInstanceOf[this.type]
+  def withDateFormat(df: DateFormat): this.type = new CompactJsonStringFormatter(writer, df).asInstanceOf[this.type]
   def withWriter(wrtr: java.io.Writer): CompactJsonStringFormatter = new CompactJsonStringFormatter(wrtr, dateFormat)
 
   private[this] val stateStack = mutable.Stack[Int]()
@@ -126,12 +125,8 @@ class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateTimeFor
   }
 
   def date(value: Date) {
-    dateTime(new DateTime(value))
-  }
-
-  def dateTime(value: DateTime) {
     writeComma(State.InArray)
-    dateFormat.printTo(writer, value)
+    writer.write(dateFormat.format(value))
   }
 
   def writeNull() {

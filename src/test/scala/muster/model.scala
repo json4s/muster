@@ -1,7 +1,7 @@
 package muster
 
-import org.joda.time.DateTime
 import java.util.Date
+import muster.Ast.ObjectNode
 
 case class Friend(id: Int, name: String)
 case class Person(
@@ -13,7 +13,7 @@ case class Person(
                    company: String,
                    email: String,
                    about: String,
-                   registered: DateTime,
+                   registered: Date,
                    latitude: Double,
                    longitude: Double,
                    tags: Set[String],
@@ -27,7 +27,7 @@ case class NotSimple(one: Int, simple: Simple)
 case class WithList(lst: List[Int])
 case class ObjWithListMap(lst: List[Int], map: Map[String,Int])
 case class WithDate(date: Date)
-case class WithDateTime(date: DateTime)
+//case class WithDateTime(date: DateTime)
 case class WithSymbol(symbol: Symbol)
 
 case class Junk(in1:Int, in2:String)

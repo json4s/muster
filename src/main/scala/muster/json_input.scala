@@ -5,8 +5,8 @@ import java.nio.CharBuffer
 import scala.annotation.{tailrec, switch}
 import com.fasterxml.jackson.databind.{DeserializationFeature, JsonNode, ObjectMapper}
 import com.fasterxml.jackson.databind.node.{ ArrayNode => JArrayNode, ObjectNode => JObjectNode }
-import org.joda.time.format.DateTimeFormatter
 import scala.collection.JavaConverters._
+import java.text.DateFormat
 
 
 trait JsonReader[R] extends Iterator[Char] {
@@ -153,7 +153,7 @@ object JsonInputCursor {
     private[this] def err(x: AstNode[_], fieldName: String, nodeType: Class[_]) =
       failStructure(s"Expected to have an ${nodeType.getSimpleName} $eleName for '$fieldName' but got ${x.getClass.getSimpleName}")
 
-    private[this] def readField[T](fieldName: String, nodeType: Class[T]): Option[T] = {
+    private[this] def readFieldFromParent[T](fieldName: String, nodeType: Class[T]): Option[T] = {
       val fldOpt = fields.get(fieldName)
       if (fldOpt != null) {
         val x = fldOpt
@@ -163,11 +163,15 @@ object JsonInputCursor {
       } else None
     }
 
-    def readArrayFieldOpt(fieldName: String): Option[ArrayNode] = readField(fieldName, classOf[JsonArrayNode])
-    def readObjectFieldOpt(fieldName: String): Option[ObjectNode] = readField(fieldName, classOf[JsonObjectNode])
-    def readStringFieldOpt(fieldName: String): Option[TextNode] = readField(fieldName, classOf[TextNode])
-    def readBooleanFieldOpt(fieldName: String): Option[BoolNode] = readField(fieldName, classOf[BoolNode])
-    def readNumberFieldOpt(fieldName: String): Option[NumberNode] = readField(fieldName, classOf[NumberNode])
+    def readArrayFieldOpt(fieldName: String): Option[ArrayNode] = readFieldFromParent(fieldName, classOf[JsonArrayNode])
+    def readObjectFieldOpt(fieldName: String): Option[ObjectNode] = readFieldFromParent(fieldName, classOf[JsonObjectNode])
+    def readStringFieldOpt(fieldName: String): Option[TextNode] = readFieldFromParent(fieldName, classOf[TextNode])
+    def readBooleanFieldOpt(fieldName: String): Option[BoolNode] = readFieldFromParent(fieldName, classOf[BoolNode])
+    def readNumberFieldOpt(fieldName: String): Option[NumberNode] = readFieldFromParent(fieldName, classOf[NumberNode])
+
+    def readField(fieldName: String): AstNode[_] = {
+      readFieldFromParent(fieldName, classOf[AstNode[_]]).getOrElse(NullNode)
+    }
 
 
     override def toString: String = s"JsonObjectNode($fields)"
@@ -317,10 +321,11 @@ object MusterJson extends JsonInputFormat[String] {
   type Cursor = JsonInputCursor[String]
   def createCursor(in: String): Cursor = new JsonStringCursor(CharBufferJsonReader(in))
 
-  def withDateFormat(df: DateTimeFormatter): MusterJson.This = new JsonInputFormat[String] {
+  def withDateFormat(df: DateFormat): MusterJson.This = new JsonInputFormat[String] {
     type Cursor = MusterJson.Cursor
+//    override val dateFormat: DateFormat = df
     def createCursor(in: String): Cursor = new JsonStringCursor(CharBufferJsonReader(in))
-    def withDateFormat(df: DateTimeFormatter): This = MusterJson.withDateFormat(df)
+//    def withDateFormat(df: DateFormat): This = MusterJson.withDateFormat(df)
   }: JsonInputFormat[String]
 }
 
@@ -335,37 +340,51 @@ class JsonStringCursor(val iterator: JsonReader[String]) extends JsonInputCursor
 object JackonInputCursor {
 
   final class JacksonObjectNode(parent: JsonNode) extends ObjectNode(null) {
-    private[this] def readField(name: String): JsonNode = if (parent.has(name)) parent.get(name) else com.fasterxml.jackson.databind.node.NullNode.getInstance()
+
+    def readField(fieldName: String): AstNode[_] = {
+      val node = readFieldFromParent(fieldName)
+      if (node.isNull) NullNode
+      else if (node.isMissingNode) UndefinedNode
+      else if (node.isArray) new JacksonArrayNode(node)
+      else if (node.isObject) new JacksonObjectNode(node)
+      else if (node.isTextual) Ast.TextNode(node.asText())
+      else if (node.isNumber) Ast.NumberNode(node.asText())
+      else if (node.isBoolean) {
+        if (node.asBoolean()) TrueNode else FalseNode
+      } else throw new MappingException("Unable to determine the type of this json")
+    }
+
+    private[this] def readFieldFromParent(name: String): JsonNode = if (parent.has(name)) parent.get(name) else com.fasterxml.jackson.databind.node.NullNode.getInstance()
     def readArrayFieldOpt(fieldName: String): Option[ArrayNode] = {
-      val node = readField(fieldName)
+      val node = readFieldFromParent(fieldName)
       if (node.isNull || node.isMissingNode) None
       else if (node.isArray) Some(new JacksonArrayNode(node))
       else throw new MappingException(s"Expected an array but found a ${node.getClass.getSimpleName}")
     }
 
     def readObjectFieldOpt(fieldName: String): Option[ObjectNode] = {
-      val node = readField(fieldName)
+      val node = readFieldFromParent(fieldName)
       if (node.isNull || node.isMissingNode) None
       else if (node.isObject) Some(new JacksonObjectNode(node))
       else throw new MappingException(s"Expected an array but found a ${node.getClass.getSimpleName}")
     }
 
     def readStringFieldOpt(fieldName: String): Option[TextNode] = {
-      val node = readField(fieldName)
+      val node = readFieldFromParent(fieldName)
       if (node.isNull || node.isMissingNode) None
       else if (node.isTextual) Some(TextNode(node.asText()))
       else throw new MappingException(s"Expected an array but found a ${node.getClass.getSimpleName}")
     }
 
     def readBooleanFieldOpt(fieldName: String): Option[BoolNode] =  {
-      val node = readField(fieldName)
+      val node = readFieldFromParent(fieldName)
       if (node.isNull || node.isMissingNode) None
       else if (node.isBoolean) Some(if (node.asBoolean()) TrueNode else FalseNode)
       else throw new MappingException(s"Expected an array but found a ${node.getClass.getSimpleName}")
     }
 
     def readNumberFieldOpt(fieldName: String): Option[NumberNode] = {
-      val node = readField(fieldName)
+      val node = readFieldFromParent(fieldName)
       if (node.isNull || node.isMissingNode) None
       else if (node.isTextual) Some(NumberNode(node.asText()))
       else if (node.isNumber) Some(NumberNode(node.asText()))
@@ -447,13 +466,14 @@ trait JacksonInputFormat[R] extends InputFormat[R] {
   type Cursor = JacksonInputCursor[R]
   type This = JacksonInputFormat[R]
   val mapper: ObjectMapper = new ObjectMapper()
+//  mapper.setDateFormat(dateFormat)
   mapper.configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
 
-  def withDateFormat(df: DateTimeFormatter): This = new JacksonInputFormat[R] {
-    def createCursor(in: R): Cursor = {
-//      mapper.setDateFormat()
-      JacksonInputFormat.this.createCursor(in)
-    }
-  }
+//  def withDateFormat(df: DateFormat): This = new JacksonInputFormat[R] {
+//    def createCursor(in: R): Cursor = {
+////      mapper.setDateFormat(df)
+//      JacksonInputFormat.this.createCursor(in)
+//    }
+//  }
 }
 

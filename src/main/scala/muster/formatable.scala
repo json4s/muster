@@ -3,26 +3,12 @@ package muster
 import scala.language.experimental.macros
 import scala.reflect.macros._
 import java.util.Date
-import org.joda.time.DateTime
 import com.fasterxml.jackson.databind.JsonNode
-import java.io.File
 import com.fasterxml.jackson.databind.node.MissingNode
 
 trait Muster[T] {
   def writeFormatted[R](value: T, outputFormat: OutputFormat[R]): R
 }
-
-
-trait InputSource[T] {
-  def value: T
-}
-
-//final case class FileInputSource(value: File) extends InputSource[File]
-//final case class StringInputSource(value: String) extends InputSource[String]
-//final case class ReadeInputSource(value: java.io.Reader) extends InputSource[java.io.Reader]
-//final case class FileInputSource(value: java.io.InputStream) extends InputSource[java.io.InputStream]
-//final case class ByteArrayInputSource(value: Array[Byte]) extends InputSource[Array[Byte]]
-//final case class URLInputSource(value: java.net.URL) extends InputSource[java.net.URL]
 
 object Muster {
 
@@ -113,7 +99,6 @@ object Muster {
         (typeOf[java.lang.Short], (t: Tree) => reify{formatterStack.splice.short(c.Expr[Short](t).splice)}),
         (typeOf[java.math.BigDecimal], (t: Tree) => reify{formatterStack.splice.bigDecimal(c.Expr[BigDecimal](t).splice)}),
         (typeOf[Date], (t: Tree) => reify{formatterStack.splice.date(c.Expr[Date](t).splice)}),
-        (typeOf[DateTime], (t: Tree) => reify{formatterStack.splice.dateTime(c.Expr[DateTime](t).splice)}),
         (typeOf[scala.Symbol], (t: Tree) => reify{formatterStack.splice.string(c.Expr[scala.Symbol](t).splice.name)}))
 
     val collTpe = typeOf[scala.collection.GenSeq[_]]

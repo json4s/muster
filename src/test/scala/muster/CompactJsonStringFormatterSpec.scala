@@ -1,20 +1,18 @@
 package muster
 
 import org.scalacheck._
-import org.joda.time.{DateTimeZone, DateTime}
-import org.joda.time.format.ISODateTimeFormat
-import java.util.Date
+import java.util.{TimeZone, Date}
 
 case class Category(id: Int, name: String)
 
 object CompactJsonStringFormatterSpec extends Properties("CompactJsonStringFormatter") {
   import Prop.forAll
 
-  DateTimeZone.setDefault(DateTimeZone.UTC)
+  TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
   val format = Muster.into.CompactJsonString
-  implicit lazy val arbDateTime: Arbitrary[DateTime] = Arbitrary(for {
-    l <- Arbitrary.arbitrary[Long]
-  } yield new DateTime(System.currentTimeMillis() + l, DateTimeZone.UTC))
+//  implicit lazy val arbDateTime: Arbitrary[DateTime] = Arbitrary(for {
+//    l <- Arbitrary.arbitrary[Long]
+//  } yield new DateTime(System.currentTimeMillis() + l, DateTimeZone.UTC))
 
   implicit lazy val arbCategory: Arbitrary[Category] = Arbitrary(for {
     id <- Arbitrary.arbInt.arbitrary
@@ -99,16 +97,16 @@ object CompactJsonStringFormatterSpec extends Properties("CompactJsonStringForma
     fmt.date(x)
     val r = fmt.result
     fmt.close()
-    r == new DateTime(x).toString(ISODateTimeFormat.dateTimeNoMillis.withZone(DateTimeZone.UTC))
+    r == format.dateFormat.format(x)
   }
-
-  property("dateTime") = forAll { (x: DateTime) =>
-    val fmt = format.createFormatter
-    fmt.dateTime(x)
-    val r = fmt.result
-    fmt.close()
-    r == x.toString(ISODateTimeFormat.dateTimeNoMillis.withZone(DateTimeZone.UTC))
-  }
+//
+//  property("dateTime") = forAll { (x: DateTime) =>
+//    val fmt = format.createFormatter
+//    fmt.dateTime(x)
+//    val r = fmt.result
+//    fmt.close()
+//    r == x.toString(ISODateTimeFormat.dateTimeNoMillis.withZone(DateTimeZone.UTC))
+//  }
 
   property("string") = forAll(Gen.alphaStr) { (x: String) =>
     val fmt = format.createFormatter

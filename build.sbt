@@ -40,17 +40,17 @@ scalacOptions += "-Ymacro-debug-lite"
 
 libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _)
 
-//libraryDependencies += "com.github.axel22" %% "scalameter" % "0.4" % "test"
+libraryDependencies += "com.github.axel22" %% "scalameter" % "0.4" % "test"
 
 libraryDependencies += "org.specs2" %% "specs2" % "2.3.7" % "test"
 
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.1" % "test"
 
-libraryDependencies += "nf.fr.eraasoft" % "objectpool" % "1.1.2"
-
-libraryDependencies += "joda-time" % "joda-time" % "2.3"
-
-libraryDependencies += "org.joda" % "joda-convert" % "1.5"
+//libraryDependencies += "nf.fr.eraasoft" % "objectpool" % "1.1.2"
+//
+//libraryDependencies += "joda-time" % "joda-time" % "2.3"
+//
+//libraryDependencies += "org.joda" % "joda-convert" % "1.5"
 
 libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.6" % "test"
 
@@ -62,9 +62,9 @@ libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.3.
 
 libraryDependencies += "net.minidev" % "json-smart" % "2.0-RC3" % "test"
 
-//testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework")
+testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework")
 
-//logBuffered := false
+logBuffered := false
 
 initialCommands in console := """
                                 |import muster._

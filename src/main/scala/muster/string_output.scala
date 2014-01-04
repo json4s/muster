@@ -2,21 +2,18 @@ package muster
 
 import java.util.Date
 import scala.collection.mutable
-import org.joda.time.{DateTimeZone, DateTime}
-import org.joda.time.format.{ISODateTimeFormat, DateTimeFormatter}
-
-
+import java.text.DateFormat
 
 trait StringOutputFormat extends OutputFormat[String] {
   def writer: java.io.Writer = new java.io.StringWriter()
-  def withDateFormat(df: DateTimeFormatter): This
+  def withDateFormat(df: DateFormat): This
 }
 
 abstract class DefaultStringFormat extends StringOutputFormat {
   type Formatter = DefaultStringOutputFormatter
   type This = DefaultStringFormat
 
-  def withDateFormat(df: DateTimeFormatter): This = new DefaultStringFormat { override val dateFormat: DateTimeFormatter = df }
+  def withDateFormat(df: DateFormat): This = new DefaultStringFormat { override val dateFormat: DateFormat = df }
   def createFormatter: Formatter = new DefaultStringOutputFormatter(writer, dateFormat)
   def freezeFormatter(fmt: Formatter): This = new DefaultStringFormat { override val createFormatter: Formatter = fmt }
 }
@@ -35,15 +32,15 @@ object StringOutputFormatter {
   val HexAlphabet = "0123456789ABCDEF"
 }
 
-class DefaultStringOutputFormatter(writer: java.io.Writer, dateFormat: DateTimeFormatter) extends BaseStringOutputFormatter(writer, dateFormat) {
-  def withDateFormat(df: DateTimeFormatter): this.type = new DefaultStringOutputFormatter(writer, df).asInstanceOf[this.type]
+class DefaultStringOutputFormatter(writer: java.io.Writer, dateFormat: DateFormat) extends BaseStringOutputFormatter(writer, dateFormat) {
+  def withDateFormat(df: DateFormat): this.type = new DefaultStringOutputFormatter(writer, df).asInstanceOf[this.type]
   def withWriter(wrtr: java.io.Writer): this.type = {
     try { wrtr.close() } catch { case _: Throwable => }
     new DefaultStringOutputFormatter(wrtr, dateFormat).asInstanceOf[this.type]
   }
 }
 
-abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: java.io.Writer, dateFormat: DateTimeFormatter, quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
+abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: java.io.Writer, dateFormat: DateFormat, quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
 
   import StringOutputFormatter._
 
@@ -127,12 +124,8 @@ abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: 
   }
 
   def date(value: Date) {
-    dateTime(new DateTime(value))
-  }
-
-  def dateTime(value: DateTime) {
     writeComma(State.InArray)
-    dateFormat.printTo(writer, value)
+    writer.write(dateFormat.format(value))
   }
 
   def writeNull() {
