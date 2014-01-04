@@ -38,12 +38,25 @@ object Consumer {
   implicit val FloatConsumer = nc[Float](_.toFloat)
   implicit val DoubleConsumer = nc[Double](_.toDouble)
   implicit val BigDecimalConsumer = nc[BigDecimal](_.toBigDecimal)
+  implicit val JavaByteConsumer = nc[java.lang.Byte](v => byte2Byte(v.toByte))
+  implicit val JavaShortConsumer = nc[java.lang.Short](v => short2Short(v.toShort))
+  implicit val JavaIntConsumer = nc[java.lang.Integer](v => int2Integer(v.toInt))
+  implicit val JavaLongConsumer = nc[java.lang.Long](v => long2Long(v.toLong))
+  implicit val JavaBigIntConsumer = nc[java.math.BigInteger](_.toBigInt.bigInteger)
+  implicit val JavaFloatConsumer = nc[java.lang.Float](v => float2Float(v.toFloat))
+  implicit val JavaDoubleConsumer = nc[java.lang.Double](v => double2Double(v.toDouble))
+  implicit val JavaBigDecimalConsumer = nc[java.math.BigDecimal](_.toBigDecimal.bigDecimal)
   implicit val StringConsumer = cc[String] {
     case TextNode(value) => value
     case NumberNode(value) => value
     case m: NumberNodeLike[_] => m.value.toString
     case NullNode | UndefinedNode => null
   }
+
+  implicit val SymbolConsumer = new Consumer[scala.Symbol] {
+    def consume(node: AstNode[_]): Symbol = Symbol(StringConsumer.consume(node))
+  }
+
   implicit val Iso8601DateConsumer = cc[Date]({
     case TextNode(value) => {
       SafeSimpleDateFormat.Iso8601Formatter.parse(value)
