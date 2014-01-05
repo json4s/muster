@@ -152,29 +152,20 @@ object Consumer {
 //    def buildArray(tpe: Type, cursor: c.Expr[Any], methodNameSuffix: String = "", args: List[Tree] = Nil): Tree = EmptyTree
 
     val nullNodeDefault = reify(Ast.NullNode).tree
-    def buildValue(_tpe: Type, reader: c.Expr[Any], methodSuffix: String = "", args: List[Tree] = Nil, default: Tree = nullNodeDefault): Tree = {
+
+    def buildValue(_tpe: Type, reader: c.Expr[Any], methodSuffix: String = "", args: List[Tree] = Nil, default: Tree = nullNodeDefault): (Tree, Tree) = {
       val tpe = _tpe.normalize
       val t = appliedType(weakTypeOf[Consumer[Any]].typeConstructor, tpe :: Nil)
       c.inferImplicitValue(t) match {
         case EmptyTree => c.abort(c.enclosingPosition, s"Couldn't find a muster.Consumer[${t.typeSymbol.name.decoded}], try bringing an implicit value for ${tpe.typeSymbol.name.decoded} in scope by importing one or defining one.")
         case resolved =>
-          val fn = c.fresh("consumer$")
-          val vn = newTermName(fn)
-          val v = ValDef(Modifiers(), vn, TypeTree(t), resolved)
 
-          val cn = c.fresh("node$")
           val rdrOpt: Tree = {
             if (helper.isPrimitive(tpe)) {
               val nm = primitiveMap(tpe)
               Apply(Select(reader.tree, newTermName(s"read${nm}${methodSuffix}Opt")), args)
             } else if (helper.isOption(tpe)) {
-              @tailrec def fetchType(tp: Type): Type = {
-                if (tp <:< weakTypeOf[Option[_]]) {
-                  val TypeRef(_, _, agTp :: Nil) = tp
-                  fetchType(agTp)
-                } else tp
-              }
-              val agType = fetchType(tpe)
+              val agType = helper.resolveInnerOptionType(tpe)
               val nm = primitiveMap(agType)
               Apply(Select(reader.tree, newTermName(s"read${nm}${methodSuffix}Opt")), args)
             } else if (helper.isSeq(tpe) || helper.isSet(tpe))
@@ -183,20 +174,29 @@ object Consumer {
               Apply(Select(reader.tree, newTermName(s"readObject${methodSuffix}Opt")), args)
           }
 
-          val tree = default match {
+          (default match {
             case EmptyTree =>
               rdrOpt
             case x =>
               Apply(Select(rdrOpt, newTermName("getOrElse")), default :: Nil)
-          }
-          val ce = c.Expr[Ast.AstNode[_]](Ident(newTermName(cn)))
-          val ct: Tree = ValDef(Modifiers(),newTermName(cn), TypeTree(weakTypeOf[Ast.AstNode[_]]), tree)
-          Block(v :: ct :: Nil, Apply(Select(Ident(vn), newTermName("consume")), ce.tree :: Nil))
+          }, resolved)
       }
     }
 
+    def setterDef(returnType: Type, reader: c.Expr[Any], fieldName: Tree, defVal: Tree = nullNodeDefault): Tree = {
+      val t = appliedType(weakTypeOf[Consumer[Any]].typeConstructor, returnType :: Nil)
+      val (definition, resolved) = buildValue(returnType, reader, "Field", List(fieldName), defVal)
+      val fn = c.fresh("consumer$")
+      val vn = newTermName(fn)
+      val v = ValDef(Modifiers(), vn, TypeTree(t), resolved)
+      val cn = c.fresh("node$")
+      val ce = c.Expr[Ast.AstNode[_]](Ident(newTermName(cn)))
+      val ct: Tree = ValDef(Modifiers(),newTermName(cn), TypeTree(weakTypeOf[Ast.AstNode[_]]), definition)
+      Block(v :: ct :: Nil, Apply(Select(Ident(vn), newTermName("consume")), ce.tree :: Nil))
+    }
+
     def buildObject(tpe: Type, reader: c.Expr[Ast.ObjectNode], methodSuffix: String = "", args: List[Tree] = Nil): Tree = {
-      if (helper.isCaseClass(tpe)) {
+      if (tpe.typeSymbol.isClass && !(helper.isPrimitive(tpe) || helper.isMap(tpe) || helper.isOption(tpe) || helper.isSeq(tpe) )) {
         val TypeRef(_, sym, tpeArgs) = tpe
         val newObjTypeTree = helper.typeArgumentTree(tpe)
 
@@ -232,6 +232,8 @@ object Consumer {
           ifElseTreeBuilder(ifExprsAndParams)
         }
 
+
+
         def buildObjFromParams(ctorParams: List[List[Symbol]]): Tree = {
           val params = ctorParams.map(_.zipWithIndex.map {
             case (pSym, index) =>
@@ -246,9 +248,9 @@ object Consumer {
               // TODO: is there a way to get teh default values for the overloaded constructors?
               val tree = if (pSym.asTerm.isParamWithDefault && sym.companionSymbol.isTerm) {
                 val defVal = Select(Ident(sym.companionSymbol), newTermName("$lessinit$greater$default$" + (index + 1).toString))
-                buildValue(pTpe, reader, "Field", List(fieldName), defVal)
+                setterDef(pTpe, reader, fieldName, defVal)
               } else {
-                buildValue(pTpe, reader, "Field", List(fieldName))
+                setterDef(pTpe, reader, fieldName)
               }
               (ValDef(Modifiers(), pTnm, TypeTree(pTpe), tree), Ident(pTnm))
           })
@@ -272,7 +274,14 @@ object Consumer {
 //          }.tree
 //        }
 
-        val setVarsBlocks: List[Tree] = Nil
+        val setVarsBlocks: List[Tree] = {
+          helper.getNonConstructorVars(tpe).toList map { pSym =>
+            val varName = pSym.name.toTermName.toString.trim
+            val tp = pSym.typeSignatureIn(tpe)
+
+            Assign(Select(Ident(ot), newTermName(varName)), setterDef(tp, reader, Literal(Constant(varName))))
+          }
+        }
 //          helper.getNonConstructorVars(tpe).toList.map {
 //            pSym =>
 //              val varName = pSym.name.toTermName.toString.trim
@@ -297,9 +306,8 @@ object Consumer {
 //          }
 
         Block(otr :: setVarsBlocks ::: setSetterBlocks, Ident(ot))
-//        pickConstructorTree(reify(reader.splice.keySet))
       } else {
-        c.abort(c.enclosingPosition, "Only case classes with a single constructor are supported")
+        c.abort(c.enclosingPosition, "Lists, Maps, Options and Primitives don't use macros")
       }
 
     }
@@ -308,15 +316,7 @@ object Consumer {
 
     reify {
       new Consumer[T] {
-//        c.Expr(importExpr).splice
-
         def consume(node: Ast.AstNode[_]): T = {
-//          node match {
-//            case obj: Ast.ObjectNode =>
-//              val res: T = c.Expr[T](buildObject(thisType, c.Expr[Ast.ObjectNode](Ident(newTermName("obj"))))).splice
-//              res
-//            case _ => throw new MappingException(s"Got a ${node.getClass.getSimpleName} and expected an ObjectNode")
-//          }
           node match {
             case obj: Ast.ObjectNode => c.Expr[T](buildObject(thisType, c.Expr[ObjectNode](Ident(newTermName("obj"))))).splice
 //            case arr: ArrayNode => c.Expr[T](buildArray(thisType, c.Expr[ArrayNode](Ident(newTermName("arr"))))).splice

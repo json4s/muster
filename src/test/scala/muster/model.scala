@@ -76,3 +76,8 @@ class ClassWithDef(val in: Int=4) {
 
 
 case class ObjWithDefJunk(name:String, junk:Junk=Junk(-1,"Default"))
+
+class OnlyVars {
+  var id: Int = _
+  var name: String = _
+}

@@ -69,13 +69,13 @@ logBuffered := false
 initialCommands in console := """
                                 |import muster._
                                 |import scala.reflect.runtime.{universe => u}
-                                |def read[T:Consumer](source: String) = Muster.from.JsonString.from[T](source)
+                                |def read[T:Consumer](source: String) = Muster.from.Json.from[T](source)
                               """.stripMargin
 
 initialCommands in (Test, console) := """
                                         |import muster._
                                         |import scala.reflect.runtime.{universe => u}
-                                        |def read[T:Consumer](source: String) = Muster.from.JsonString.from[T](source)
+                                        |def read[T:Consumer](source: String) = Muster.from.Json.from[T](source)
                                       """.stripMargin
 
 packageOptions <+= (name, version, organization) map {

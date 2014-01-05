@@ -283,57 +283,6 @@ object Ast {
     def readDoubleFieldOpt(fieldName: String): Option[DoubleNode] = readNumberFieldOpt(fieldName).map(_.toDoubleAst)
     def readBigDecimalFieldOpt(fieldName: String): Option[BigDecimalNode] = readNumberFieldOpt(fieldName).map(_.toBigDecimalAst)
 
-//    def readArrayFieldValue(fieldName: String): ArrayNode = readArrayField(fieldName)
-//    def readObjectFieldValue(fieldName: String): ObjectNode = readObjectField(fieldName)
-//    def readStringFieldValue(fieldName: String): String = readStringField(fieldName).value
-//    def readSymbolFieldValue(fieldName: String): Symbol = Symbol(readStringField(fieldName).value)
-//    def readBooleanFieldValue(fieldName: String): Boolean = readBooleanField(fieldName).value
-//    def readNumberFieldValue(fieldName: String): String = readNumberField(fieldName).value
-//    def readByteFieldValue(fieldName: String): Byte = readNumberField(fieldName).toByte
-//    def readJByteFieldValue(fieldName: String): java.lang.Byte = byte2Byte(readNumberField(fieldName).toByte)
-//    def readShortFieldValue(fieldName: String): Short = readNumberField(fieldName).toShort
-//    def readJShortFieldValue(fieldName: String): java.lang.Short = short2Short(readNumberField(fieldName).toShort)
-//    def readIntFieldValue(fieldName: String): Int = readNumberField(fieldName).toInt
-//    def readIntegerFieldValue(fieldName: String): java.lang.Integer = int2Integer(readNumberField(fieldName).toInt)
-//    def readLongFieldValue(fieldName: String): Long = readNumberField(fieldName).toLong
-//    def readJLongFieldValue(fieldName: String): java.lang.Long = long2Long(readNumberField(fieldName).toLong)
-//    def readBigIntFieldValue(fieldName: String): BigInt = readNumberField(fieldName).toBigInt
-//    def readBigIntegerFieldValue(fieldName: String): java.math.BigInteger = readNumberField(fieldName).toBigInt.bigInteger
-//    def readFloatFieldValue(fieldName: String): Float = readNumberField(fieldName).toFloat
-//    def readJFloatFieldValue(fieldName: String): java.lang.Float = float2Float(readNumberField(fieldName).toFloat)
-//    def readDoubleFieldValue(fieldName: String): Double = readNumberField(fieldName).toDouble
-//    def readJDoubleFieldValue(fieldName: String): java.lang.Double = double2Double(readNumberField(fieldName).toDouble)
-//    def readBigDecimalFieldValue(fieldName: String): BigDecimal = readNumberField(fieldName).toBigDecimal
-//    def readJBigDecimalFieldValue(fieldName: String): java.math.BigDecimal = readNumberField(fieldName).toBigDecimal.bigDecimal
-//
-//    def readArrayFieldOptValue(fieldName: String): Option[ArrayNode] = readArrayFieldOpt(fieldName)
-//    def readObjectFieldOptValue(fieldName: String): Option[ObjectNode] = readObjectFieldOpt(fieldName)
-//    def readStringFieldOptValue(fieldName: String): Option[String] = readStringFieldOpt(fieldName).map(_.value)
-//    def readSymbolFieldOptValue(fieldName: String): Option[scala.Symbol] = readStringFieldOpt(fieldName).map(v => Symbol(v.value))
-//    def readBooleanFieldOptValue(fieldName: String): Option[Boolean] = readBooleanFieldOpt(fieldName).map(_.value)
-//    def readNumberFieldOptValue(fieldName: String): Option[String] = readNumberFieldOpt(fieldName).map(_.value)
-//    def readByteFieldOptValue(fieldName: String): Option[Byte] = readNumberFieldOpt(fieldName).map(_.toByte)
-//    def readJByteFieldOptValue(fieldName: String): Option[java.lang.Byte] = readNumberFieldOpt(fieldName).map(v => byte2Byte(v.toByte))
-//    def readShortFieldOptValue(fieldName: String): Option[Short] = readNumberFieldOpt(fieldName).map(_.toShort)
-//    def readJShortFieldOptValue(fieldName: String): Option[java.lang.Short] = readNumberFieldOpt(fieldName).map(v => short2Short(v.toShort))
-//    def readIntFieldOptValue(fieldName: String): Option[Int] = readNumberFieldOpt(fieldName).map(_.toInt)
-//    def readIntegerFieldOptValue(fieldName: String): Option[java.lang.Integer] = readNumberFieldOpt(fieldName).map(v => int2Integer(v.toInt))
-//    def readLongFieldOptValue(fieldName: String): Option[Long] = readNumberFieldOpt(fieldName).map(_.toLong)
-//    def readJLongFieldOptValue(fieldName: String): Option[java.lang.Long] = readNumberFieldOpt(fieldName).map(v => long2Long(v.toLong))
-//    def readBigIntFieldOptValue(fieldName: String): Option[BigInt] = readNumberFieldOpt(fieldName).map(_.toBigInt)
-//    def readBigIntegerFieldOptValue(fieldName: String): Option[java.math.BigInteger] = readNumberFieldOpt(fieldName).map(_.toBigInt.bigInteger)
-//    def readFloatFieldOptValue(fieldName: String): Option[Float] = readNumberFieldOpt(fieldName).map(_.toFloat)
-//    def readJFloatFieldOptValue(fieldName: String): Option[java.lang.Float] = readNumberFieldOpt(fieldName).map(v => float2Float(v.toFloat))
-//    def readDoubleFieldOptValue(fieldName: String): Option[Double] = readNumberFieldOpt(fieldName).map(_.toDouble)
-//    def readJDoubleFieldOptValue(fieldName: String): Option[java.lang.Double] = readNumberFieldOpt(fieldName).map(v => double2Double(v.toDouble))
-//    def readBigDecimalFieldOptValue(fieldName: String): Option[BigDecimal] = readNumberFieldOpt(fieldName).map(_.toBigDecimal)
-//    def readJBigDecimalFieldOptValue(fieldName: String): Option[java.math.BigDecimal] = readNumberFieldOpt(fieldName).map(_.toBigDecimal.bigDecimal)
-//
-//    def readDateFieldValue(fieldName: String, dateFormat: DateFormat): java.util.Date =
-//      dateFormat.parse(readStringFieldValue(fieldName))
-//    def readDateFieldOptValue(fieldName: String, dateFormat: DateFormat): Option[java.util.Date] =
-//      readStringFieldOptValue(fieldName) map dateFormat.parse
-
     def readField(fieldName: String): Ast.AstNode[_]
     def keySet: Set[String]
     def keysIterator: Iterator[String]
@@ -385,58 +334,6 @@ trait AstCursor extends CursorFailures {
   def readDoubleOpt(): Option[DoubleNode] = readNumberOpt().map(_.toDoubleAst)
   def readBigDecimalOpt(): Option[BigDecimalNode] = readNumberOpt().map(_.toBigDecimalAst)
 
-//  def readArrayValue(): ArrayNode = readArray()
-//  def readObjectValue(): ObjectNode = readObject()
-//  def readStringValue(): String = readString().value
-//  def readSymbolValue(): Symbol = Symbol(readString().value)
-//  def readBooleanValue(): Boolean = readBoolean().value
-//  def readNumberValue(): String = readNumber().value
-//  def readByteValue(): Byte = readNumber().toByte
-//  def readJByteValue(): java.lang.Byte = byte2Byte(readNumber().toByte)
-//  def readShortValue(): Short = readNumber().toShort
-//  def readJShortValue(): java.lang.Short = short2Short(readNumber().toShort)
-//  def readIntValue(): Int = readNumber().toInt
-//  def readIntegerValue(): java.lang.Integer = int2Integer(readNumber().toInt)
-//  def readLongValue(): Long = readNumber().toLong
-//  def readJLongValue(): java.lang.Long = long2Long(readNumber().toLong)
-//  def readBigIntValue(): BigInt = readNumber().toBigInt
-//  def readBigIntegerValue(): java.math.BigInteger = readNumber().toBigInt.bigInteger
-//  def readFloatValue(): Float = readNumber().toFloat
-//  def readJFloatValue(): java.lang.Float = float2Float(readNumber().toFloat)
-//  def readDoubleValue(): Double = readNumber().toDouble
-//  def readJDoubleValue(): java.lang.Double = double2Double(readNumber().toDouble)
-//  def readBigDecimalValue(): BigDecimal = readNumber().toBigDecimal
-//  def readJBigDecimalValue(): java.math.BigDecimal = readNumber().toBigDecimal.bigDecimal
-//
-//  def readArrayOptValue(): Option[ArrayNode] = readArrayOpt()
-//  def readObjectOptValue(): Option[ObjectNode] = readObjectOpt()
-//  def readStringOptValue(): Option[String] = readStringOpt().map(_.value)
-//  def readSymbolOptValue(): Option[Symbol] = readStringOpt().map(v => Symbol(v.value))
-//  def readBooleanOptValue(): Option[Boolean] = readBooleanOpt().map(_.value)
-//  def readNumberOptValue(): Option[String] = readNumberOpt().map(_.value)
-//  def readByteOptValue(): Option[Byte] = readNumberOpt().map(_.toByte)
-//  def readJByteOptValue(): Option[java.lang.Byte] = readNumberOpt().map(v => byte2Byte(v.toByte))
-//  def readShortOptValue(): Option[Short] = readNumberOpt().map(_.toShort)
-//  def readJShortOptValue(): Option[java.lang.Short] = readNumberOpt().map(v => short2Short(v.toShort))
-//  def readIntOptValue(): Option[Int] = readNumberOpt().map(_.toInt)
-//  def readIntegerOptValue(): Option[java.lang.Integer] = readNumberOpt().map(v => int2Integer(v.toInt))
-//  def readLongOptValue(): Option[Long] = readNumberOpt().map(_.toLong)
-//  def readJLongOptValue(): Option[java.lang.Long] = readNumberOpt().map(v => long2Long(v.toLong))
-//  def readBigIntOptValue(): Option[BigInt] = readNumberOpt().map(_.toBigInt)
-//  def readBigIntegerOptValue(): Option[java.math.BigInteger] = readNumberOpt().map(_.toBigInt.bigInteger)
-//  def readFloatOptValue(): Option[Float] = readNumberOpt().map(_.toFloat)
-//  def readJFloatOptValue(): Option[java.lang.Float] = readNumberOpt().map(v => float2Float(v.toFloat))
-//  def readDoubleOptValue(): Option[Double] = readNumberOpt().map(_.toDouble)
-//  def readJDoubleOptValue(): Option[java.lang.Double] = readNumberOpt().map(v => double2Double(v.toDouble))
-//  def readBigDecimalOptValue(): Option[BigDecimal] = readNumberOpt().map(_.toBigDecimal)
-//  def readJBigDecimalOptValue(): Option[java.math.BigDecimal] = readNumberOpt().map(_.toBigDecimal.bigDecimal)
-//
-//  def readDateValue(dateFormat: DateFormat): java.util.Date =
-//    dateFormat.parse(readStringValue())
-//  def readDateOptValue(dateFormat: DateFormat): Option[java.util.Date] =
-//    readStringOptValue() map dateFormat.parse
-
-
   def hasNextNode: Boolean = false
   def nextNode(): AstNode[_]
   private[this] def notFound(node: Class[_]) = failStructure(s"Could not find element of ${node.getSimpleName}")
@@ -447,16 +344,14 @@ trait InputCursor[R] extends AstCursor {
   def source: R
 }
 
-trait InputFormat[R] {
-  type Cursor <: InputCursor[R]
-  type This <: InputFormat[R]
-  def createCursor(in: R): Cursor
-//  def dateFormat: DateFormat = SafeSimpleDateFormat.Iso8601Formatter
-//  def withDateFormat(df: DateFormat): This
+trait InputFormat[R, C <: InputCursor[_]] {
+  def createCursor(in: R): C
 
   def from[T](source: R)(implicit consumer: Consumer[T]): T = {
     val cursor = createCursor(source)
-    consumer.consume(cursor.nextNode())
+    val n = (Try(cursor.nextNode()) recover { case _ => UndefinedNode}).get
+    consumer.consume(n)
   }
   def tryFrom[T](source: R)(implicit consumer: Consumer[T]): Try[T] = Try(from(source))
+
 }

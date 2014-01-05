@@ -3,6 +3,7 @@ package muster
 import scala.reflect.macros._
 import java.util.Date
 import java.sql.Timestamp
+import scala.annotation.tailrec
 
 class Helper[C <: Context](val c: C) {
 
@@ -29,6 +30,16 @@ class Helper[C <: Context](val c: C) {
         } else false
 
     }
+  }
+
+  def resolveInnerOptionType(tpe: Type): Type = {
+    @tailrec def fetchType(tp: Type): Type = {
+      if (tp <:< weakTypeOf[Option[_]]) {
+        val TypeRef(_, _, agTp :: Nil) = tp
+        fetchType(agTp)
+      } else tp
+    }
+    fetchType(tpe)
   }
 
   def isVal(v: Symbol) = v.isTerm && v.asTerm.isVal

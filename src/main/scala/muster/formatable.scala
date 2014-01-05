@@ -4,6 +4,7 @@ import scala.language.experimental.macros
 import scala.reflect.macros._
 import java.util.Date
 import com.fasterxml.jackson.databind.JsonNode
+import scala.util.Try
 import com.fasterxml.jackson.databind.node.MissingNode
 
 trait Muster[T] {
@@ -23,44 +24,22 @@ object Muster {
   }
 
   object from {
-     object JsonString extends JacksonInputFormat[String] {
-      def createCursor(in: String): Cursor = new JacksonInputCursor[String] {
-        val source = in
-        protected val node: JsonNode = try {
-          mapper.readTree(source)
-        } catch {
-          case _: Throwable => MissingNode.getInstance()
-        }
+    
+    trait UnifiedInputFormat
+    
+    object Json extends JacksonInputFormat[Consumable[_]] {
+
+      private def jic[T](src: T)(fn: (T) => JsonNode): JacksonInputCursor[T] = new JacksonInputCursor[T] {
+        protected val node: JsonNode = Try(fn(src)).getOrElse(MissingNode.getInstance())
+        val source: T = src
       }
-    }
-    object JsonStream extends JacksonInputFormat[java.io.InputStream] {
-      def createCursor(in: java.io.InputStream): Cursor = new JacksonInputCursor[java.io.InputStream] {
-        val source: java.io.InputStream = in
-        protected val node: JsonNode = mapper.readTree(source)
-      }
-    }
-    object JsonReader extends JacksonInputFormat[java.io.Reader] {
-      def createCursor(in: java.io.Reader): Cursor = new JacksonInputCursor[java.io.Reader] {
-        val source: java.io.Reader = in
-        protected val node: JsonNode = mapper.readTree(source)
-      }
-    }
-    object JsonFile extends JacksonInputFormat[java.io.File] {
-      def createCursor(in: java.io.File): Cursor = new JacksonInputCursor[java.io.File] {
-        val source: java.io.File = in
-        protected val node: JsonNode = mapper.readTree(source)
-      }
-    }
-    object JsonByteArray extends JacksonInputFormat[Array[Byte]] {
-      def createCursor(in: Array[Byte]): Cursor = new JacksonInputCursor[Array[Byte]] {
-        val source: Array[Byte] = in
-        protected val node: JsonNode = mapper.readTree(source)
-      }
-    }
-    object JsonURL extends JacksonInputFormat[java.net.URL] {
-      def createCursor(in: java.net.URL): Cursor = new JacksonInputCursor[java.net.URL] {
-        val source: java.net.URL = in
-        protected val node: JsonNode = mapper.readTree(source)
+      def createCursor(in: Consumable[_]): JacksonInputCursor[_] = in match {
+        case StringConsumable(src) => jic(src)(mapper.readTree)
+        case FileConsumable(src) => jic(src)(mapper.readTree)
+        case ReaderConsumable(src) => jic(src)(mapper.readTree)
+        case InputStreamConsumable(src) => jic(src)(mapper.readTree)
+        case ByteArrayConsumable(src) => jic(src)(mapper.readTree)
+        case URLConsumable(src) => jic(src)(mapper.readTree)
       }
     }
   }

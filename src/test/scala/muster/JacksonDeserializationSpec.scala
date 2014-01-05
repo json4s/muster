@@ -31,7 +31,7 @@ class Ac2 {
 class JacksonDeserializationSpec extends Specification {
 
   implicit val defaultFormats = DefaultFormats
-  val format = Muster.from.JsonString
+  val format = Muster.from.Json
 
   val refJunk = Junk(2,"cats")
   val refJunkDict: String = org.json4s.jackson.Serialization.write(refJunk)
@@ -43,7 +43,7 @@ class JacksonDeserializationSpec extends Specification {
 
   def read[T:Consumer](value: String) = format.from[T](value)
 
-  "Muster.from.JsonString" should {
+  "Muster.from.Json" should {
 //    "read a dateTime" in {
 //      val date = DateTime.now
 //      val ds = Muster.from.JsonString.dateFormat.print(new DateTime(date))

@@ -313,20 +313,16 @@ trait JsonInputCursor[R] extends InputCursor[R] {
   
 }
 
-trait JsonInputFormat[R] extends InputFormat[R] {
+trait JsonInputFormat[R] extends InputFormat[R, JsonInputCursor[_]] {
   type This = JsonInputFormat[R]
 }
 
 object MusterJson extends JsonInputFormat[String] {
-  type Cursor = JsonInputCursor[String]
-  def createCursor(in: String): Cursor = new JsonStringCursor(CharBufferJsonReader(in))
+  def createCursor(in: String): JsonInputCursor[_] = new JsonStringCursor(CharBufferJsonReader(in))
 
   def withDateFormat(df: DateFormat): MusterJson.This = new JsonInputFormat[String] {
-    type Cursor = MusterJson.Cursor
-//    override val dateFormat: DateFormat = df
-    def createCursor(in: String): Cursor = new JsonStringCursor(CharBufferJsonReader(in))
-//    def withDateFormat(df: DateFormat): This = MusterJson.withDateFormat(df)
-  }: JsonInputFormat[String]
+    def createCursor(in: String): JsonInputCursor[_] = new JsonStringCursor(CharBufferJsonReader(in))
+  }
 }
 
 class JsonStringCursor(val iterator: JsonReader[String]) extends JsonInputCursor[String] {
@@ -462,18 +458,8 @@ trait JacksonInputCursor[R] extends InputCursor[R] {
   }
 }
 
-trait JacksonInputFormat[R] extends InputFormat[R] {
-  type Cursor = JacksonInputCursor[R]
-  type This = JacksonInputFormat[R]
+trait JacksonInputFormat[R] extends InputFormat[R, JacksonInputCursor[_]] {
   val mapper: ObjectMapper = new ObjectMapper()
-//  mapper.setDateFormat(dateFormat)
   mapper.configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
-
-//  def withDateFormat(df: DateFormat): This = new JacksonInputFormat[R] {
-//    def createCursor(in: R): Cursor = {
-////      mapper.setDateFormat(df)
-//      JacksonInputFormat.this.createCursor(in)
-//    }
-//  }
 }
 

@@ -10,7 +10,7 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
 
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
 //  def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
-  val format = Muster.from.JsonString
+  val format = Muster.from.Json
 
   def read[T:Consumer](js: String) = format.from[T](js)
 
