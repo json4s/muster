@@ -24,7 +24,7 @@ object Consumer {
     def consume(node: AstNode[_]): S = if (fn.isDefinedAt(node)) fn(node) else throw new MappingException(s"Couldn't convert $node to ${mf.runtimeClass.getSimpleName}")
   }
 
-  private def nc[S](fn: NumberNodeLike[_] => S)(implicit mf: ClassTag[S]) = cc[S]{
+  private def nc[S](fn: NumberNodeLike[_] => S)(implicit mf: ClassTag[S]) = cc[S] {
     case m: NumberNodeLike[_] => fn(m)
     case m: TextNode => fn(NumberNode(m.value))
   }
@@ -88,12 +88,13 @@ object Consumer {
   }
 
   import scala.language.higherKinds
+
   implicit def traversableReader[F[_], V](implicit cbf: generic.CanBuildFrom[F[_], V, F[V]], valueReader: Consumer[V]): Consumer[F[V]] =
     new Consumer[F[V]] {
       def consume(node: AstNode[_]): F[V] = node match {
         case m: ArrayNode =>
           val bldr = cbf()
-          while(m.hasNextNode) {
+          while (m.hasNextNode) {
             bldr += valueReader.consume(m.nextNode())
           }
           bldr.result()
@@ -106,7 +107,7 @@ object Consumer {
       def consume(node: AstNode[_]): Array[T] = node match {
         case m: ArrayNode =>
           val bldr = Array.newBuilder
-          while(m.hasNextNode) {
+          while (m.hasNextNode) {
             bldr += valueReader.consume(m.nextNode())
           }
           bldr.result()
@@ -148,8 +149,8 @@ object Consumer {
 
     val importExpr = c.parse(s"import ${thisType.normalize.typeConstructor.typeSymbol.fullName}")
 
-//    def buildPrimitive(tpe: Type, cursor: c.Expr[Any], methodNameSuffix: String = "", args: List[Tree] = Nil): Tree = EmptyTree
-//    def buildArray(tpe: Type, cursor: c.Expr[Any], methodNameSuffix: String = "", args: List[Tree] = Nil): Tree = EmptyTree
+    //    def buildPrimitive(tpe: Type, cursor: c.Expr[Any], methodNameSuffix: String = "", args: List[Tree] = Nil): Tree = EmptyTree
+    //    def buildArray(tpe: Type, cursor: c.Expr[Any], methodNameSuffix: String = "", args: List[Tree] = Nil): Tree = EmptyTree
 
     val nullNodeDefault = reify(Ast.NullNode).tree
 
@@ -191,12 +192,12 @@ object Consumer {
       val v = ValDef(Modifiers(), vn, TypeTree(t), resolved)
       val cn = c.fresh("node$")
       val ce = c.Expr[Ast.AstNode[_]](Ident(newTermName(cn)))
-      val ct: Tree = ValDef(Modifiers(),newTermName(cn), TypeTree(weakTypeOf[Ast.AstNode[_]]), definition)
+      val ct: Tree = ValDef(Modifiers(), newTermName(cn), TypeTree(weakTypeOf[Ast.AstNode[_]]), definition)
       Block(v :: ct :: Nil, Apply(Select(Ident(vn), newTermName("consume")), ce.tree :: Nil))
     }
 
     def buildObject(tpe: Type, reader: c.Expr[Ast.ObjectNode], methodSuffix: String = "", args: List[Tree] = Nil): Tree = {
-      if (tpe.typeSymbol.isClass && !(helper.isPrimitive(tpe) || helper.isMap(tpe) || helper.isOption(tpe) || helper.isSeq(tpe) )) {
+      if (tpe.typeSymbol.isClass && !(helper.isPrimitive(tpe) || helper.isMap(tpe) || helper.isOption(tpe) || helper.isSeq(tpe))) {
         val TypeRef(_, sym, tpeArgs) = tpe
         val newObjTypeTree = helper.typeArgumentTree(tpe)
 
@@ -204,7 +205,7 @@ object Consumer {
         def pickConstructorTree(argNames: c.Expr[Set[String]]): Tree = {
           // Makes expressions for determining of they list is satisfied by the reader
           def ctorCheckingExpr(ctors: List[List[Symbol]]): c.Expr[Boolean] = {
-             def isRequired(item: Symbol) = {
+            def isRequired(item: Symbol) = {
               val sym = item.asTerm
               !(sym.isParamWithDefault || sym.typeSignature <:< typeOf[Option[_]])
             }
@@ -262,17 +263,17 @@ object Consumer {
         val ot = newTermName(on)
         val otr: Tree = ValDef(Modifiers(), ot, TypeTree(tpe), pickConstructorTree(reify(reader.splice.keySet)))
 
-//        // Sets fields after the instance is has been created
-//        def optionalParams(pTpe: Type, varName: String, exprMaker: Tree => c.Expr[_]): Tree = {
-//          val compName = Literal(Constant(varName))
-//          // Use option if primitive, should be faster than exceptions.
-//          reify {
-//            c.Expr[Option[Any]](buildOption(pTpe, ce, "Field", List(compName))).splice match {
-//              case Some(x) => exprMaker(Ident(newTermName("x"))).splice
-//              case None =>
-//            }
-//          }.tree
-//        }
+        //        // Sets fields after the instance is has been created
+        //        def optionalParams(pTpe: Type, varName: String, exprMaker: Tree => c.Expr[_]): Tree = {
+        //          val compName = Literal(Constant(varName))
+        //          // Use option if primitive, should be faster than exceptions.
+        //          reify {
+        //            c.Expr[Option[Any]](buildOption(pTpe, ce, "Field", List(compName))).splice match {
+        //              case Some(x) => exprMaker(Ident(newTermName("x"))).splice
+        //              case None =>
+        //            }
+        //          }.tree
+        //        }
 
         val setVarsBlocks: List[Tree] = {
           helper.getNonConstructorVars(tpe).toList map { pSym =>
@@ -293,18 +294,18 @@ object Consumer {
             Apply(Select(Ident(ot), pSym.name), setterDef(paramType, reader, Literal(Constant(name))) :: Nil)
           }
         }
-//          helper.getJavaStyleSetters(tpe).toList.map {
-//            pSym => // MethodSymbol
-//              val origName = pSym.name.decoded.substring(3)
-//              val name = origName.charAt(0).toLower + origName.substring(1)
-//              val paramType = {
-//                val tpe = pSym.asMethod.paramss(0)(0)
-//                tpe.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
-//              }
-//              optionalParams(paramType, name,
-//                tree => c.Expr(Apply(Select(Ident(ot), pSym.name), tree :: Nil))
-//              )
-//          }
+        //          helper.getJavaStyleSetters(tpe).toList.map {
+        //            pSym => // MethodSymbol
+        //              val origName = pSym.name.decoded.substring(3)
+        //              val name = origName.charAt(0).toLower + origName.substring(1)
+        //              val paramType = {
+        //                val tpe = pSym.asMethod.paramss(0)(0)
+        //                tpe.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+        //              }
+        //              optionalParams(paramType, name,
+        //                tree => c.Expr(Apply(Select(Ident(ot), pSym.name), tree :: Nil))
+        //              )
+        //          }
 
         Block(otr :: setVarsBlocks ::: setSetterBlocks, Ident(ot))
       } else {
@@ -320,10 +321,10 @@ object Consumer {
         def consume(node: Ast.AstNode[_]): T = {
           node match {
             case obj: Ast.ObjectNode => c.Expr[T](buildObject(thisType, c.Expr[ObjectNode](Ident(newTermName("obj"))))).splice
-//            case arr: ArrayNode => c.Expr[T](buildArray(thisType, c.Expr[ArrayNode](Ident(newTermName("arr"))))).splice
-//            case nr: NumberNodeLike[_] => c.Expr[T](buildPrimitive(thisType, c.Expr[ArrayNode](Ident(newTermName("nr"))))).splice
-//            case txt: TextNode => c.Expr[T](buildPrimitive(thisType, c.Expr[ArrayNode](Ident(newTermName("txt"))))).splice
-//            case bool: BoolNode => c.Expr[T](buildPrimitive(thisType, c.Expr[ArrayNode](Ident(newTermName("bool"))))).splice
+            //            case arr: ArrayNode => c.Expr[T](buildArray(thisType, c.Expr[ArrayNode](Ident(newTermName("arr"))))).splice
+            //            case nr: NumberNodeLike[_] => c.Expr[T](buildPrimitive(thisType, c.Expr[ArrayNode](Ident(newTermName("nr"))))).splice
+            //            case txt: TextNode => c.Expr[T](buildPrimitive(thisType, c.Expr[ArrayNode](Ident(newTermName("txt"))))).splice
+            //            case bool: BoolNode => c.Expr[T](buildPrimitive(thisType, c.Expr[ArrayNode](Ident(newTermName("bool"))))).splice
             case muster.Ast.NullNode | muster.Ast.UndefinedNode => null.asInstanceOf[T]
             case x => throw new MappingException(s"Got a ${x.getClass.getSimpleName} and expected an ObjectNode")
           }

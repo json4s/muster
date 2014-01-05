@@ -6,6 +6,7 @@ import java.text.DateFormat
 
 trait StringOutputFormat extends OutputFormat[String] {
   def writer: java.io.Writer = new java.io.StringWriter()
+
   def withDateFormat(df: DateFormat): This
 }
 
@@ -13,9 +14,15 @@ abstract class DefaultStringFormat extends StringOutputFormat {
   type Formatter = DefaultStringOutputFormatter
   type This = DefaultStringFormat
 
-  def withDateFormat(df: DateFormat): This = new DefaultStringFormat { override val dateFormat: DateFormat = df }
+  def withDateFormat(df: DateFormat): This = new DefaultStringFormat {
+    override val dateFormat: DateFormat = df
+  }
+
   def createFormatter: Formatter = new DefaultStringOutputFormatter(writer, dateFormat)
-  def freezeFormatter(fmt: Formatter): This = new DefaultStringFormat { override val createFormatter: Formatter = fmt }
+
+  def freezeFormatter(fmt: Formatter): This = new DefaultStringFormat {
+    override val createFormatter: Formatter = fmt
+  }
 }
 
 
@@ -34,8 +41,13 @@ object StringOutputFormatter {
 
 class DefaultStringOutputFormatter(writer: java.io.Writer, dateFormat: DateFormat) extends BaseStringOutputFormatter(writer, dateFormat) {
   def withDateFormat(df: DateFormat): this.type = new DefaultStringOutputFormatter(writer, df).asInstanceOf[this.type]
+
   def withWriter(wrtr: java.io.Writer): this.type = {
-    try { wrtr.close() } catch { case _: Throwable => }
+    try {
+      wrtr.close()
+    } catch {
+      case _: Throwable =>
+    }
     new DefaultStringOutputFormatter(wrtr, dateFormat).asInstanceOf[this.type]
   }
 }
@@ -45,6 +57,7 @@ abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: 
   import StringOutputFormatter._
 
   protected val stateStack = mutable.Stack[Int]()
+
   protected def state = stateStack.headOption getOrElse State.None
 
   def startArray(name: String) {
@@ -169,20 +182,23 @@ abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: 
       else if (c == '\n') writer.write("\\n")
       else if (c == '\r') writer.write("\\r")
       else if (c == '\t') writer.write("\\t")
-        // Reference:
-        // http://www.unicode.org/versions/Unicode5.1.0/
+      // Reference:
+      // http://www.unicode.org/versions/Unicode5.1.0/
       else if ((c >= '\u0000' && c <= '\u001f') || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100')) {
         writer.write("\\u")
         writer.write(HexAlphabet.charAt(c >> 12 & 0x000F))
-        writer.write(HexAlphabet.charAt(c >>  8 & 0x000F))
-        writer.write(HexAlphabet.charAt(c >>  6 & 0x000F))
-        writer.write(HexAlphabet.charAt(c >>  0 & 0x000F))
+        writer.write(HexAlphabet.charAt(c >> 8 & 0x000F))
+        writer.write(HexAlphabet.charAt(c >> 6 & 0x000F))
+        writer.write(HexAlphabet.charAt(c >> 0 & 0x000F))
       } else writer.write(c)
       i += 1
     }
   }
 
   def withWriter(wrtr: java.io.Writer): this.type
-  def close() { writer.close() }
+
+  def close() {
+    writer.close()
+  }
 
 }

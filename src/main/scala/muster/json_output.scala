@@ -9,22 +9,29 @@ abstract class JsonOutput extends StringOutputFormat {
   type This = JsonOutput
 
   def withDateFormat(df: DateFormat): This =
-    new JsonOutput { override val dateFormat: DateFormat = df }
+    new JsonOutput {
+      override val dateFormat: DateFormat = df
+    }
 
   def createFormatter: Formatter = new CompactJsonStringFormatter(writer, dateFormat)
 
   def freezeFormatter(fmt: Formatter): This =
-    new JsonOutput { override val createFormatter: Formatter = fmt }
+    new JsonOutput {
+      override val createFormatter: Formatter = fmt
+    }
 }
 
 
-class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat)  extends OutputFormatter[String] {
+class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat) extends OutputFormatter[String] {
+
   import StringOutputFormatter._
 
   def withDateFormat(df: DateFormat): this.type = new CompactJsonStringFormatter(writer, df).asInstanceOf[this.type]
+
   def withWriter(wrtr: java.io.Writer): CompactJsonStringFormatter = new CompactJsonStringFormatter(wrtr, dateFormat)
 
   private[this] val stateStack = mutable.Stack[Int]()
+
   private[this] def state = stateStack.headOption getOrElse State.None
 
   def startArray(name: String = "") {
@@ -71,9 +78,9 @@ class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat)
       else if ((c >= '\u0000' && c <= '\u001f') || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100')) {
         writer.write("\\u")
         writer.write(HexAlphabet.charAt(c >> 12 & 0x000F))
-        writer.write(HexAlphabet.charAt(c >>  8 & 0x000F))
-        writer.write(HexAlphabet.charAt(c >>  6 & 0x000F))
-        writer.write(HexAlphabet.charAt(c >>  0 & 0x000F))
+        writer.write(HexAlphabet.charAt(c >> 8 & 0x000F))
+        writer.write(HexAlphabet.charAt(c >> 6 & 0x000F))
+        writer.write(HexAlphabet.charAt(c >> 0 & 0x000F))
       } else writer.append(c.toString)
       i += 1
     }
@@ -157,7 +164,12 @@ class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat)
   }
 
   def result: String = writer.toString
+
   def close() {
-    try { writer.close() } catch { case _: Throwable => }
+    try {
+      writer.close()
+    } catch {
+      case _: Throwable =>
+    }
   }
 }

@@ -107,17 +107,17 @@ class Helper[C <: Context](val c: C) {
     // TODO: Looks like these are always accessed with getters and setters. Need to find if the getters and setters
     //       are valid
     for {
-      // TODO: need to check if the var is public or not, but doesn't seem to work properly
+    // TODO: need to check if the var is public or not, but doesn't seem to work properly
       sym <- vars(tpe) if !ctorParams.exists(sym.name.toTermName.toString.trim == _)
     } yield sym
   }
 
   def getJavaStyleSetters(tpe: Type) = {
-    val candidates = tpe.members.filter(_.isTerm).filter(_.asTerm.isMethod).filter{ s =>
+    val candidates = tpe.members.filter(_.isTerm).filter(_.asTerm.isMethod).filter { s =>
       val name = s.asTerm.name.decoded
       name.startsWith("get") || name.startsWith("set")
     }
-    candidates.filter ( sym =>
+    candidates.filter(sym =>
       candidates.exists(_.asTerm.name.decoded.trim.endsWith(sym.asTerm.name.decoded.trim.substring("set".length))) &&
         sym.asMethod.paramss.flatten.length == 1
     ).toList

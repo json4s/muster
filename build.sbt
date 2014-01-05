@@ -72,11 +72,11 @@ initialCommands in console := """
                                 |def read[T:Consumer](source: String) = Muster.from.Json.from[T](source)
                               """.stripMargin
 
-initialCommands in (Test, console) := """
-                                        |import muster._
-                                        |import scala.reflect.runtime.{universe => u}
-                                        |def read[T:Consumer](source: String) = Muster.from.Json.from[T](source)
-                                      """.stripMargin
+initialCommands in(Test, console) := """
+                                       |import muster._
+                                       |import scala.reflect.runtime.{universe => u}
+                                       |def read[T:Consumer](source: String) = Muster.from.Json.from[T](source)
+                                     """.stripMargin
 
 packageOptions <+= (name, version, organization) map {
   (title, version, vendor) =>
@@ -94,7 +94,7 @@ packageOptions <+= (name, version, organization) map {
     )
 }
 
-publishTo <<= (version) { version: String =>
+publishTo <<= version { version: String =>
   if (version.trim.endsWith("SNAPSHOT"))
     Some(Opts.resolver.sonatypeSnapshots)
   else
@@ -102,23 +102,25 @@ publishTo <<= (version) { version: String =>
 }
 
 val mavenCentralFrouFrou = Seq(
-    homepage := Some(new URL("https://github.com/casualjim/muster")),
-    startYear := Some(2013),
-    licenses := Seq(("MIT", new URL("https://github.com/casualjim/muster/raw/HEAD/LICENSE"))),
-    pomExtra <<= (pomExtra, name, description) {(pom, name, desc) => pom ++ Group(
+  homepage := Some(new URL("https://github.com/casualjim/muster")),
+  startYear := Some(2013),
+  licenses := Seq(("MIT", new URL("https://github.com/casualjim/muster/raw/HEAD/LICENSE"))),
+  pomExtra <<= (pomExtra, name, description) { (pom, name, desc) =>
+    pom ++ Group(
       <scm>
         <url>http://github.com/casualjim/muster</url>
         <connection>scm:git:git://github.com/casualjim/muster.git</connection>
       </scm>
-      <developers>
-        <developer>
-          <id>casualjim</id>
-          <name>Ivan Porto Carrero</name>
-          <url>http://flanders.co.nz/</url>
-        </developer>
-      </developers>
-    )}
-  )
+        <developers>
+          <developer>
+            <id>casualjim</id>
+            <name>Ivan Porto Carrero</name>
+            <url>http://flanders.co.nz/</url>
+          </developer>
+        </developers>
+    )
+  }
+)
 
 cappiSettings
 

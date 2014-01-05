@@ -1,20 +1,21 @@
 package muster
 
 import org.scalacheck._
-import java.util.{TimeZone, Date}
+import java.util.TimeZone
 import scala.reflect.ClassTag
 import muster.StringOutputFormatter._
 
 object ConsumerPropertiesSpec extends Properties("Readable") {
+
   import Prop.forAll
 
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
-//  def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
+  //  def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
   val format = Muster.from.Json
 
-  def read[T:Consumer](js: String) = format.from[T](js)
+  def read[T: Consumer](js: String) = format.from[T](js)
 
-  def cp[T:Arbitrary:Consumer:ClassTag] = {
+  def cp[T: Arbitrary : Consumer : ClassTag] = {
     property(implicitly[ClassTag[T]].runtimeClass.getSimpleName + " value") = forAll { (i: T) =>
       format.from[T](i.toString) == i
     }
@@ -61,10 +62,10 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
     val bd = double2Double(i)
     read[java.lang.Double](bd.toString) == bd
   }
-//  property("java.math.BigDecimal value") = forAll { (i: Double) =>
-//    val bd = BigDecimal(i.toString)
-//    read[java.math.BigDecimal](i.toString) == bd.bigDecimal
-//  }
+  //  property("java.math.BigDecimal value") = forAll { (i: Double) =>
+  //    val bd = BigDecimal(i.toString)
+  //    read[java.math.BigDecimal](i.toString) == bd.bigDecimal
+  //  }
 
   property("String value") = forAll(Gen.alphaStr) { (i: String) =>
     val sb = new StringBuilder()
@@ -75,12 +76,13 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
   }
 
   property("List value") = forAll { (i: List[Int]) =>
-    read[List[Int]](i.mkString("[",",","]")) == i
+    read[List[Int]](i.mkString("[", ",", "]")) == i
   }
 
   import collection.mutable
+
   property("mutable List value") = forAll { (i: mutable.ListBuffer[Int]) =>
-    read[mutable.ListBuffer[Int]](i.mkString("[",",","]")) == i
+    read[mutable.ListBuffer[Int]](i.mkString("[", ",", "]")) == i
   }
 
   val mapGen = {
@@ -89,7 +91,7 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
       m <- Gen.chooseNum(1, 999999999)
       t = (n, m)
       r <- Gen.mapOf(t)
-    } yield  r
+    } yield r
   }
   property("map value") = forAll(mapGen) { (i: Map[String, Int]) =>
     val json = {
@@ -117,7 +119,7 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
       m <- Gen.listOf(Gen.chooseNum(1, 999999999))
       t = (n, m)
       r <- Gen.mapOf(t)
-    } yield  r
+    } yield r
   }
   property("map with list value") = forAll(mapListGen) { (i: Map[String, List[Int]]) =>
     val json = {
@@ -150,58 +152,58 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
     read[Option[Int]](i.map(_.toString).getOrElse("")) == i
   }
 
-  property("option value in  a list" ) = forAll { (i: List[Option[Int]]) =>
+  property("option value in  a list") = forAll { (i: List[Option[Int]]) =>
     read[List[Option[Int]]](i.map(_.map(_.toString).getOrElse("null")).mkString("[", ",", "]")) == i
   }
 
-//  val mapOptionGen = {
-//    for {
-//      n <- Gen.nonEmptyListOf(Gen.alphaChar).map(_.mkString).suchThat(_.forall(_.isLetter))
-//      m <- Gen.option(Gen.chooseNum(1, 999999999))
-//      r <- Gen.mapOf((n, m))
-//    } yield  r
-//  }
-//  property("option value as null in a map") = forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
-//     val json = {
-//       val sb = new mutable.StringBuilder()
-//       sb.append('{')
-//       var first = true
-//       i foreach { case (k, v) =>
-//         if (!first) sb.append(',')
-//         else first = false
-//         sb.append('"')
-//         quote(k, sb)
-//         sb.append('"')
-//         sb.append(':')
-//         if (v.isDefined) sb.append(v)
-//         else sb.append("null")
-//       }
-//       sb.append('}')
-//       sb.toString
-//     }
-//     read[Map[String, Option[Int]]](json) == i
-//  }
-//  property("option value as missing in a map") = forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
-//     val json = {
-//       val sb = new mutable.StringBuilder()
-//       sb.append('{')
-//       var first = true
-//       i foreach { case (k, v) =>
-//         if (v.isDefined) {
-//           if (!first) sb.append(',')
-//           else first = false
-//           sb.append('"')
-//           quote(k, sb)
-//           sb.append('"')
-//           sb.append(':')
-//           sb.append(v)
-//         }
-//       }
-//       sb.append('}')
-//       sb.toString
-//     }
-//     read[Map[String, Option[Int]]](json) == i
-//  }
+  //  val mapOptionGen = {
+  //    for {
+  //      n <- Gen.nonEmptyListOf(Gen.alphaChar).map(_.mkString).suchThat(_.forall(_.isLetter))
+  //      m <- Gen.option(Gen.chooseNum(1, 999999999))
+  //      r <- Gen.mapOf((n, m))
+  //    } yield  r
+  //  }
+  //  property("option value as null in a map") = forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
+  //     val json = {
+  //       val sb = new mutable.StringBuilder()
+  //       sb.append('{')
+  //       var first = true
+  //       i foreach { case (k, v) =>
+  //         if (!first) sb.append(',')
+  //         else first = false
+  //         sb.append('"')
+  //         quote(k, sb)
+  //         sb.append('"')
+  //         sb.append(':')
+  //         if (v.isDefined) sb.append(v)
+  //         else sb.append("null")
+  //       }
+  //       sb.append('}')
+  //       sb.toString
+  //     }
+  //     read[Map[String, Option[Int]]](json) == i
+  //  }
+  //  property("option value as missing in a map") = forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
+  //     val json = {
+  //       val sb = new mutable.StringBuilder()
+  //       sb.append('{')
+  //       var first = true
+  //       i foreach { case (k, v) =>
+  //         if (v.isDefined) {
+  //           if (!first) sb.append(',')
+  //           else first = false
+  //           sb.append('"')
+  //           quote(k, sb)
+  //           sb.append('"')
+  //           sb.append(':')
+  //           sb.append(v)
+  //         }
+  //       }
+  //       sb.append('}')
+  //       sb.toString
+  //     }
+  //     read[Map[String, Option[Int]]](json) == i
+  //  }
 
   private[this] def quote(s: String, writer: StringBuilder) {
     var i = 0
@@ -218,9 +220,9 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
       else if ((c >= '\u0000' && c <= '\u001f') || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100')) {
         writer.append("\\u")
         writer.append(HexAlphabet.charAt(c >> 12 & 0x000F))
-        writer.append(HexAlphabet.charAt(c >>  8 & 0x000F))
-        writer.append(HexAlphabet.charAt(c >>  6 & 0x000F))
-        writer.append(HexAlphabet.charAt(c >>  0 & 0x000F))
+        writer.append(HexAlphabet.charAt(c >> 8 & 0x000F))
+        writer.append(HexAlphabet.charAt(c >> 6 & 0x000F))
+        writer.append(HexAlphabet.charAt(c >> 0 & 0x000F))
       } else writer.append(c.toString)
       i += 1
     }

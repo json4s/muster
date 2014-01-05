@@ -1,6 +1,7 @@
 package muster
 
 //import org.scalameter.api._
+
 import scala.io.Source
 import com.fasterxml.jackson.databind.ObjectMapper
 
@@ -10,35 +11,36 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 object Benchmarks {
   val smallJson = Source.fromInputStream(getClass.getResourceAsStream("/small.json")).mkString
-//  val smallJsonGen = Gen.single("small.json")(smallJson)
+  //  val smallJsonGen = Gen.single("small.json")(smallJson)
 
   val json = Source.fromInputStream(getClass.getResourceAsStream("/larger.json")).mkString // 1.2Mb
-//  val jsonGen = Gen.single("larger.json")(json)
+  //  val jsonGen = Gen.single("larger.json")(json)
 
-//  case class LoggingReporter() extends Reporter {
-//
-//      def report(result: CurveData, persistor: Persistor) {
-//        // output context
-//        log(s"::Benchmark ${result.context.scope}::")
-////        for ((key, value) <- result.context.properties.filterKeys(Context.machine.properties.keySet.contains).toSeq.sortBy(_._1)) {
-////          log(s"$key: $value")
-////        }
-//
-//        // output measurements
-//        for (measurement <- result.measurements) {
-//          log(s"${measurement.value}")
-//        }
-//
-//        // add a new line
-//        log("")
-//      }
-//
-//      def report(result: Tree[CurveData], persistor: Persistor) = true
-//
-//    }
+  //  case class LoggingReporter() extends Reporter {
+  //
+  //      def report(result: CurveData, persistor: Persistor) {
+  //        // output context
+  //        log(s"::Benchmark ${result.context.scope}::")
+  ////        for ((key, value) <- result.context.properties.filterKeys(Context.machine.properties.keySet.contains).toSeq.sortBy(_._1)) {
+  ////          log(s"$key: $value")
+  ////        }
+  //
+  //        // output measurements
+  //        for (measurement <- result.measurements) {
+  //          log(s"${measurement.value}")
+  //        }
+  //
+  //        // add a new line
+  //        log("")
+  //      }
+  //
+  //      def report(result: Tree[CurveData], persistor: Persistor) = true
+  //
+  //    }
 }
 
 class JsonParsersBenchmark extends com.google.caliper.SimpleBenchmark {
+
   import Benchmarks._
 
   val mapper = new ObjectMapper()
@@ -72,6 +74,7 @@ class JsonParsersBenchmark extends com.google.caliper.SimpleBenchmark {
 }
 
 class MediumJsonParsersBenchmark extends com.google.caliper.SimpleBenchmark {
+
   import Benchmarks._
 
   val mapper = new ObjectMapper()

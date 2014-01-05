@@ -4,13 +4,14 @@ import org.scalacheck._
 import java.util.{TimeZone, Date}
 
 object DefaultStringFormatter extends Properties("DefaultStringFormatter") {
+
   import Prop.forAll
 
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
   val format = Muster.into.String
-//  implicit lazy val arbDateTime: Arbitrary[DateTime] = Arbitrary(for {
-//    l <- Arbitrary.arbitrary[Long]
-//  } yield new DateTime(System.currentTimeMillis() + l, DateTimeZone.UTC))
+  //  implicit lazy val arbDateTime: Arbitrary[DateTime] = Arbitrary(for {
+  //    l <- Arbitrary.arbitrary[Long]
+  //  } yield new DateTime(System.currentTimeMillis() + l, DateTimeZone.UTC))
 
   implicit lazy val arbCategory: Arbitrary[Category] = Arbitrary(for {
     id <- Arbitrary.arbitrary[Int]
@@ -97,21 +98,21 @@ object DefaultStringFormatter extends Properties("DefaultStringFormatter") {
     fmt.close()
     r == format.dateFormat.format(x)
   }
-//
-//  property("dateTime") = forAll { (x: DateTime) =>
-//    val fmt = format.createFormatter
-//    fmt.dateTime(x)
-//    val r = fmt.result
-//    fmt.close()
-//    r == x.toString(ISODateTimeFormat.dateTimeNoMillis.withZone(DateTimeZone.UTC))
-//  }
+  //
+  //  property("dateTime") = forAll { (x: DateTime) =>
+  //    val fmt = format.createFormatter
+  //    fmt.dateTime(x)
+  //    val r = fmt.result
+  //    fmt.close()
+  //    r == x.toString(ISODateTimeFormat.dateTimeNoMillis.withZone(DateTimeZone.UTC))
+  //  }
 
   property("string") = forAll(Gen.alphaStr) { (x: String) =>
     val fmt = format.createFormatter
     fmt.string(x)
     val r = fmt.result
     fmt.close()
-    r == "\""+x+"\""
+    r == "\"" + x + "\""
   }
 
   property("list") = forAll(Gen.nonEmptyListOf(Gen.posNum[Int])) { lst =>
