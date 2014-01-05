@@ -47,6 +47,7 @@ trait OutputFormatter[R] extends AutoCloseable {
   def close()
 }
 
+
 trait OutputFormat[R] {
   type Formatter <: OutputFormatter[R]
   type This <: OutputFormat[R]
@@ -59,5 +60,5 @@ trait OutputFormat[R] {
 
   def freezeFormatter(fmt: Formatter): This
 
-  def into[T](out: T)(implicit fmt: Muster[T]): R = fmt.writeFormatted(out, this)
+  def from[T](out: T)(implicit fmt: Producer[T]): R = fmt.writeFormatted(out, this)
 }

@@ -1,5 +1,4 @@
 # muster
-======
 
 A library for macro based serializers to many different formats.
 It uses scala macros so no reflection is involved and it will generate code at compile time
@@ -11,12 +10,17 @@ The idea is that things work a little bit like this
 ```scala
 case class Person(id: Long, name: String, age: Int)
 val person = Person(1, "Luke", 38)
-person.writeFormatted(Muster.into.ByteString)
-person.writeFormatted(Muster.into.ByteBuffer)
-person.writeFormatted(Muster.into.ShowFormat)
-person.writeFormatted(Muster.into.CompactJsonString)
-person.writeFormatted(Muster.into.PrettyJsonString)
-person.writeFormatted(Muster.into.Protobuf[Protocol.Person])
+Muster.produce.CompactJsonString.from(person)
+Muster.produce.PrettyJsonString.from(person)
+Muster.produce.String.from(person)
+Muster.produce.ByteBuffer.from(person)
+Muster.produce.ByteString.from(person)
+Muster.produce.Protobuf[Protocol.Person].from(person)
+
+/* or */
+
+person.toJson // calls: Muster.produce.CompactJsonString.from(person)
+person.toString // calls: Muster.produce.String.from(person)
 ```
 
 

@@ -7,18 +7,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import scala.util.Try
 import com.fasterxml.jackson.databind.node.MissingNode
 
-trait Muster[T] {
-  def writeFormatted[R](value: T, outputFormat: OutputFormat[R]): R
-}
-
 object Muster {
-
-  implicit class FormattableProduct[T <: Product](p: T) {
-    def writeFormatted[R](outputFormat: OutputFormat[R])(implicit fmt: Muster[T]): R =
-      fmt.writeFormatted(p, outputFormat)
-  }
-
-  object into {
+  object produce {
 
     object String extends DefaultStringFormat
 
@@ -47,9 +37,25 @@ object Muster {
 
   }
 
-  implicit def formatable[T]: Muster[T] = macro formatableImpl[T]
+}
 
-  def formatableImpl[T: c.WeakTypeTag](c: Context): c.Expr[Muster[T]] = {
+trait Producer[T] {
+  def writeFormatted[R](value: T, outputFormat: OutputFormat[R]): R
+}
+
+object Producer {
+
+  import scala.language.implicitConversions
+  class ProducableProduct[T <: Product](p: T)(implicit prod: Producer[T])
+  implicit def producableProduct[T <: Product](p: T)(implicit prod: Producer[T]) = new ProducableProduct[T](p){
+    override def toString: String = Muster.produce.String.from(p)
+    def toJson = Muster.produce.CompactJsonString.from(p)
+  }
+
+
+  implicit def formatable[T]: Producer[T] = macro formatableImpl[T]
+
+  def formatableImpl[T: c.WeakTypeTag](c: Context): c.Expr[Producer[T]] = {
     import c.universe._
     import definitions._
     import Flag._
@@ -196,7 +202,7 @@ object Muster {
 
     val Block(formatableClass :: Nil, _) = {
       reify {
-        final class $anon extends Muster[T] {
+        final class $anon extends Producer[T] {
           def writeFormatted[R](value: T, outputFormat: OutputFormat[R]): R = {
             val sw = new java.io.StringWriter()
             try {
@@ -211,7 +217,7 @@ object Muster {
       }.tree
     }
 
-    c.Expr[Muster[T]](
+    c.Expr[Producer[T]](
       Block(
         List(formatableClass),
         Apply(Select(New(Ident(newTypeName("$anon"))), nme.CONSTRUCTOR), List())

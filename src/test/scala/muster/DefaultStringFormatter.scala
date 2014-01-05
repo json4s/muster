@@ -8,7 +8,7 @@ object DefaultStringFormatter extends Properties("DefaultStringFormatter") {
   import Prop.forAll
 
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
-  val format = Muster.into.String
+  val format = Muster.produce.String
   //  implicit lazy val arbDateTime: Arbitrary[DateTime] = Arbitrary(for {
   //    l <- Arbitrary.arbitrary[Long]
   //  } yield new DateTime(System.currentTimeMillis() + l, DateTimeZone.UTC))

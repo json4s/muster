@@ -10,7 +10,7 @@ object CompactJsonStringFormatterSpec extends Properties("CompactJsonStringForma
   import Prop.forAll
 
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
-  val format = Muster.into.CompactJsonString
+  val format = Muster.produce.CompactJsonString
   //  implicit lazy val arbDateTime: Arbitrary[DateTime] = Arbitrary(for {
   //    l <- Arbitrary.arbitrary[Long]
   //  } yield new DateTime(System.currentTimeMillis() + l, DateTimeZone.UTC))

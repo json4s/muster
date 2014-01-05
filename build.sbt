@@ -28,7 +28,7 @@ scalacOptions ++= Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-optimiz
 
 javacOptions ++= Seq("-deprecation", "-Xlint")
 
-//scalacOptions += "-Ymacro-debug-lite"
+scalacOptions += "-Ymacro-debug-lite"
 //
 //scalacOptions += "-Xlog-implicits"
 
@@ -69,13 +69,13 @@ logBuffered := false
 initialCommands in console := """
                                 |import muster._
                                 |import scala.reflect.runtime.{universe => u}
-                                |def read[T:Consumer](source: String) = Muster.from.Json.from[T](source)
+                                |def read[T:Consumer](source: String) = Muster.consume.Json.as[T](source)
                               """.stripMargin
 
 initialCommands in(Test, console) := """
                                        |import muster._
                                        |import scala.reflect.runtime.{universe => u}
-                                       |def read[T:Consumer](source: String) = Muster.from.Json.from[T](source)
+                                       |def read[T:Consumer](source: String) = Muster.consume.Json.as[T](source)
                                      """.stripMargin
 
 packageOptions <+= (name, version, organization) map {
