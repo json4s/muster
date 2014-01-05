@@ -60,11 +60,11 @@ class Helper[C <: Context](val c: C) {
 
   def isEither(tpe: Type) = tpe <:< typeOf[Either[_, _]]
 
-  def isMap(tpe: Type) = tpe <:< typeOf[scala.collection.GenMap[_, _]]
+  def isMap(tpe: Type) = tpe <:< typeOf[scala.collection.GenMap[_, _]] || tpe <:< typeOf[java.util.Map[_, _]]
 
-  def isSeq(tpe: Type) = tpe <:< typeOf[scala.collection.GenSeq[_]]
+  def isSeq(tpe: Type) = tpe <:< typeOf[scala.collection.GenSeq[_]] || tpe <:< typeOf[java.util.List[_]]
 
-  def isSet(tpe: Type) = tpe <:< typeOf[scala.collection.GenSet[_]]
+  def isSet(tpe: Type) = tpe <:< typeOf[scala.collection.GenSet[_]] || tpe <:< typeOf[java.util.Set[_]]
 
   def typeArgumentTree(t: c.Type): c.Tree = t match {
     case TypeRef(_, _, typeArgs@_ :: _) =>

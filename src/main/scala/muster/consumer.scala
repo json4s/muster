@@ -11,6 +11,7 @@ import muster.Ast.TextNode
 import muster.Ast.NumberNode
 import scala.util.Try
 import scala.annotation.tailrec
+import java.util
 
 trait Consumer[S] {
   def consume(node: AstNode[_]): S
@@ -87,9 +88,20 @@ object Consumer {
     case NullNode | UndefinedNode => null
   }
 
+
+  implicit def mutableMapConsumer[V](implicit valueConsumer: Consumer[V]) = cc[scala.collection.mutable.Map[String, V]] {
+    case m: ObjectNode =>
+      val bldr = collection.mutable.Map.newBuilder[String, V]
+      m.keySet foreach { key =>
+        bldr += key -> valueConsumer.consume(m.readField(key))
+      }
+      bldr.result()
+    case NullNode | UndefinedNode => null
+  }
+
   import scala.language.higherKinds
 
-  implicit def traversableReader[F[_], V](implicit cbf: generic.CanBuildFrom[F[_], V, F[V]], valueReader: Consumer[V]): Consumer[F[V]] =
+  implicit def traversableConsumer[F[_], V](implicit cbf: generic.CanBuildFrom[F[_], V, F[V]], valueReader: Consumer[V]): Consumer[F[V]] =
     new Consumer[F[V]] {
       def consume(node: AstNode[_]): F[V] = node match {
         case m: ArrayNode =>
@@ -98,29 +110,54 @@ object Consumer {
             bldr += valueReader.consume(m.nextNode())
           }
           bldr.result()
+        case NullNode | UndefinedNode => cbf().result()
         case x => throw new MappingException(s"Got a ${x.getClass.getSimpleName} and expected an ArrayNode")
       }
     }
 
-  implicit def arrayConsumer[T](implicit ct: ClassTag[T], valueReader: Consumer[T]): Consumer[Array[T]] = {
-    new Consumer[Array[T]] {
-      def consume(node: AstNode[_]): Array[T] = node match {
-        case m: ArrayNode =>
-          val bldr = Array.newBuilder
-          while (m.hasNextNode) {
-            bldr += valueReader.consume(m.nextNode())
-          }
-          bldr.result()
-        case x => throw new MappingException(s"Got a ${x.getClass.getSimpleName} and expected an ArrayNode")
+  implicit def javaListConsumer[T](implicit valueConsumer: Consumer[T]) = cc[java.util.List[T]] {
+    case m: ArrayNode =>
+      val lst = new java.util.ArrayList[T]()
+      while(m.hasNextNode) {
+        lst add valueConsumer.consume(m.nextNode())
       }
-    }
+      lst
+    case NullNode | UndefinedNode => new util.ArrayList[T]()
   }
 
-  implicit def optionConsumer[T](implicit valueReader: Consumer[T]): Consumer[Option[T]] = new Consumer[Option[T]] {
-    def consume(node: AstNode[_]): Option[T] = node match {
-      case NullNode | UndefinedNode => None
-      case v => Try(valueReader.consume(v)).toOption
-    }
+  implicit def javaSetConsumer[T](implicit valueConsumer: Consumer[T]) = cc[java.util.Set[T]] {
+    case m: ArrayNode =>
+      val lst = new java.util.HashSet[T]()
+      while(m.hasNextNode) {
+        lst add valueConsumer.consume(m.nextNode())
+      }
+      lst
+    case NullNode | UndefinedNode => new util.HashSet[T]()
+  }
+
+  implicit def javaMapConsumer[T](implicit valueConsumer: Consumer[T]) = cc[java.util.Map[String, T]] {
+    case m: ObjectNode =>
+      val lst = new util.HashMap[String, T]()
+      m.keySet foreach { key =>
+        lst.put(key, valueConsumer.consume(m.readField(key)))
+      }
+      lst
+    case NullNode | UndefinedNode => new util.HashMap[String, T]()
+  }
+
+  implicit def arrayConsumer[T](implicit ct: ClassTag[T], valueReader: Consumer[T]): Consumer[Array[T]] = cc[Array[T]] {
+    case m: ArrayNode =>
+      val bldr = Array.newBuilder
+      while (m.hasNextNode) {
+        bldr += valueReader.consume(m.nextNode())
+      }
+      bldr.result()
+    case NullNode | UndefinedNode => Array.newBuilder[T].result()
+  }
+
+  implicit def optionConsumer[T](implicit valueReader: Consumer[T]): Consumer[Option[T]] = cc[Option[T]] {
+    case NullNode | UndefinedNode => None
+    case v => Try(valueReader.consume(v)).toOption
   }
 
   implicit def consumer[T]: Consumer[T] = macro consumerImpl[T]
@@ -263,18 +300,6 @@ object Consumer {
         val ot = newTermName(on)
         val otr: Tree = ValDef(Modifiers(), ot, TypeTree(tpe), pickConstructorTree(reify(reader.splice.keySet)))
 
-        //        // Sets fields after the instance is has been created
-        //        def optionalParams(pTpe: Type, varName: String, exprMaker: Tree => c.Expr[_]): Tree = {
-        //          val compName = Literal(Constant(varName))
-        //          // Use option if primitive, should be faster than exceptions.
-        //          reify {
-        //            c.Expr[Option[Any]](buildOption(pTpe, ce, "Field", List(compName))).splice match {
-        //              case Some(x) => exprMaker(Ident(newTermName("x"))).splice
-        //              case None =>
-        //            }
-        //          }.tree
-        //        }
-
         val setVarsBlocks: List[Tree] = {
           helper.getNonConstructorVars(tpe).toList map { pSym =>
             val varName = pSym.name.toTermName.toString.trim
@@ -294,18 +319,6 @@ object Consumer {
             Apply(Select(Ident(ot), pSym.name), setterDef(paramType, reader, Literal(Constant(name))) :: Nil)
           }
         }
-        //          helper.getJavaStyleSetters(tpe).toList.map {
-        //            pSym => // MethodSymbol
-        //              val origName = pSym.name.decoded.substring(3)
-        //              val name = origName.charAt(0).toLower + origName.substring(1)
-        //              val paramType = {
-        //                val tpe = pSym.asMethod.paramss(0)(0)
-        //                tpe.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
-        //              }
-        //              optionalParams(paramType, name,
-        //                tree => c.Expr(Apply(Select(Ident(ot), pSym.name), tree :: Nil))
-        //              )
-        //          }
 
         Block(otr :: setVarsBlocks ::: setSetterBlocks, Ident(ot))
       } else {

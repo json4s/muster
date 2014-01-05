@@ -415,7 +415,7 @@ object JackonInputCursor {
       val node = readFieldFromParent(fieldName)
       if (node.isNull || node.isMissingNode) None
       else if (node.isObject) Some(new JacksonObjectNode(node))
-      else throw new MappingException(s"Expected an array but found a ${node.getClass.getSimpleName}")
+      else throw new MappingException(s"Expected an object but found a ${node.getClass.getSimpleName}")
     }
 
     def readStringFieldOpt(fieldName: String): Option[TextNode] = {
