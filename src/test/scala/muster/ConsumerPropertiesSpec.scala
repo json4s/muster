@@ -72,7 +72,7 @@ class ConsumerSpec extends Specification with ScalaCheck {
   val javaDoubleProp = cpc { (x: Double) => double2Double(x) }
   val javaBigDecimalProp = cpc { (x: BigDecimal) => x.bigDecimal }
 
-  val stringProp = Prop.forAll(Gen.alphaStr) { (i: String) =>
+  val stringProp = prop { (i: String) =>
     val sb = new StringBuilder()
     sb.append('"')
     JsonOutput.quote(i, sb)

@@ -9,6 +9,7 @@ import scala.collection.JavaConverters._
 import java.text.DateFormat
 
 
+
 trait JsonReader[R] extends Iterator[Char] {
   def source: R
 
@@ -238,7 +239,7 @@ trait JsonInputCursor[R] extends InputCursor[R] {
     val end = iterator.current // store quote as separator
     var shouldContinue = iterator.hasNext
     var seenEnd = false
-    val sb = new StringBuilder
+    val sb = new java.lang.StringBuilder
     while (shouldContinue) {
       (iterator.next(): @switch) match {
         case '"' | '\'' =>
@@ -260,8 +261,14 @@ trait JsonInputCursor[R] extends InputCursor[R] {
               case '/' => sb.append('/')
               case '\'' => sb.append('\'')
               case '"' => sb.append('"')
-              case 'u' => sb.append(readUnicode(4))
-              case 'x' => sb.append(readUnicode(2))
+              case 'u' =>
+                val chars = Array(iterator.next(), iterator.next(), iterator.next(), iterator.next())
+                val codePoint = Integer.parseInt(new String(chars), 16)
+                sb.appendCodePoint(codePoint)
+              case 'x' =>
+                val chars = Array(iterator.next(), iterator.next())
+                val codePoint = Integer.parseInt(new String(chars), 16)
+                sb.appendCodePoint(codePoint)
               case _ =>
             }
             shouldContinue = iterator.hasNext
@@ -321,22 +328,6 @@ trait JsonInputCursor[R] extends InputCursor[R] {
     }
   }
 
-  protected def readUnicode(totalChars: Int): Char = {
-    var value: Int = 0
-    var i: Int = 0
-    while (i < totalChars) {
-      value = value * 16
-      i += 1
-      val c = iterator.next()
-      if (c <= '9' && c >= '0') value += c - '0'
-      else if (c <= 'F' && c >= 'A') value += (c - 'A') + 10
-      else if (c >= 'a' && c <= 'f') value += (c - 'a') + 10
-      else if (!iterator.hasNext) throw failParse("Tried to move past the end of the input.")
-      else throw failParse("Tried to move past the end of the input")
-    }
-    value.asInstanceOf[Char]
-  }
-
   override def hasNextNode = iterator.hasNext
 
   @tailrec final def nextNode(): AstNode[_] = {
@@ -364,13 +355,12 @@ trait JsonInputCursor[R] extends InputCursor[R] {
 }
 
 trait JsonInputFormat[R] extends InputFormat[R, JsonInputCursor[_]] {
-  type This = JsonInputFormat[R]
 }
 
 object MusterJson extends JsonInputFormat[String] {
   def createCursor(in: String): JsonInputCursor[_] = new JsonStringCursor(CharBufferJsonReader(in))
 
-  def withDateFormat(df: DateFormat): MusterJson.This = new JsonInputFormat[String] {
+  def withDateFormat(df: DateFormat): JsonInputFormat[String] = new JsonInputFormat[String] {
     def createCursor(in: String): JsonInputCursor[_] = new JsonStringCursor(CharBufferJsonReader(in))
   }
 }
