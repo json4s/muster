@@ -20,7 +20,7 @@ Muster.produce.Protobuf[Protocol.Person].from(person)
 /* or */
 
 person.toJson // calls: Muster.produce.CompactJsonString.from(person)
-person.toString // calls: Muster.produce.String.from(person)
+person.asString // calls: Muster.produce.String.from(person)
 ```
 
 

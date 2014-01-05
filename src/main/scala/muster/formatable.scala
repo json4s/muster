@@ -7,37 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import scala.util.Try
 import com.fasterxml.jackson.databind.node.MissingNode
 
-object Muster {
-  object produce {
 
-    object String extends DefaultStringFormat
-
-    object CompactJsonString extends JsonOutput
-
-  }
-
-  object consume {
-
-    object Json extends JacksonInputFormat[Consumable[_]] {
-
-      private def jic[T](src: T)(fn: (T) => JsonNode): JacksonInputCursor[T] = new JacksonInputCursor[T] {
-        protected val node: JsonNode = Try(fn(src)).getOrElse(MissingNode.getInstance())
-        val source: T = src
-      }
-
-      def createCursor(in: Consumable[_]): JacksonInputCursor[_] = in match {
-        case StringConsumable(src) => jic(src)(mapper.readTree)
-        case FileConsumable(src) => jic(src)(mapper.readTree)
-        case ReaderConsumable(src) => jic(src)(mapper.readTree)
-        case InputStreamConsumable(src) => jic(src)(mapper.readTree)
-        case ByteArrayConsumable(src) => jic(src)(mapper.readTree)
-        case URLConsumable(src) => jic(src)(mapper.readTree)
-      }
-    }
-
-  }
-
-}
 
 trait Producer[T] {
   def writeFormatted[R](value: T, outputFormat: OutputFormat[R]): R
@@ -45,12 +15,6 @@ trait Producer[T] {
 
 object Producer {
 
-  import scala.language.implicitConversions
-  class ProducableProduct[T <: Product](p: T)(implicit prod: Producer[T])
-  implicit def producableProduct[T <: Product](p: T)(implicit prod: Producer[T]) = new ProducableProduct[T](p){
-    override def toString: String = Muster.produce.String.from(p)
-    def toJson = Muster.produce.CompactJsonString.from(p)
-  }
 
 
   implicit def formatable[T]: Producer[T] = macro formatableImpl[T]

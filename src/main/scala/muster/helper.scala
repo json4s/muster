@@ -42,9 +42,9 @@ class Helper[C <: Context](val c: C) {
     fetchType(tpe)
   }
 
-  def isVal(v: Symbol) = v.isTerm && v.asTerm.isVal && v.isPublic
+  def isVal(v: Symbol) = v.isTerm && v.asTerm.isVal && (v.isPublic||v.asTerm.isCaseAccessor)
 
-  def isVar(v: Symbol) = v.isTerm && v.asTerm.isVar && v.isPublic
+  def isVar(v: Symbol) = v.isTerm && v.asTerm.isVar && (v.isPublic||v.asTerm.isCaseAccessor)
 
   def vals(tpe: Type): Seq[Symbol] = tpe.members.toVector filter isVal
 
@@ -113,7 +113,8 @@ class Helper[C <: Context](val c: C) {
   }
 
   def getJavaStyleSetters(tpe: Type) = {
-    val candidates = tpe.members.filter(_.isTerm).filter(_.asTerm.isMethod).filter { s =>
+    val knownVar = getNonConstructorVars(tpe).toSet
+    val candidates = tpe.members.filter(v => v.isTerm && v.asTerm.isMethod && !knownVar(v)).filter { s =>
       val name = s.asTerm.name.decoded
       name.startsWith("get") || name.startsWith("set")
     }
