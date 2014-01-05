@@ -11,13 +11,13 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
 
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
   //  def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
-  val format = Muster.from.Json
+  val format = Muster.consume.Json
 
-  def read[T: Consumer](js: String) = format.from[T](js)
+  def read[T: Consumer](js: String) = format.as[T](js)
 
   def cp[T: Arbitrary : Consumer : ClassTag] = {
     property(implicitly[ClassTag[T]].runtimeClass.getSimpleName + " value") = forAll { (i: T) =>
-      format.from[T](i.toString) == i
+      format.as[T](i.toString) == i
     }
   }
 

@@ -576,11 +576,11 @@ trait InputCursor[R] extends AstCursor {
 trait InputFormat[R, C <: InputCursor[_]] {
   def createCursor(in: R): C
 
-  def from[T](source: R)(implicit consumer: Consumer[T]): T = {
+  def as[T](source: R)(implicit consumer: Consumer[T]): T = {
     val cursor = createCursor(source)
     consumer.consume(cursor.nextNode())
   }
 
-  def tryFrom[T](source: R)(implicit consumer: Consumer[T]): Try[T] = Try(from(source))
+  def tryAs[T](source: R)(implicit consumer: Consumer[T]): Try[T] = Try(as(source))
 
 }

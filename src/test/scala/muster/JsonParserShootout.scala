@@ -49,7 +49,7 @@ class JsonParsersBenchmark extends com.google.caliper.SimpleBenchmark {
 
   def timeMusterJacksonParserForLarge(reps: Int): Unit =
     for (i <- 0 to reps)
-      Muster.from.Json.createCursor(json).nextNode()
+      Muster.consume.Json.createCursor(json).nextNode()
 
   def timeMusterJsonParserForLarge(reps: Int): Unit =
     for (i <- 0 to reps)
@@ -83,7 +83,7 @@ class MediumJsonParsersBenchmark extends com.google.caliper.SimpleBenchmark {
 
   def timeMusterJacksonParserForLarge(reps: Int): Unit =
     for (i <- 0 to reps)
-      Muster.from.Json.createCursor(smallJson).nextNode()
+      Muster.consume.Json.createCursor(smallJson).nextNode()
 
   def timeMusterJsonParserForLarge(reps: Int): Unit =
     for (i <- 0 to reps)

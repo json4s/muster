@@ -26,9 +26,7 @@ object Muster {
 
   }
 
-  object from {
-
-    trait UnifiedInputFormat
+  object consume {
 
     object Json extends JacksonInputFormat[Consumable[_]] {
 
