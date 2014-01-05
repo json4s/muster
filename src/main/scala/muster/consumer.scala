@@ -10,7 +10,6 @@ import scala.collection.{generic, immutable}
 import muster.Ast.TextNode
 import muster.Ast.NumberNode
 import scala.util.Try
-import scala.annotation.tailrec
 import java.util
 
 trait Consumer[S] {
@@ -118,7 +117,7 @@ object Consumer {
   implicit def javaListConsumer[T](implicit valueConsumer: Consumer[T]) = cc[java.util.List[T]] {
     case m: ArrayNode =>
       val lst = new java.util.ArrayList[T]()
-      while(m.hasNextNode) {
+      while (m.hasNextNode) {
         lst add valueConsumer.consume(m.nextNode())
       }
       lst
@@ -128,7 +127,7 @@ object Consumer {
   implicit def javaSetConsumer[T](implicit valueConsumer: Consumer[T]) = cc[java.util.Set[T]] {
     case m: ArrayNode =>
       val lst = new java.util.HashSet[T]()
-      while(m.hasNextNode) {
+      while (m.hasNextNode) {
         lst add valueConsumer.consume(m.nextNode())
       }
       lst
@@ -164,8 +163,6 @@ object Consumer {
 
   def consumerImpl[T: c.WeakTypeTag](c: Context): c.Expr[Consumer[T]] = {
     import c.universe._
-    import definitions._
-    import Flag._
 
     val primitiveMap =
       Map[Type, String](
@@ -212,25 +209,43 @@ object Consumer {
               Apply(Select(reader.tree, newTermName(s"readObject${methodSuffix}Opt")), args)
           }
 
-          (default match {
-            case EmptyTree =>
-              rdrOpt
-            case x =>
-              Apply(Select(rdrOpt, newTermName("getOrElse")), default :: Nil)
-          }, resolved)
+          (rdrOpt, resolved)
+        //          (default match {
+        //            case EmptyTree =>
+        //              rdrOpt
+        //            case x =>
+        //              Apply(Select(rdrOpt, newTermName("getOrElse")), default :: Nil)
+        //          }, resolved)
       }
     }
 
-    def setterDef(returnType: Type, reader: c.Expr[Any], fieldName: Tree, defVal: Tree = nullNodeDefault): Tree = {
+    def setterDef(returnType: Type, reader: c.Expr[Any], fieldName: Tree, defVal: Tree = EmptyTree): Tree = {
       val t = appliedType(weakTypeOf[Consumer[Any]].typeConstructor, returnType :: Nil)
       val (definition, resolved) = buildValue(returnType, reader, "Field", List(fieldName), defVal)
       val fn = c.fresh("consumer$")
       val vn = newTermName(fn)
       val v = ValDef(Modifiers(), vn, TypeTree(t), resolved)
       val cn = c.fresh("node$")
-      val ce = c.Expr[Ast.AstNode[_]](Ident(newTermName(cn)))
-      val ct: Tree = ValDef(Modifiers(), newTermName(cn), TypeTree(weakTypeOf[Ast.AstNode[_]]), definition)
-      Block(v :: ct :: Nil, Apply(Select(Ident(vn), newTermName("consume")), ce.tree :: Nil))
+
+      defVal match {
+        case EmptyTree =>
+          val noDefault = Apply(Select(definition, newTermName("getOrElse")), nullNodeDefault :: Nil)
+          val ce = c.Expr[Ast.AstNode[_]](Ident(newTermName(cn)))
+          val ct: Tree = ValDef(Modifiers(), newTermName(cn), TypeTree(weakTypeOf[Ast.AstNode[_]]), noDefault)
+          Block(v :: ct :: Nil, Apply(Select(Ident(vn), newTermName("consume")), ce.tree :: Nil))
+        case defTree =>
+          val ce = c.Expr[Option[Ast.AstNode[_]]](Ident(newTermName(cn)))
+          val ct: Tree = ValDef(Modifiers(), newTermName(cn), TypeTree(weakTypeOf[Option[AstNode[_]]]), definition)
+          //          val cons = Apply(Select(Ident(vn), newTermName("consume")), ce.tree :: Nil)
+          val res = reify(
+            ce.splice match {
+              case Some(n) => c.Expr(Apply(Select(Ident(vn), newTermName("consume")), Ident(newTermName("n")) :: Nil)).splice
+              case _ => c.Expr(defTree).splice
+            })
+          Block(v :: ct :: Nil, res.tree)
+      }
+
+
     }
 
     def buildObject(tpe: Type, reader: c.Expr[Ast.ObjectNode], methodSuffix: String = "", args: List[Tree] = Nil): Tree = {
@@ -286,6 +301,7 @@ object Consumer {
               // TODO: is there a way to get teh default values for the overloaded constructors?
               val tree = if (pSym.asTerm.isParamWithDefault && sym.companionSymbol.isTerm) {
                 val defVal = Select(Ident(sym.companionSymbol), newTermName("$lessinit$greater$default$" + (index + 1).toString))
+                //                val defValG = Apply(Select(New(weakTypeOf[ConstantNode[_]])))
                 setterDef(pTpe, reader, fieldName, defVal)
               } else {
                 setterDef(pTpe, reader, fieldName)
@@ -293,7 +309,9 @@ object Consumer {
               (ValDef(Modifiers(), pTnm, TypeTree(pTpe), tree), Ident(pTnm))
           })
 
-          Block(params.head.map(_._1), Apply(Select(New(Ident(sym)), nme.CONSTRUCTOR), params.head.map(_._2)))
+          Block(params.flatMap(_.map(_._1)), params.foldLeft(Select(New(Ident(sym)), nme.CONSTRUCTOR): Tree) { (ct, args) =>
+            Apply(ct, args.map(_._2))
+          })
         }
 
         val on = c.fresh("consumed$")
@@ -327,11 +345,7 @@ object Consumer {
         def consume(node: Ast.AstNode[_]): T = {
           node match {
             case obj: Ast.ObjectNode => c.Expr[T](buildObject(thisType, c.Expr[ObjectNode](Ident(newTermName("obj"))))).splice
-            //            case arr: ArrayNode => c.Expr[T](buildArray(thisType, c.Expr[ArrayNode](Ident(newTermName("arr"))))).splice
-            //            case nr: NumberNodeLike[_] => c.Expr[T](buildPrimitive(thisType, c.Expr[ArrayNode](Ident(newTermName("nr"))))).splice
-            //            case txt: TextNode => c.Expr[T](buildPrimitive(thisType, c.Expr[ArrayNode](Ident(newTermName("txt"))))).splice
-            //            case bool: BoolNode => c.Expr[T](buildPrimitive(thisType, c.Expr[ArrayNode](Ident(newTermName("bool"))))).splice
-            case muster.Ast.NullNode | muster.Ast.UndefinedNode => null.asInstanceOf[T]
+             case muster.Ast.NullNode | muster.Ast.UndefinedNode => null.asInstanceOf[T]
             case x => throw new MappingException(s"Got a ${x.getClass.getSimpleName} and expected an ObjectNode")
           }
         }

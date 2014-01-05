@@ -149,8 +149,8 @@ class JacksonDeserializationSpec extends Specification {
     }
 
     val junkJson = """{"in1":123,"in2":"456"}"""
-    val junk = Junk(123, "456")
     val thingWithJunkJson = s"""{"name":"foo","junk":$junkJson}"""
+    val junk = Junk(123, "456")
     val thingWithJunk = ThingWithJunk("foo", junk)
     "read a ThingWithJunk" in {
       read[ThingWithJunk](thingWithJunkJson) must_== thingWithJunk
@@ -297,10 +297,89 @@ class JacksonDeserializationSpec extends Specification {
       result.in2 must_== expected.in2
     }
 
+    "read a class with a default value and data is in the json" in {
+      val js = """{"in1": 123, "in2": "not the default" }"""
+      read[JunkWithDefault](js) must_== JunkWithDefault(123, "not the default")
+    }
+
+    "read a class with a default value and use the default value for a missing json value" in {
+      val js = """{"in1": 123}"""
+      read[JunkWithDefault](js) must_== JunkWithDefault(123)
+    }
+
+    "read a class with a list and name property" in {
+      val js = """{"name":"list and name","lst":[3949,3912,2050]}"""
+      read[WithListAndName](js) must_== WithListAndName("list and name", List(3949,3912,2050))
+    }
+
+    "read a class with an object list and a name" in {
+      val js = s"""{"name":"list and name","list":[$thingWithJunkJson]}"""
+      read[WithObjList](js) must_== WithObjList("list and name", List(thingWithJunk))
+    }
+
+    "read a curried object" in {
+      val js = """{"in1":1395,"in2":4059,"in3":395}"""
+      read[Curried](js) must_== Curried(1395, 4059)(395)
+    }
+
+    "read an object with a type param" in {
+      val js = """{"in1":39589}"""
+      read[WithTpeParams[Int]](js) must_== WithTpeParams(39589)
+    }
+
+    "read an object with a seq" in {
+      read[WithSeq]("""{"in":[1,3,4]}""") must_== WithSeq(Seq(1,3,4))
+    }
+
+    "read an object with nested type params" in {
+      val js = """{"in1":12,"in2":{"in1":94}}"""
+      read[WithNstedTpeParams[Int, Int]](js) must_== new WithNstedTpeParams(12, WithTpeParams(94))
+    }
+
+    "read an object with nested type params and a resolved param" in {
+      val js = """{"in3":12,"in4":{"in1":94}}"""
+      read[ResolvedParams[Int]](js) must_== ResolvedParams(12, WithTpeParams(94))
+    }
+
+    "read an object with date and a name" in {
+      val date = new Date
+      val ds = SafeSimpleDateFormat.Iso8601Formatter.format(date)
+      val pd = SafeSimpleDateFormat.Iso8601Formatter.parse(ds)
+      val js = s"""{"date":"$ds","name":"with date and name"}"""
+      read[WithDateAndName](js) must_== new WithDateAndName("with date and name",pd)
+    }
+
+    "read a regular class with a val definition and use the data from json" in {
+      val js = """{"in":49}"""
+      read[ClassWithDef](js) must_== new ClassWithDef(49)
+    }
+
+    "read a regular class with a val definition and use the default value" in {
+      val js = """{}"""
+      read[ClassWithDef](js) must_== new ClassWithDef()
+    }
+
+    "read an object with a default complex object" in {
+      val js = s"""{"name":"junk with default", "junk":$junkJson}"""
+      read[ObjWithDefJunk](js) must_== ObjWithDefJunk("junk with default", junk)
+    }
+
+    "read an object with a default complex object and use the default value" in {
+      val js = s"""{"name":"junk with default"}"""
+      read[ObjWithDefJunk](js) must_== ObjWithDefJunk("junk with default")
+    }
+
     /*
 
-    case class MutableJunkWithJunk(var in1: Int) {
-      var in2: Junk = Junk(0, "")
+    case class Bill(in: Int)
+
+    class Billy[U](in: U)
+
+    case class BillyB(in: Int) extends Billy[Int](in)
+
+    case class ObjWithDefJunk(name: String, junk: Junk = Junk(-1, "Default"))
+
+
     }
      */
 

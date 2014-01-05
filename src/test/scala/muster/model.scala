@@ -61,7 +61,7 @@ case class WithListAndName(name: String, lst: List[Int])
 
 case class WithObjList(name: String, list: List[ThingWithJunk])
 
-case class Curried(in1: Int, in2: Int)(in3: Int)
+case class Curried(in1: Int, in2: Int)(val in3: Int)
 
 case class WithTpeParams[U](in1: U)
 

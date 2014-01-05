@@ -17,9 +17,9 @@ object Producer {
 
 
 
-  implicit def formatable[T]: Producer[T] = macro formatableImpl[T]
+  implicit def producer[T]: Producer[T] = macro producerImpl[T]
 
-  def formatableImpl[T: c.WeakTypeTag](c: Context): c.Expr[Producer[T]] = {
+  def producerImpl[T: c.WeakTypeTag](c: Context): c.Expr[Producer[T]] = {
     import c.universe._
     import definitions._
     import Flag._
@@ -102,7 +102,7 @@ object Producer {
 
     def writeList(tp: Type, target: Tree): c.Expr[Unit] = {
       val TypeRef(_, _: Symbol, pTpe :: Nil) = tp
-      reify {
+       reify {
         formatterStack.splice.startArray(c.Expr[String](Literal(Constant(tp.typeSymbol.name.decoded))).splice)
         val coll = c.Expr[Seq[Any]](target).splice
         coll foreach { ele =>
@@ -132,18 +132,24 @@ object Producer {
 
     def complexObject(tp: Type, target: Tree): c.Tree = {
       val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tp.normalize
+//      val fields = helper.getGetters(tp)
       val fields = helper.vals(tp) ++ helper.vars(tp)
 
       val fieldTrees = fields flatMap { pSym =>
         val tt = pSym.typeSignatureIn(tp)
         val fieldName = pSym.name.decoded.trim
+//        val on = pSym.name.decoded.trim
+//        val needsLower = on.startsWith("get")
+//        val stripped = on.replaceFirst("^get", "")
+//        val fieldName = if (needsLower) stripped(0).toLower + stripped.substring(1) else stripped
         val fieldPath = Select(target, newTermName(fieldName))
-
-        val startFieldExpr = reify {
-          formatterStack.splice.startField(c.Expr[String](Literal(Constant(fieldName))).splice)
-        }
+        val startFieldExpr =
+          Apply(Select(Ident(newTermName("formatter")), newTermName("startField")), Literal(Constant(fieldName)) :: Nil)
+//        val startFieldExpr = reify {
+//          formatterStack.splice.startField(c.Expr[String](Literal(Constant(fieldName))).splice)
+//        }
         val fval = buildTpe(tt, fieldPath)
-        fval :: startFieldExpr.tree :: Nil
+        fval :: startFieldExpr :: Nil
       }
       Block(
         reify(formatterStack.splice.startObject(c.Expr[String](Literal(Constant(tp.typeSymbol.name.decoded))).splice)).tree ::

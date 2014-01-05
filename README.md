@@ -40,7 +40,6 @@ Muster.consume.ByteBuffer.as[Person](/* file | string | reader | byte array | in
 ## What's inside
 
 Currently muster supports JSON through parsing with jackson and it can extract the following things:
-
 * Primitive values like String, Int, Date
 * All scala collections
 * Scala maps
@@ -51,11 +50,13 @@ Currently muster supports JSON through parsing with jackson and it can extract t
 * Scala classes with java style getter/setter methods
 * Scala case classes
 * Classes initialized through a constructor only
+* Classes with type parameters
+
 
 Expected to be added next:
-* Classes with type parameters
 * Polymorphic classes/collections through a configurable type hint field and strategy
 * Support for maps with different keys than String
+* Support for writing bytebuffers (through the pickling format)
+* Support for writing akka.util.ByteString (through the pickling format)
 * Support for streaming large collections through a scala iterator, java iterator or scala stream
-
-
+* Support for using a map as an input source
