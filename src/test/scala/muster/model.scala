@@ -81,3 +81,13 @@ class OnlyVars {
   var id: Int = _
   var name: String = _
 }
+
+class JavaStyle {
+  private[this] var id: Int = _
+  private[this] var name: String = _
+
+  def getId: Int = id
+  def getName: String = name
+  def setId(newId: Int) = id = newId
+  def setName(newName: String) = name = newName
+}

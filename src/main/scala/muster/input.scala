@@ -349,8 +349,7 @@ trait InputFormat[R, C <: InputCursor[_]] {
 
   def from[T](source: R)(implicit consumer: Consumer[T]): T = {
     val cursor = createCursor(source)
-    val n = (Try(cursor.nextNode()) recover { case _ => UndefinedNode}).get
-    consumer.consume(n)
+    consumer.consume(cursor.nextNode())
   }
   def tryFrom[T](source: R)(implicit consumer: Consumer[T]): Try[T] = Try(from(source))
 

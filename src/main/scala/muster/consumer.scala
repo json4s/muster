@@ -282,16 +282,17 @@ object Consumer {
             Assign(Select(Ident(ot), newTermName(varName)), setterDef(tp, reader, Literal(Constant(varName))))
           }
         }
-//          helper.getNonConstructorVars(tpe).toList.map {
-//            pSym =>
-//              val varName = pSym.name.toTermName.toString.trim
-//              val tpe = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
-//              optionalParams(tpe, varName,
-//                tree => c.Expr(Assign(Select(Ident(ot), newTermName(varName)), tree))
-//              )
-//          }
-
-        val setSetterBlocks: List[Tree] = Nil
+        val setSetterBlocks: List[Tree] = {
+          helper.getJavaStyleSetters(tpe).toList map { pSym =>
+            val origName = pSym.name.decoded.substring(3)
+            val name = origName.charAt(0).toLower + origName.substring(1)
+            val paramType = {
+              val tp = pSym.asMethod.paramss(0)(0)
+              tp.typeSignatureIn(tpe)
+            }
+            Apply(Select(Ident(ot), pSym.name), setterDef(paramType, reader, Literal(Constant(name))) :: Nil)
+          }
+        }
 //          helper.getJavaStyleSetters(tpe).toList.map {
 //            pSym => // MethodSymbol
 //              val origName = pSym.name.decoded.substring(3)

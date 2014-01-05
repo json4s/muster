@@ -192,6 +192,20 @@ class JacksonDeserializationSpec extends Specification {
       val js = """{"nr":3939}"""
       read[ImplOverride](js) must_== ImplOverride(3854)
     }
+
+    "read a class with java style getter/setter definitions" in {
+      val js = """{"id":1,"name":"Tom"}"""
+      val result = read[JavaStyle](js)
+      result.getId must_== 1
+      result.getName must_== "Tom"
+    }
+
+    "read a java class" in {
+      val js = """{"id":1,"name":"Tom"}"""
+      val result = read[SimpleJava](js)
+      result.getId must_== 1
+      result.getName must_== "Tom"
+    }
   }
 
 

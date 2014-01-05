@@ -42,9 +42,9 @@ class Helper[C <: Context](val c: C) {
     fetchType(tpe)
   }
 
-  def isVal(v: Symbol) = v.isTerm && v.asTerm.isVal
+  def isVal(v: Symbol) = v.isTerm && v.asTerm.isVal && v.isPublic
 
-  def isVar(v: Symbol) = v.isTerm && v.asTerm.isVar
+  def isVar(v: Symbol) = v.isTerm && v.asTerm.isVar && v.isPublic
 
   def vals(tpe: Type): Seq[Symbol] = tpe.members.toVector filter isVal
 
