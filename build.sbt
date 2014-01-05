@@ -64,6 +64,8 @@ libraryDependencies += "net.minidev" % "json-smart" % "2.0-RC3" % "test"
 
 testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework")
 
+parallelExecution in test := false
+
 logBuffered := false
 
 initialCommands in console := """

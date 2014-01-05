@@ -4,86 +4,85 @@ import org.scalacheck._
 import java.util.TimeZone
 import scala.reflect.ClassTag
 import muster.StringOutputFormatter._
+import org.specs2.{ScalaCheck, Specification}
+import org.specs2.matcher.MatchResult
 
-object ConsumerPropertiesSpec extends Properties("Readable") {
-
-  import Prop.forAll
-
+class ConsumerSpec extends Specification with ScalaCheck {
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
   //  def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
   val format = Muster.consume.Json
 
   def read[T: Consumer](js: String) = format.as[T](js)
 
-  def cp[T: Arbitrary : Consumer : ClassTag] = {
-    property(implicitly[ClassTag[T]].runtimeClass.getSimpleName + " value") = forAll { (i: T) =>
-      format.as[T](i.toString) == i
+  def cp[T](implicit toProp : MatchResult[T] => Prop, a : org.scalacheck.Arbitrary[T], s : org.scalacheck.Shrink[T], cons: Consumer[T]) = {
+    prop { (i: T) =>
+      format.as[T](i.toString) must_== i
     }
   }
 
-  cp[Byte]
-  cp[Short]
-  cp[Int]
-  cp[Long]
-  cp[BigInt]
-  cp[Float]
-  cp[Double]
+  def cpc[T, N](fn: T => N)(implicit toProp : MatchResult[N] => Prop, a : org.scalacheck.Arbitrary[T], s : org.scalacheck.Shrink[T], cons: Consumer[N]) = {
+    prop { (i: T) =>
+      val conv = fn(i)
+      read[N](conv.toString) must_== conv
+    }
+  }
 
-  // The artbitrary for big decimal generates numbers it can't parse back in
-  property("BigDecimal value") = forAll { (i: Double) =>
-    val bd = BigDecimal(i)
-    read[BigDecimal](bd.toString) == bd
-  }
-  property("java.lang.Byte value") = forAll { (i: Byte) =>
-    val bd = byte2Byte(i)
-    read[java.lang.Byte](bd.toString) == bd
-  }
-  property("java.lang.Byte value") = forAll { (i: Short) =>
-    val bd = short2Short(i)
-    read[java.lang.Short](bd.toString) == bd
-  }
-  property("java.lang.Integer value") = forAll { (i: Int) =>
-    val bd = int2Integer(i)
-    read[Integer](bd.toString) == bd
-  }
-  property("java.lang.Long value") = forAll { (i: Long) =>
-    val bd = long2Long(i)
-    read[java.lang.Long](bd.toString) == bd
-  }
-  property("java.math.BigInteger value") = forAll { (i: BigInt) =>
-    val bd = i.bigInteger
-    read[java.math.BigInteger](bd.toString) == bd
-  }
-  property("java.lang.Float value") = forAll { (i: Float) =>
-    val bd = float2Float(i)
-    read[java.lang.Float](bd.toString) == bd
-  }
-  property("java.lang.Double value") = forAll { (i: Double) =>
-    val bd = double2Double(i)
-    read[java.lang.Double](bd.toString) == bd
-  }
-  //  property("java.math.BigDecimal value") = forAll { (i: Double) =>
-  //    val bd = BigDecimal(i.toString)
-  //    read[java.math.BigDecimal](i.toString) == bd.bigDecimal
-  //  }
+  def is =
+    "A consumer should" ^
+      "read a byte value" ! byteProp ^ br ^
+      "read a short value" ! shortProp ^ br ^
+      "read a int value" ! intProp ^ br ^
+      "read a long value" ! longProp ^ br ^
+      "read a big integer value" ! bigIntProp ^ br ^
+      "read a float value" ! floatProp ^ br ^
+      "read a double value" ! doubleProp ^ br ^
+      "read a big decimal value" ! bigDecimalProp ^ br ^
+      "read a java byte value" ! javaByteProp ^ br ^
+      "read a java short value" ! javaShortProp ^ br ^
+      "read a java int value" ! javaIntProp ^ br ^
+      "read a java long value" ! javaLongProp ^ br ^
+      "read a java big integer value" ! javaBigIntProp ^ br ^
+      "read a java float value" ! javaFloatProp ^ br ^
+      "read a java double value" ! javaDoubleProp ^ br ^
+//      "read a java big decimal value" ! javaBigDecimalProp ^ br ^
+      "read a string value" ! stringProp ^ br ^
+      "read a list value" ! listProp ^ br ^
+      "read a map value" ! mapProp ^ br ^
+      "read a map with list value" ! mapListProp ^ br ^
+      "read an option value" ! optProp ^ br ^
+      "read an option with list value" ! optListProp ^ br ^
+    end
 
-  property("String value") = forAll(Gen.alphaStr) { (i: String) =>
+
+
+  val byteProp = cp[Byte]
+  val shortProp = cp[Short]
+  val intProp = cp[Int]
+  val longProp = cp[Long]
+  val bigIntProp = cp[BigInt]
+  val floatProp = cp[Float]
+  val doubleProp = cp[Double]
+  val bigDecimalProp = cpc { (x: Double) => BigDecimal(x) }
+  val javaByteProp = cpc { (x: Byte) => byte2Byte(x) }
+  val javaShortProp = cpc { (x: Short) => short2Short(x) }
+  val javaIntProp = cpc { (x: Int) => int2Integer(x) }
+  val javaLongProp = cpc { (x: Long) => long2Long(x) }
+  val javaBigIntProp = cpc { (x: BigInt) => x.bigInteger }
+  val javaFloatProp = cpc { (x: Float) => float2Float(x) }
+  val javaDoubleProp = cpc { (x: Double) => double2Double(x) }
+  val javaBigDecimalProp = cpc { (x: BigDecimal) => x.bigDecimal }
+
+  val stringProp = Prop.forAll(Gen.alphaStr) { (i: String) =>
     val sb = new StringBuilder()
     sb.append('"')
-    quote(i, sb)
+    JsonOutput.quote(i, sb)
     sb.append('"')
-    read[String](sb.toString()) == i
+    read[String](sb.toString()) must_== i
   }
 
-  property("List value") = forAll { (i: List[Int]) =>
-    read[List[Int]](i.mkString("[", ",", "]")) == i
-  }
-
+  val listProp = prop { (i: List[Int]) => read[List[Int]](i.mkString("[", ",", "]")) must_== i  }
   import collection.mutable
-
-  property("mutable List value") = forAll { (i: mutable.ListBuffer[Int]) =>
-    read[mutable.ListBuffer[Int]](i.mkString("[", ",", "]")) == i
-  }
+  val mutableListProp = prop { (i: mutable.ListBuffer[Int]) => read[mutable.ListBuffer[Int]](i.mkString("[", ",", "]")) must_== i  }
 
   val mapGen = {
     for {
@@ -93,7 +92,8 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
       r <- Gen.mapOf(t)
     } yield r
   }
-  property("map value") = forAll(mapGen) { (i: Map[String, Int]) =>
+
+  val mapProp = Prop.forAll(mapGen) { (i: Map[String, Int]) =>
     val json = {
       val sb = new mutable.StringBuilder()
       sb.append('{')
@@ -102,7 +102,7 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
         if (!first) sb.append(',')
         else first = false
         sb.append('"')
-        quote(k, sb)
+        JsonOutput.quote(k, sb)
         sb.append('"')
         sb.append(':')
         sb.append(v)
@@ -110,7 +110,7 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
       sb.append('}')
       sb.toString
     }
-    read[Map[String, Int]](json) == i
+    read[Map[String, Int]](json) must_== i
   }
 
   val mapListGen = {
@@ -121,7 +121,8 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
       r <- Gen.mapOf(t)
     } yield r
   }
-  property("map with list value") = forAll(mapListGen) { (i: Map[String, List[Int]]) =>
+
+  val mapListProp = Prop.forAll(mapListGen) { (i: Map[String, List[Int]]) =>
     val json = {
       val sb = new mutable.StringBuilder()
       sb.append('{')
@@ -130,7 +131,7 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
         if (!first) sb.append(',')
         else first = false
         sb.append('"')
-        quote(k, sb)
+        JsonOutput.quote(k, sb)
         sb.append('"')
         sb.append(':')
         sb.append('[')
@@ -145,16 +146,18 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
       sb.append('}')
       sb.toString
     }
-    read[Map[String, List[Int]]](json) == i
+    read[Map[String, List[Int]]](json) must_== i
   }
 
-  property("option value") = forAll { (i: Option[Int]) =>
-    read[Option[Int]](i.map(_.toString).getOrElse("")) == i
+  val optProp = prop { (i: Option[Int]) =>
+    read[Option[Int]](i.map(_.toString).getOrElse("")) must_== i
   }
 
-  property("option value in  a list") = forAll { (i: List[Option[Int]]) =>
-    read[List[Option[Int]]](i.map(_.map(_.toString).getOrElse("null")).mkString("[", ",", "]")) == i
+  val optListProp = prop { (i: List[Option[Int]]) =>
+    read[List[Option[Int]]](i.map(_.map(_.toString).getOrElse("null")).mkString("[", ",", "]")) must_== i
   }
+
+
 
   //  val mapOptionGen = {
   //    for {
@@ -163,7 +166,7 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
   //      r <- Gen.mapOf((n, m))
   //    } yield  r
   //  }
-  //  property("option value as null in a map") = forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
+  //  val optNullMapProp = Prop.forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
   //     val json = {
   //       val sb = new mutable.StringBuilder()
   //       sb.append('{')
@@ -183,7 +186,7 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
   //     }
   //     read[Map[String, Option[Int]]](json) == i
   //  }
-  //  property("option value as missing in a map") = forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
+  //  val optMissingMapProp = Prop.forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
   //     val json = {
   //       val sb = new mutable.StringBuilder()
   //       sb.append('{')
@@ -204,27 +207,4 @@ object ConsumerPropertiesSpec extends Properties("Readable") {
   //     }
   //     read[Map[String, Option[Int]]](json) == i
   //  }
-
-  private[this] def quote(s: String, writer: StringBuilder) {
-    var i = 0
-    val l = s.length
-    while (i < l) {
-      val c = s(i)
-      if (c == '"') writer.append("\\\"")
-      else if (c == '\\') writer.append("\\\\")
-      else if (c == '\b') writer.append("\\b")
-      else if (c == '\f') writer.append("\\f")
-      else if (c == '\n') writer.append("\\n")
-      else if (c == '\r') writer.append("\\r")
-      else if (c == '\t') writer.append("\\t")
-      else if ((c >= '\u0000' && c <= '\u001f') || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100')) {
-        writer.append("\\u")
-        writer.append(HexAlphabet.charAt(c >> 12 & 0x000F))
-        writer.append(HexAlphabet.charAt(c >> 8 & 0x000F))
-        writer.append(HexAlphabet.charAt(c >> 6 & 0x000F))
-        writer.append(HexAlphabet.charAt(c >> 0 & 0x000F))
-      } else writer.append(c.toString)
-      i += 1
-    }
-  }
 }

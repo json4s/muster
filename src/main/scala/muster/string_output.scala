@@ -87,7 +87,7 @@ abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: 
   def string(value: String) {
     writeComma(State.InArray)
     if (quoteStringWith != null && quoteStringWith.trim.nonEmpty) writer.write(quoteStringWith)
-    if (escapeSpecialChars) quote(value) else writer.write(value)
+    if (escapeSpecialChars) JsonOutput.quote(value, writer) else writer.write(value)
     if (quoteStringWith != null && quoteStringWith.trim.nonEmpty) writer.write(quoteStringWith)
   }
 
@@ -169,31 +169,6 @@ abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: 
   }
 
   def result: String = writer.toString
-
-  private[this] def quote(s: String) {
-    var i = 0
-    val l = s.length
-    while (i < l) {
-      val c = s(i)
-      if (c == '"') writer.write("\\\"")
-      else if (c == '\\') writer.write("\\\\")
-      else if (c == '\b') writer.write("\\b")
-      else if (c == '\f') writer.write("\\f")
-      else if (c == '\n') writer.write("\\n")
-      else if (c == '\r') writer.write("\\r")
-      else if (c == '\t') writer.write("\\t")
-      // Reference:
-      // http://www.unicode.org/versions/Unicode5.1.0/
-      else if ((c >= '\u0000' && c <= '\u001f') || (c >= '\u0080' && c < '\u00a0') || (c >= '\u2000' && c < '\u2100')) {
-        writer.write("\\u")
-        writer.write(HexAlphabet.charAt(c >> 12 & 0x000F))
-        writer.write(HexAlphabet.charAt(c >> 8 & 0x000F))
-        writer.write(HexAlphabet.charAt(c >> 6 & 0x000F))
-        writer.write(HexAlphabet.charAt(c >> 0 & 0x000F))
-      } else writer.write(c)
-      i += 1
-    }
-  }
 
   def withWriter(wrtr: java.io.Writer): this.type
 

@@ -2,141 +2,89 @@ package muster
 
 import org.scalacheck._
 import java.util.{TimeZone, Date}
+import org.specs2.matcher.MatchResult
 
-object DefaultStringFormatter extends Properties("DefaultStringFormatter") {
+trait StringOutputFormatterSpec extends FormatterSpec[String] {
 
-  import Prop.forAll
+  def sharedFragments =
+    "write a byte property" ! byteProp ^ br ^
+    "write a short property" ! shortProp ^ br ^
+    "write a int property" ! intProp ^ br ^
+    "write a long property" ! longProp ^ br ^
+    "write a big int property" ! bigIntProp ^ br ^
+    "write a float property" ! floatProp ^ br ^
+    "write a double property" ! doubleProp ^ br ^
+    "write a big decimal property" ! bigDecimalProp ^ br ^
+    "write a boolean property" ! boolProp ^ br ^
+    "write a date property property" ! dateProp ^ br ^
+    "write a string property" ! stringProp ^ br ^
+    "write a list property" ! listProp ^ br ^
+    "write a object property" ! objectProp ^  br
 
-  TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
-  val format = Muster.produce.String
-  //  implicit lazy val arbDateTime: Arbitrary[DateTime] = Arbitrary(for {
-  //    l <- Arbitrary.arbitrary[Long]
-  //  } yield new DateTime(System.currentTimeMillis() + l, DateTimeZone.UTC))
-
-  implicit lazy val arbCategory: Arbitrary[Category] = Arbitrary(for {
-    id <- Arbitrary.arbitrary[Int]
-    nm <- Gen.alphaStr
-  } yield Category(id, nm))
-
-
-  property("byte") = forAll { (x: Byte) =>
-    val fmt = format.createFormatter
-    fmt.byte(x)
-    val r = fmt.result
-    fmt.close()
-    r == x.toString
+  def writerProp[T](fn: (format.Formatter, T) => Unit)(implicit toProp : MatchResult[T] => Prop, a : org.scalacheck.Arbitrary[T], s : org.scalacheck.Shrink[T]) = prop { (x: T) =>
+    withFormatter { fmt =>
+      fn(fmt, x)
+      fmt.result must_== x.toString
+    }
   }
 
-  property("short") = forAll { (x: Short) =>
-    val fmt = format.createFormatter
-    fmt.short(x)
-    val r = fmt.result
-    fmt.close()
-    r == x.toString
+  def listProp: Prop
+  def objectProp: Prop
+
+  val byteProp = writerProp { (fmt, x:Byte) => fmt.byte(x) }
+  val shortProp = writerProp { (fmt, x:Short) => fmt.short(x) }
+  val intProp = writerProp { (fmt, x:Int) => fmt.int(x) }
+  val longProp = writerProp { (fmt, x:Long) => fmt.long(x) }
+  val bigIntProp = writerProp { (fmt, x:BigInt) => fmt.bigInt(x) }
+  val floatProp = writerProp { (fmt, x:Float) => fmt.float(x) }
+  val doubleProp = writerProp { (fmt, x:Double) => fmt.double(x) }
+  val bigDecimalProp = writerProp { (fmt, x:BigDecimal) => fmt.bigDecimal(x) }
+  val boolProp = writerProp { (fmt, x:Boolean) => fmt.boolean(x) }
+  val dateProp = prop { (x:Date) =>
+    withFormatter { fmt =>
+      fmt.date(x)
+      fmt.result must_== format.dateFormat.format(x)
+    }
   }
 
-  property("int") = forAll { (x: Int) =>
-    val fmt = format.createFormatter
-    fmt.int(x)
-    val r = fmt.result
-    fmt.close()
-    r == x.toString
-  }
 
-  property("long") = forAll { (x: Long) =>
-    val fmt = format.createFormatter
-    fmt.long(x)
-    val r = fmt.result
-    fmt.close()
-    r == x.toString
-  }
-
-  property("bigInt") = forAll { (x: BigInt) =>
-    val fmt = format.createFormatter
-    fmt.bigInt(x)
-    val r = fmt.result
-    fmt.close()
-    r == x.toString
-  }
-
-  property("float") = forAll { (x: Float) =>
-    val fmt = format.createFormatter
-    fmt.float(x)
-    val r = fmt.result
-    fmt.close()
-    r == x.toString
-  }
-
-  property("double") = forAll { (x: Double) =>
-    val fmt = format.createFormatter
-    fmt.double(x)
-    val r = fmt.result
-    fmt.close()
-    r == x.toString
-  }
-
-  property("bigDecimal") = forAll { (x: BigDecimal) =>
-    val fmt = format.createFormatter
-    fmt.bigDecimal(x)
-    val r = fmt.result
-    fmt.close()
-    r == x.toString
-  }
-
-  property("boolean") = forAll { (x: Boolean) =>
-    val fmt = format.createFormatter
-    fmt.boolean(x)
-    val r = fmt.result
-    fmt.close()
-    r == x.toString
-  }
-
-  property("date") = forAll { (x: Date) =>
-    val fmt = format.createFormatter
-    fmt.date(x)
-    val r = fmt.result
-    fmt.close()
-    r == format.dateFormat.format(x)
-  }
-  //
-  //  property("dateTime") = forAll { (x: DateTime) =>
-  //    val fmt = format.createFormatter
-  //    fmt.dateTime(x)
-  //    val r = fmt.result
-  //    fmt.close()
-  //    r == x.toString(ISODateTimeFormat.dateTimeNoMillis.withZone(DateTimeZone.UTC))
-  //  }
-
-  property("string") = forAll(Gen.alphaStr) { (x: String) =>
-    val fmt = format.createFormatter
-    fmt.string(x)
-    val r = fmt.result
-    fmt.close()
-    r == "\"" + x + "\""
-  }
-
-  property("list") = forAll(Gen.nonEmptyListOf(Gen.posNum[Int])) { lst =>
-    val fmt = format.createFormatter
-    fmt.startArray("List")
-    lst foreach fmt.int
-    fmt.endArray()
-    val r = fmt.result
-    fmt.close()
-    r == lst.toString()
-  }
-
-  property("object") = forAll { (obj: Category) =>
-    val fmt = format.createFormatter
-    fmt.startObject("Category")
-    fmt.startField("id")
-    fmt.int(obj.id)
-    fmt.startField("name")
-    fmt.string(obj.name)
-    fmt.endObject()
-    val r = fmt.result
-    fmt.close()
-    r == s"""Category(id: ${obj.id}, name: "${obj.name}")"""
+  val stringProp = prop { (x: String) =>
+    withFormatter { fmt =>
+      fmt.string(x)
+      val sb = new StringBuilder
+      sb.append('"')
+      JsonOutput.quote(x, sb)
+      sb.append('"')
+      fmt.result must_== sb.toString()
+    }
   }
 
 
 }
+
+class DefaultStringFormatterSpec extends {val format = Muster.produce.String} with  StringOutputFormatterSpec {
+
+
+
+  val listProp = writerProp { (fmt, lst: List[Int]) =>
+    fmt.startArray("List")
+    lst foreach fmt.int
+    fmt.endArray()
+  }
+
+  val objectProp = prop { (obj: Category) =>
+    withFormatter { fmt =>
+      fmt.startObject("Category")
+      fmt.startField("id")
+      fmt.int(obj.id)
+      fmt.startField("name")
+      fmt.string(obj.name)
+      fmt.endObject()
+      fmt.result must_== s"""Category(id: ${obj.id}, name: "${obj.name}")"""
+    }
+  }
+
+  val is = "The default string formatter should" ^ br ^ sharedFragments ^ end
+
+}
+

@@ -82,7 +82,6 @@ final class StringJsonReader(val source: String) extends JsonReader[String] {
 }
 
 object JsonInputCursor {
-
   private[this] val notNextField = (c: Char) => {
     InputCursor.isWhitespace(c) || c == ','
   }

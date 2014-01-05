@@ -371,16 +371,9 @@ class JacksonDeserializationSpec extends Specification {
 
     /*
 
-    case class Bill(in: Int)
-
     class Billy[U](in: U)
 
     case class BillyB(in: Int) extends Billy[Int](in)
-
-    case class ObjWithDefJunk(name: String, junk: Junk = Junk(-1, "Default"))
-
-
-    }
      */
 
 
