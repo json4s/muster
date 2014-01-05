@@ -518,8 +518,13 @@ trait JacksonInputCursor[R] extends InputCursor[R] {
   }
 }
 
+
 trait JacksonInputFormat[R] extends InputFormat[R, JacksonInputCursor[_]] {
   val mapper: ObjectMapper = new ObjectMapper()
   mapper.configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
+
+  def typeHintFieldName: String = "$typeName"
+
+
 }
 

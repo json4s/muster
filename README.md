@@ -7,6 +7,8 @@ add your own formats.
 
 The idea is that things work a little bit like this
 
+## Writing
+
 ```scala
 case class Person(id: Long, name: String, age: Int)
 val person = Person(1, "Luke", 38)
@@ -19,10 +21,12 @@ Muster.produce.Protobuf[Protocol.Person].from(person)
 
 /* or */
 
-person.toJson // calls: Muster.produce.CompactJsonString.from(person)
-person.asString // calls: Muster.produce.String.from(person)
+import muster._
+person.asJson // calls: Muster.produce.CompactJsonString.from(person) and produces {"id":1,"name":"Luke","age":38}
+person.asString // calls: Muster.produce.String.from(person) and produces Person(id: 1, name: "Luke", age: 38)
 ```
 
+## Reading
 
 Similarly reading can be achieved with
 
@@ -36,6 +40,7 @@ Muster.consume.ByteBuffer.as[Person](/* file | string | reader | byte array | in
 ## What's inside
 
 Currently muster supports JSON through parsing with jackson and it can extract the following things:
+
 * Primitive values like String, Int, Date
 * All scala collections
 * Scala maps

@@ -300,18 +300,11 @@ object Consumer {
         val ot = newTermName(on)
         val otr: Tree = ValDef(Modifiers(), ot, TypeTree(tpe), pickConstructorTree(reify(reader.splice.keySet)))
 
-        val setVarsBlocks: List[Tree] = {
-          helper.getNonConstructorVars(tpe).toList map { pSym =>
-            val varName = pSym.name.toTermName.toString.trim
-            val tp = pSym.typeSignatureIn(tpe)
-
-            Assign(Select(Ident(ot), newTermName(varName)), setterDef(tp, reader, Literal(Constant(varName))))
-          }
-        }
-        val setSetterBlocks: List[Tree] = {
-          helper.getJavaStyleSetters(tpe).toList map { pSym =>
-            val origName = pSym.name.decoded.substring(3)
-            val name = origName.charAt(0).toLower + origName.substring(1)
+        val setterBlocks: List[Tree] = {
+          helper.getSetters(tpe) map { pSym =>
+            val needsLower = pSym.name.decoded.startsWith("set")
+            val stripped = pSym.name.decoded.replaceFirst("^set", "").replaceFirst("_=$", "")
+            val name = if (needsLower) stripped(0).toLower + stripped.substring(1) else stripped
             val paramType = {
               val tp = pSym.asMethod.paramss(0)(0)
               tp.typeSignatureIn(tpe)
@@ -320,7 +313,7 @@ object Consumer {
           }
         }
 
-        Block(otr :: setVarsBlocks ::: setSetterBlocks, Ident(ot))
+        Block(otr :: setterBlocks, Ident(ot))
       } else {
         c.abort(c.enclosingPosition, "Lists, Maps, Options and Primitives don't use macros")
       }

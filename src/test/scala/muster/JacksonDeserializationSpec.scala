@@ -274,7 +274,35 @@ class JacksonDeserializationSpec extends Specification {
       result.getLst must_== lst
     }
 
+    "reads mutable junk" in {
+      val js = """{"in1":2334, "in2": "some string"}"""
+      read[MutableJunk](js) must_== MutableJunk(2334, "some string")
+    }
 
+    "reads mutable junk with a field" in {
+      val js = """{"in1":2334, "in2": "some string"}"""
+      val expected = MutableJunkWithField(2334)
+      expected.in2 = "some string"
+      val result = read[MutableJunkWithField](js)
+      result.in1 must_== expected.in1
+      result.in2 must_== expected.in2
+    }
+
+    "read mutable junk with a junk field" in {
+      val js = s"""{"in1":3994, "in2":$junkJson}"""
+      val expected = MutableJunkWithJunk(3994)
+      expected.in2 = junk
+      val result = read[MutableJunkWithJunk](js)
+      result.in1 must_== expected.in1
+      result.in2 must_== expected.in2
+    }
+
+    /*
+
+    case class MutableJunkWithJunk(var in1: Int) {
+      var in2: Junk = Junk(0, "")
+    }
+     */
 
 
   }

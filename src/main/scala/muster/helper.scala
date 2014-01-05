@@ -44,13 +44,12 @@ class Helper[C <: Context](val c: C) {
 
   def isVal(v: Symbol) = v.isTerm && v.asTerm.isVal && (v.isPublic||v.asTerm.isCaseAccessor)
 
-  def isVar(v: Symbol) = v.isTerm && v.asTerm.isVar && (v.isPublic||v.asTerm.isCaseAccessor)
+  def isVar(v: Symbol) = v.isTerm && v.asTerm.isVar && !v.asTerm.isCaseAccessor
 
   def vals(tpe: Type): Seq[Symbol] = tpe.members.toVector filter isVal
 
   def vars(tpe: Type): Seq[Symbol] = tpe.members.toVector filter isVar
 
-  //  def isCaseClass(sym: c.universe.Symbol) = sym.isClass && sym.asClass.isCaseClass
   def isCaseClass(tpe: Type) = {
     val sym = tpe.typeSymbol
     sym.isClass && sym.asClass.isCaseClass
@@ -73,54 +72,33 @@ class Helper[C <: Context](val c: C) {
       Ident(t.typeSymbol.name)
   }
 
-  private[this] def pickConstructor(tpe: Type, argNames: Set[String]): (MethodSymbol, Seq[Symbol]) = {
-    val clazz = tpe.typeSymbol.asClass
-    val withAlt = clazz.typeSignature.member(nme.CONSTRUCTOR).asTerm.alternatives
-    val ctors = withAlt.map(_.asMethod).sortBy(-_.paramss.sortBy(-_.size).headOption.getOrElse(Nil).size)
-    val zipped = ctors zip (ctors map (ctor => pickConstructorArgs(ctor.paramss, argNames)))
-    zipped collectFirst {
-      case (m: MethodSymbol, Some(args)) =>
-        (m, args)
-    } getOrElse (throw new RuntimeException(s"Couldn't find a constructor for ${clazz.name.decoded.trim} and args: [${argNames.mkString(", ")}]"))
+  def isJavaOrScalaSetter(varNames: Set[String], v: Symbol) = {
+    val methodName = v.name.decoded.trim
+    v.isTerm && v.asTerm.isMethod && v.isPublic &&
+      (v.asTerm.asMethod.isSetter || v.asTerm.name.decoded.startsWith("set")) &&
+      varNames.exists(vn => s"set${vn.capitalize}" == methodName || s"${vn}_=" == methodName) &&
+      v.asMethod.paramss.flatten.length == 1
   }
 
-  private[this] def pickConstructorArgs(candidates: Seq[Seq[Symbol]], argNames: Set[String]): Option[Seq[Symbol]] = {
-    val ctors = candidates.sortBy(-_.size)
-    def isRequired(item: Symbol) = {
-      val sym = item.asTerm
-      !(sym.isParamWithDefault || sym.typeSignature <:< typeOf[Option[_]])
-    }
-    def matchingRequired(plist: Seq[Symbol]) = {
-      val required = plist filter isRequired
-      required.size <= argNames.size && required.forall(s => argNames.contains(s.name.decoded.trim))
-    }
-    ctors find matchingRequired
+  def getSetters(tpe: Type): List[Symbol] = {
+    val ctorParams = tpe.member(nme.CONSTRUCTOR).asTerm.alternatives.map(_.asMethod.paramss.flatten.map(_.name)).flatten.toSet
+    val varNames = vars(tpe).filter(sym => sym.asTerm.isProtected || sym.asTerm.isPrivate && !ctorParams(sym.name)).map(_.name.decoded.trim).toSet
+    (tpe.members filter (isJavaOrScalaSetter(varNames, _))).toList
   }
 
-  def getNonConstructorVars(tpe: Type): Seq[Symbol] = {
-    // Make sure that the param isn't part of the constructor
-    val ctorParams = tpe.member(nme.CONSTRUCTOR).asTerm.alternatives
-      .map(_.asMethod.paramss.flatten.map(_.name.toTermName.toString.trim))
-      .flatten
-      .toSet
-
-    // TODO: Looks like these are always accessed with getters and setters. Need to find if the getters and setters
-    //       are valid
-    for {
-    // TODO: need to check if the var is public or not, but doesn't seem to work properly
-      sym <- vars(tpe) if !ctorParams.exists(sym.name.toTermName.toString.trim == _)
-    } yield sym
+  def isJavaOrScalaGetter(varNames: Set[String], v: Symbol) = {
+    val methodName = v.name.decoded.trim
+    v.isTerm && v.asTerm.isMethod && v.isPublic &&
+      (v.asTerm.asMethod.isGetter || v.asTerm.name.decoded.startsWith("get")) &&
+      varNames.exists(vn => s"get${vn.capitalize}" == methodName || vn == methodName) &&
+      v.asMethod.paramss.flatten.length == 0
   }
 
-  def getJavaStyleSetters(tpe: Type) = {
-    val knownVar = getNonConstructorVars(tpe).toSet
-    val candidates = tpe.members.filter(v => v.isTerm && v.asTerm.isMethod && !knownVar(v)).filter { s =>
-      val name = s.asTerm.name.decoded
-      name.startsWith("get") || name.startsWith("set")
-    }
-    candidates.filter(sym =>
-      candidates.exists(_.asTerm.name.decoded.trim.endsWith(sym.asTerm.name.decoded.trim.substring("set".length))) &&
-        sym.asMethod.paramss.flatten.length == 1
-    ).toList
+  def getGetters(tpe: Type): List[Symbol] = {
+    val ctorParams = tpe.member(nme.CONSTRUCTOR).asTerm.alternatives.map(_.asMethod.paramss.flatten.map(_.name)).flatten.toSet
+    val varNames = vars(tpe).filter(sym => sym.asTerm.isProtected || sym.asTerm.isPrivate && !ctorParams(sym.name)).map(_.name.decoded.trim).toSet
+    (tpe.members filter (isJavaOrScalaSetter(varNames, _))).toList
   }
+
+
 }
