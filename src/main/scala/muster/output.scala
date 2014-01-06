@@ -60,5 +60,13 @@ trait OutputFormat[R] {
 
   def freezeFormatter(fmt: Formatter): This
 
-  def from[T](out: T)(implicit fmt: Producer[T]): R = fmt.writeFormatted(out, this)
+  def from[T](out: T)(implicit producer: Producer[T]): R = {
+    val fmt = createFormatter
+    try {
+      producer.produce(out, fmt)
+      fmt.result
+    } finally {
+      fmt.close()
+    }
+  }
 }

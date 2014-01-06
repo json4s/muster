@@ -97,8 +97,8 @@ class Helper[C <: Context](val c: C) {
   def getGetters(tpe: Type): List[Symbol] = {
     val ctorParams = tpe.member(nme.CONSTRUCTOR).asTerm.alternatives.map(_.asMethod.paramss.flatten.map(_.name)).flatten.toSet
     val valNames = vals(tpe).filterNot(sym => sym.asTerm.isProtected || sym.asTerm.isPrivate ).map(_.name.decoded.trim).toSet
-    val varNames = vars(tpe).filter(sym => sym.asTerm.isProtected || sym.asTerm.isPrivate && !ctorParams(sym.name)).map(_.name.decoded.trim).toSet
-    (tpe.members filter (isJavaOrScalaSetter(varNames ++ valNames, _))).toList
+    val varNames = vars(tpe).filter(sym => sym.asTerm.isProtected || sym.asTerm.isPrivate).map(_.name.decoded.trim).toSet
+    (tpe.members filter (isJavaOrScalaGetter(varNames ++ valNames ++ ctorParams.map(_.decoded.trim), _))).toList
   }
 
 

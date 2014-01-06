@@ -56,7 +56,7 @@ abstract class JsonOutput extends StringOutputFormat {
 }
 
 
-class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat) extends OutputFormatter[String] {
+class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat, spaces: Int = 0) extends OutputFormatter[String] {
 
   import StringOutputFormatter._
 
@@ -67,27 +67,34 @@ class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat)
   private[this] val stateStack = mutable.Stack[Int]()
 
   private[this] def state = stateStack.headOption getOrElse State.None
+  private[this] var inField = false
 
   def startArray(name: String = "") {
     writeComma(State.InArray)
     writer.write('[')
     stateStack push State.ArrayStarted
+    writePretty()
   }
 
   def endArray() {
+    writePretty(outdent = 2)
     writer.write(']')
     stateStack.pop()
+    inField = false
   }
 
   def startObject(name: String = "") {
     writeComma(State.InArray)
     writer.write('{')
     stateStack push State.ObjectStarted
+    writePretty()
   }
 
   def endObject() {
+    writePretty(outdent = 2)
     writer.write('}')
     stateStack.pop()
+    inField = false
   }
 
   def string(value: String) {
@@ -95,61 +102,73 @@ class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat)
     writer.write('"')
     JsonOutput.quote(value, writer)
     writer.write('"')
+    inField = false
   }
 
   def byte(value: Byte) {
     writeComma(State.InArray)
     writer.write(value.toString)
+    inField = false
   }
 
   def int(value: Int) {
     writeComma(State.InArray)
     writer.write(value.toString)
+    inField = false
   }
 
   def long(value: Long) {
     writeComma(State.InArray)
     writer.write(value.toString)
+    inField = false
   }
 
   def bigInt(value: BigInt) {
     writeComma(State.InArray)
     writer.write(value.toString)
+    inField = false
   }
 
   def boolean(value: Boolean) {
     writeComma(State.InArray)
     writer.write(value.toString)
+    inField = false
   }
 
   def short(value: Short) {
     writeComma(State.InArray)
     writer.write(value.toString)
+    inField = false
   }
 
   def float(value: Float) {
     writeComma()
     writer.write(value.toString)
+    inField = false
   }
 
   def double(value: Double) {
     writeComma(State.InArray)
     writer.write(value.toString)
+    inField = false
   }
 
   def bigDecimal(value: BigDecimal) {
     writeComma(State.InArray)
     writer.write(value.toString)
+    inField = false
   }
 
   def date(value: Date) {
     writeComma(State.InArray)
     writer.write(dateFormat.format(value))
+    inField = false
   }
 
   def writeNull() {
     writeComma(State.InArray)
     writer.write("null")
+    inField = false
   }
 
   def undefined() {}
@@ -163,16 +182,27 @@ class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat)
       stateStack push State.InObject
     } else if (when.contains(state)) {
       writer.write(',')
+      if (!inField) writePretty()
+    }
+  }
+
+  private[this] def writePretty(outdent: Int = 0) = {
+    if (spaces > 0) {
+      writer write '\n'
+      writer.write(" " * (stateStack.size * spaces - outdent))
     }
   }
 
   def startField(name: String) {
     writeComma(State.InObject)
+    inField = true
     writer.write('"')
     writer.write(name)
     writer.write('"')
     writer.write(':')
   }
+
+
 
   def result: String = writer.toString
 
