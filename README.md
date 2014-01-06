@@ -12,8 +12,9 @@ The idea is that things work a little bit like this
 ```scala
 case class Person(id: Long, name: String, age: Int)
 val person = Person(1, "Luke", 38)
-Muster.produce.CompactJsonString.from(person)
-Muster.produce.PrettyJsonString.from(person)
+Muster.produce.Json.from(person)
+Muster.produce.Json.into(new File("luke.json")).from(person)
+Muster.produce.Json.Pretty.from(person)
 Muster.produce.String.from(person)
 Muster.produce.ByteBuffer.from(person)
 Muster.produce.ByteString.from(person)
@@ -22,7 +23,7 @@ Muster.produce.Protobuf[Protocol.Person].from(person)
 /* or */
 
 import muster._
-person.asJson // calls: Muster.produce.CompactJsonString.from(person) and produces {"id":1,"name":"Luke","age":38}
+person.asJson // calls: Muster.produce.Json.from(person) and produces {"id":1,"name":"Luke","age":38}
 person.asString // calls: Muster.produce.String.from(person) and produces Person(id: 1, name: "Luke", age: 38)
 ```
 

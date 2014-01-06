@@ -37,32 +37,41 @@ object JsonOutput {
     }
   }
 
-}
-abstract class JsonOutput extends StringOutputFormat {
-  type Formatter = CompactJsonStringFormatter
-  type This = JsonOutput
-
-  def withDateFormat(df: DateFormat): This =
-    new JsonOutput {
-      override val dateFormat: DateFormat = df
-    }
-
-  def createFormatter: Formatter = new CompactJsonStringFormatter(writer, dateFormat)
-
-  def freezeFormatter(fmt: Formatter): This =
-    new JsonOutput {
-      override val createFormatter: Formatter = fmt
-    }
+//  private class PrettyJsonOutput[R](val indentSpaces: Int = 2, ) extends JsonOutput[R]
 }
 
+abstract class JsonOutput[R] extends OutputFormat[R] {
 
-class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat, spaces: Int = 0) extends OutputFormatter[String] {
+  type Formatter = JsonFormatter[R]
+
+  def indentSpaces: Int
+
+  def createFormatter: Formatter
+
+  def Pretty: JsonOutput[R] = withSpaces(2)
+
+  def into[T](producible: Producible[_, T]): JsonOutput[T] = new ProducibleJsonOutput[T](producible)
+
+  protected def withSpaces(spaces: Int): this.type
+}
+
+class ProducibleJsonOutput[T](producible: Producible[_, T], val indentSpaces: Int = 0) extends JsonOutput[T] {
+  def createFormatter: Formatter = {
+    if (producible == StringProducible) new StringJsonFormatter(producible.toWriter, indentSpaces).asInstanceOf[JsonFormatter[T]]
+    else new UnitJsonFormatter(producible.toWriter, indentSpaces).asInstanceOf[JsonFormatter[T]]
+  }
+
+  protected def withSpaces(spaces: Int): this.type = new ProducibleJsonOutput[T](producible, spaces).asInstanceOf[this.type]
+}
+
+trait JsonFormatter[T] extends OutputFormatter[T] {
+
+
+  protected def writer: java.io.Writer
+
+  protected def spaces: Int
 
   import StringOutputFormatter._
-
-  def withDateFormat(df: DateFormat): this.type = new CompactJsonStringFormatter(writer, df).asInstanceOf[this.type]
-
-  def withWriter(wrtr: java.io.Writer): CompactJsonStringFormatter = new CompactJsonStringFormatter(wrtr, dateFormat)
 
   private[this] val stateStack = mutable.Stack[Int]()
 
@@ -77,9 +86,9 @@ class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat,
   }
 
   def endArray() {
-    writePretty(outdent = 2)
     writer.write(']')
     stateStack.pop()
+    writePretty(outdent = 2)
     inField = false
   }
 
@@ -91,9 +100,9 @@ class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat,
   }
 
   def endObject() {
+    stateStack.pop()
     writePretty(outdent = 2)
     writer.write('}')
-    stateStack.pop()
     inField = false
   }
 
@@ -159,12 +168,6 @@ class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat,
     inField = false
   }
 
-  def date(value: Date) {
-    writeComma(State.InArray)
-    writer.write(dateFormat.format(value))
-    inField = false
-  }
-
   def writeNull() {
     writeComma(State.InArray)
     writer.write("null")
@@ -189,7 +192,8 @@ class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat,
   private[this] def writePretty(outdent: Int = 0) = {
     if (spaces > 0) {
       writer write '\n'
-      writer.write(" " * (stateStack.size * spaces - outdent))
+      val level = if (spaces > 0) stateStack.size + 1 else stateStack.size
+      writer.write(" " * (level * spaces - outdent))
     }
   }
 
@@ -203,14 +207,20 @@ class CompactJsonStringFormatter(writer: java.io.Writer, dateFormat: DateFormat,
   }
 
 
+  def close() { }
 
-  def result: String = writer.toString
+}
 
-  def close() {
-    try {
-      writer.close()
-    } catch {
-      case _: Throwable =>
-    }
+private[muster] class StringJsonFormatter(protected val writer: java.io.Writer, protected val spaces: Int = 0) extends JsonFormatter[String] {
+  def result: String = {
+    writer.flush()
+    writer.toString
+  }
+}
+
+private[muster] class UnitJsonFormatter(protected val writer: java.io.Writer, protected val spaces: Int = 0) extends JsonFormatter[Unit] {
+  def result: Unit = {
+    writer.flush()
+    ()
   }
 }

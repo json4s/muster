@@ -32,8 +32,6 @@ trait OutputFormatter[R] extends AutoCloseable {
 
   def bigDecimal(value: BigDecimal): Unit
 
-  def date(value: Date): Unit
-
   def startField(name: String): Unit
 
   def writeNull(): Unit
@@ -42,31 +40,18 @@ trait OutputFormatter[R] extends AutoCloseable {
 
   def result: R
 
-  def withDateFormat(df: DateFormat): this.type
-
   def close()
 }
 
 
 trait OutputFormat[R] {
   type Formatter <: OutputFormatter[R]
-  type This <: OutputFormat[R]
-
-  def dateFormat: DateFormat = SafeSimpleDateFormat.Iso8601Formatter
-
-  def withDateFormat(df: DateFormat): This
 
   def createFormatter: Formatter
 
-  def freezeFormatter(fmt: Formatter): This
-
   def from[T](out: T)(implicit producer: Producer[T]): R = {
     val fmt = createFormatter
-    try {
       producer.produce(out, fmt)
       fmt.result
-    } finally {
-      fmt.close()
-    }
   }
 }

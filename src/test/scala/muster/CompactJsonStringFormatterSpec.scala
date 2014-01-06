@@ -30,7 +30,7 @@ trait FormatterSpec[T] extends Specification with ScalaCheck {
   }
 }
 
-class CompactJsonStringFormatterSpec extends {val format = Muster.produce.CompactJsonString} with StringOutputFormatterSpec {
+class CompactJsonStringFormatterSpec extends {val format = Muster.produce.Json} with StringOutputFormatterSpec {
 
   val listProp = prop { (lst: List[Int]) =>
     withFormatter { fmt =>

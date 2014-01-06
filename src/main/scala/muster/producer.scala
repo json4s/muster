@@ -81,13 +81,12 @@ object Producer {
     import Flag._
 
     val helper = new Helper[c.type](c)
+    val tpe = weakTypeOf[T].normalize
 
-
-    def buildObject(tpe: Type, target: Tree, formatter: Tree): Tree = {
-      val TypeRef(_, sym: Symbol, _) = tpe.normalize
+    def buildObject(target: Tree, formatter: Tree): Tree = {
+      val TypeRef(_, sym: Symbol, _) = tpe
       val fields = helper.getGetters(tpe)
        val fieldTrees = fields map { fld =>
-
         val tt = fld.asMethod.returnType
         val on = fld.name.decoded.trim
         val needsLower = on.startsWith("get")
@@ -111,7 +110,6 @@ object Producer {
             val fv: Tree = ValDef(Modifiers(), ftn, TypeTree(tt), fieldPath)
             val write: Tree = Apply(Select(Ident(ptn), newTermName("produce")), Ident(ftn) :: formatter :: Nil)
             fv :: pv ::  write :: Nil
-
         }
         startFieldExpr :: fVal
       }
@@ -122,12 +120,12 @@ object Producer {
 
     }
 
-    val tpe = weakTypeOf[T].normalize
+
     if (tpe.typeSymbol.isClass && !(helper.isPrimitive(tpe) || helper.isMap(tpe) || helper.isOption(tpe) || helper.isSeq(tpe))) {
       reify {
         new Producer[T] {
           def produce(value: T, formatter: OutputFormatter[_]): Unit = {
-            c.Expr(buildObject(tpe, Ident(newTermName("value")), Ident(newTermName("formatter")))).splice
+            c.Expr(buildObject(Ident(newTermName("value")), Ident(newTermName("formatter")))).splice
           }
         }
       }
@@ -135,7 +133,7 @@ object Producer {
   }
 }
 
-trait Producer[-T] {
+trait Producer[T] {
   def produce(value: T, formatter: OutputFormatter[_])
 }
 

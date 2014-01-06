@@ -16,7 +16,6 @@ trait StringOutputFormatterSpec extends FormatterSpec[String] {
     "write a double property" ! doubleProp ^ br ^
     "write a big decimal property" ! bigDecimalProp ^ br ^
     "write a boolean property" ! boolProp ^ br ^
-    "write a date property property" ! dateProp ^ br ^
     "write a string property" ! stringProp ^ br ^
     "write a list property" ! listProp ^ br ^
     "write a object property" ! objectProp ^  br
@@ -40,12 +39,6 @@ trait StringOutputFormatterSpec extends FormatterSpec[String] {
   val doubleProp = writerProp { (fmt, x:Double) => fmt.double(x) }
   val bigDecimalProp = writerProp { (fmt, x:BigDecimal) => fmt.bigDecimal(x) }
   val boolProp = writerProp { (fmt, x:Boolean) => fmt.boolean(x) }
-  val dateProp = prop { (x:Date) =>
-    withFormatter { fmt =>
-      fmt.date(x)
-      fmt.result must_== format.dateFormat.format(x)
-    }
-  }
 
 
   val stringProp = prop { (x: String) =>

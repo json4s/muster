@@ -3,14 +3,14 @@ package muster
 import com.fasterxml.jackson.databind.JsonNode
 import scala.util.Try
 import com.fasterxml.jackson.databind.node.MissingNode
+import java.io.File
 
 object Muster {
   object produce {
 
     object String extends DefaultStringFormat
 
-    object CompactJsonString extends JsonOutput
-
+    object Json extends ProducibleJsonOutput(StringProducible)
   }
 
   object consume {

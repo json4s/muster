@@ -27,7 +27,7 @@ ideaExcludeFolders += ".idea_modules"
 scalacOptions ++= Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-optimize", "-feature", "-Yinline-warnings")
 
 javacOptions ++= Seq("-deprecation", "-Xlint")
-
+//
 //scalacOptions += "-Ymacro-debug-lite"
 //
 //scalacOptions += "-Xlog-implicits"
