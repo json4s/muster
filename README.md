@@ -24,6 +24,13 @@ Muster.produce.Protobuf[Protocol.Person].from(person)
 
 import muster._
 person.asJson // calls: Muster.produce.Json.from(person) and produces {"id":1,"name":"Luke","age":38}
+person.asPrettyJson /* calls: Muster.produce.Json.Pretty.from(person) and produces
+                       {
+                         "id":1,
+                         "name":
+                         "Luke",
+                         "age":38
+                       } */  
 person.asString // calls: Muster.produce.String.from(person) and produces Person(id: 1, name: "Luke", age: 38)
 ```
 
