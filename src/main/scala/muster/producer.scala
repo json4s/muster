@@ -38,14 +38,14 @@ object Producer {
   implicit object StringProducer extends SP[String](_ string _)
   implicit object SymbolProducer extends SP[scala.Symbol](_ string _.name)
 
-  implicit def arrayProducer[T](implicit ct: ClassTag[T], valueProducer: Producer[T]) =
+  implicit def arrayProducer[T](implicit ct: ClassTag[T], valueProducer: Producer[T]): Producer[Array[T]] =
     sp[Array[T]] { (fmt, arr) =>
       fmt.startArray("Array")
       arr.foreach(valueProducer.produce(_, fmt))
       fmt.endArray()
     }
 
-  implicit def mapProducer[T](implicit valueProducer: Producer[T]) =
+  implicit def mapProducer[T](implicit valueProducer: Producer[T]): Producer[collection.GenMap[String, T]] =
     sp[collection.GenMap[String, T]] { (fmt, v) =>
       fmt.startObject(v.getClass.getSimpleName)
       v foreach { kv =>
@@ -55,14 +55,22 @@ object Producer {
       fmt.endObject()
     }
 
-  implicit def traversableProducer[T](implicit valueProducer: Producer[T]) =
-    sp[Traversable[T]] { (fmt, v) =>
+  implicit def seqProducer[T](implicit valueProducer: Producer[T]): Producer[Seq[T]] =
+    sp[Seq[T]] { (fmt, v) =>
       fmt.startArray(v.getClass.getSimpleName)
       v foreach (valueProducer.produce(_, fmt))
       fmt.endArray()
     }
 
-  implicit def optionProducer[T](implicit valueProducer: Producer[T]) =
+  implicit def setProducer[T](implicit valueProducer: Producer[T]): Producer[Set[T]] =
+    sp[Set[T]] { (fmt, v) =>
+      fmt.startArray(v.getClass.getSimpleName)
+      v foreach (valueProducer.produce(_, fmt))
+      fmt.endArray()
+    }
+
+
+  implicit def optionProducer[T](implicit valueProducer: Producer[T]): Producer[Option[T]] =
     sp[Option[T]] { (fmt, v) => v foreach (valueProducer.produce(_, fmt))}
 
   private[this] val safeFormatterPool = TrieMap.empty[String, DateFormat]

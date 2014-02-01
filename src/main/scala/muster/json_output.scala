@@ -76,34 +76,39 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
   private[this] val stateStack = mutable.Stack[Int]()
 
   private[this] def state = stateStack.headOption getOrElse State.None
-  private[this] var inField = false
+
+  private[this] var indentLevel = 0
 
   def startArray(name: String = "") {
     writeComma(State.InArray)
     writer.write('[')
     stateStack push State.ArrayStarted
-    writePretty()
   }
 
   def endArray() {
     writer.write(']')
     stateStack.pop()
-    writePretty(outdent = 2)
-    inField = false
   }
 
   def startObject(name: String = "") {
     writeComma(State.InArray)
     writer.write('{')
+    indentLevel += 1
     stateStack push State.ObjectStarted
-    writePretty()
+  }
+
+  private[this] final def indentForPretty() {
+    if (spaces > 0) {
+      writer.write('\n')
+      writer.write(" " * spaces * indentLevel)
+    }
   }
 
   def endObject() {
     stateStack.pop()
-    writePretty(outdent = 2)
+    indentLevel -= 1
+    indentForPretty()
     writer.write('}')
-    inField = false
   }
 
   def string(value: String) {
@@ -111,72 +116,61 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
     writer.write('"')
     JsonOutput.quote(value, writer)
     writer.write('"')
-    inField = false
   }
 
   def byte(value: Byte) {
     writeComma(State.InArray)
     writer.write(value.toString)
-    inField = false
   }
 
   def int(value: Int) {
     writeComma(State.InArray)
     writer.write(value.toString)
-    inField = false
   }
 
   def long(value: Long) {
     writeComma(State.InArray)
     writer.write(value.toString)
-    inField = false
   }
 
   def bigInt(value: BigInt) {
     writeComma(State.InArray)
     writer.write(value.toString)
-    inField = false
   }
 
   def boolean(value: Boolean) {
     writeComma(State.InArray)
     writer.write(value.toString)
-    inField = false
   }
 
   def short(value: Short) {
     writeComma(State.InArray)
     writer.write(value.toString)
-    inField = false
   }
 
   def float(value: Float) {
     writeComma()
     writer.write(value.toString)
-    inField = false
   }
 
   def double(value: Double) {
     writeComma(State.InArray)
     writer.write(value.toString)
-    inField = false
   }
 
   def bigDecimal(value: BigDecimal) {
     writeComma(State.InArray)
     writer.write(value.toString)
-    inField = false
   }
 
   def writeNull() {
     writeComma(State.InArray)
     writer.write("null")
-    inField = false
   }
 
   def undefined() {}
 
-  private[this] def writeComma(when: Int*) {
+  private[this] final def writeComma(when: Int*) {
     if (state == State.ArrayStarted) {
       stateStack.pop()
       stateStack push State.InArray
@@ -185,21 +179,12 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
       stateStack push State.InObject
     } else if (when.contains(state)) {
       writer.write(',')
-      if (!inField) writePretty()
-    }
-  }
-
-  private[this] def writePretty(outdent: Int = 0) = {
-    if (spaces > 0) {
-      writer write '\n'
-      val level = if (spaces > 0) stateStack.size + 1 else stateStack.size
-      writer.write(" " * (level * spaces - outdent))
     }
   }
 
   def startField(name: String) {
     writeComma(State.InObject)
-    inField = true
+    indentForPretty()
     writer.write('"')
     writer.write(name)
     writer.write('"')
