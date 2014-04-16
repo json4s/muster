@@ -30,7 +30,7 @@ person.asPrettyJson /* calls: Muster.produce.Json.Pretty.from(person) and produc
                          "name":
                          "Luke",
                          "age":38
-                       } */  
+                       } */
 person.asString // calls: Muster.produce.String.from(person) and produces Person(id: 1, name: "Luke", age: 38)
 ```
 
@@ -50,7 +50,7 @@ Muster.consume.ByteBuffer.as[Person](/* file | string | reader | byte array | in
 Currently muster supports JSON through parsing with jackson and it can extract the following things:
 * Primitive values like String, Int, Date
 * All scala collections
-* Scala maps
+* Scala maps with string keys
 * Java collections like java.util.List and java.util.Set
 * Java maps (that implement java.util.Map)
 * Java classes with bean getter/setters

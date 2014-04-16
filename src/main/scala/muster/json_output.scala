@@ -149,7 +149,7 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
   }
 
   def float(value: Float) {
-    writeComma()
+    writeComma(State.InArray)
     writer.write(value.toString)
   }
 

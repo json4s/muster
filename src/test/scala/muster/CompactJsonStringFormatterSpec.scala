@@ -4,16 +4,18 @@ package muster
 import java.util.{TimeZone, Date}
 import org.specs2.{ScalaCheck, Specification}
 import org.scalacheck.{Arbitrary, Gen}
+//import org.joda.time.DateTime
+//import org.joda.time.DateTimeZone
 
 case class Category(id: Int, name: String)
 
 trait FormatterSpec[T] extends Specification with ScalaCheck {
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
   val format: OutputFormat[T]
-
-  //  implicit lazy val arbDateTime: Arbitrary[DateTime] = Arbitrary(for {
-  //    l <- Arbitrary.arbitrary[Long]
-  //  } yield new DateTime(System.currentTimeMillis() + l, DateTimeZone.UTC))
+//
+//   implicit lazy val arbDateTime: Arbitrary[DateTime] = Arbitrary(for {
+//     l <- Arbitrary.arbitrary[Long]
+//   } yield new DateTime(System.currentTimeMillis() + l, DateTimeZone.UTC))
 
   implicit lazy val arbCategory: Arbitrary[Category] = Arbitrary(for {
     id <- Arbitrary.arbInt.arbitrary

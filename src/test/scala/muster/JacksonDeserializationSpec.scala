@@ -4,7 +4,7 @@ import org.specs2.mutable.Specification
 import org.json4s._
 import java.util.{TimeZone, Date}
 import java.util
-
+//import org.joda.time.DateTime
 object Aliased {
   type Foo = Junk
 
@@ -130,13 +130,14 @@ class JacksonDeserializationSpec extends Specification {
       val js = s"""{"date":"$ds"}"""
       read[WithDate](js) must_== WithDate(pd)
     }
-    //    "read an object with a datetime" in {
-    //      val date = DateTime.now
-    //      val ds = Muster.from.JsonString.dateFormat.print(date)
-    //      val pd = Muster.from.JsonString.dateFormat.parseDateTime(ds)
-    //      val js = s"""{"date":"$ds"}"""
-    //      read[WithDateTime](js) must_== WithDateTime(pd)
-    //    }
+//
+//    "read an object with a datetime" in {
+//      val date = DateTime.now.toDate
+//      val ds = SafeSimpleDateFormat.Iso8601Formatter.format(date)
+//      val pd = SafeSimpleDateFormat.Iso8601Formatter.parse(ds)
+//      val js = s"""{"date":"$ds"}"""
+//      read[WithDateTime](js) must_== WithDateTime(new DateTime(pd))
+//    }
 
     "read an object with a Symbol" in {
       val js = """{"symbol":"baz"}"""

@@ -48,9 +48,9 @@ libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.1" % "test"
 
 //libraryDependencies += "nf.fr.eraasoft" % "objectpool" % "1.1.2"
 //
-//libraryDependencies += "joda-time" % "joda-time" % "2.3"
-//
-//libraryDependencies += "org.joda" % "joda-convert" % "1.5"
+libraryDependencies += "joda-time" % "joda-time" % "2.3"
+
+libraryDependencies += "org.joda" % "joda-convert" % "1.5"
 
 libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.6" % "test"
 

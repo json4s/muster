@@ -11,6 +11,7 @@ import muster.Ast.TextNode
 import muster.Ast.NumberNode
 import scala.util.Try
 import java.util
+//import org.joda.time.DateTime
 
 trait Consumer[S] {
   def consume(node: AstNode[_]): S
@@ -61,12 +62,16 @@ object Consumer {
   }
 
   implicit val Iso8601DateConsumer = cc[Date]({
-    case TextNode(value) => {
-      SafeSimpleDateFormat.Iso8601Formatter.parse(value)
-    }
+    case TextNode(value) => SafeSimpleDateFormat.Iso8601Formatter.parse(value)
     case m: NumberNodeLike[_] => new Date(m.toLong)
     case NullNode | UndefinedNode => null
   })
+//
+//  implicit val Iso8601DateTimeConsumer = cc[DateTime]({
+//    case TextNode(value) => new DateTime(SafeSimpleDateFormat.Iso8601Formatter.parse(value))
+//    case m: NumberNodeLike[_] => new DateTime(m.toLong)
+//    case NullNode | UndefinedNode => null
+//  })
 
   def dateConsumer(pattern: String) = {
     cc[Date]({

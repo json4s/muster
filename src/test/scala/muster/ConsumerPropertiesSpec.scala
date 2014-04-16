@@ -6,6 +6,7 @@ import scala.reflect.ClassTag
 import muster.StringOutputFormatter._
 import org.specs2.{ScalaCheck, Specification}
 import org.specs2.matcher.MatchResult
+//import org.joda.time.DateTime
 
 class ConsumerSpec extends Specification with ScalaCheck {
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
@@ -51,6 +52,8 @@ class ConsumerSpec extends Specification with ScalaCheck {
       "read a map with list value" ! mapListProp ^ br ^
       "read an option value" ! optProp ^ br ^
       "read an option with list value" ! optListProp ^ br ^
+      "read an option with option int value, with null as default" ! optNullMapProp ^ br ^
+      "read an option with option value, with missing as missing" ! optMissingMapProp ^ br ^
     end
 
 
@@ -159,52 +162,52 @@ class ConsumerSpec extends Specification with ScalaCheck {
 
 
 
-  //  val mapOptionGen = {
-  //    for {
-  //      n <- Gen.nonEmptyListOf(Gen.alphaChar).map(_.mkString).suchThat(_.forall(_.isLetter))
-  //      m <- Gen.option(Gen.chooseNum(1, 999999999))
-  //      r <- Gen.mapOf((n, m))
-  //    } yield  r
-  //  }
-  //  val optNullMapProp = Prop.forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
-  //     val json = {
-  //       val sb = new mutable.StringBuilder()
-  //       sb.append('{')
-  //       var first = true
-  //       i foreach { case (k, v) =>
-  //         if (!first) sb.append(',')
-  //         else first = false
-  //         sb.append('"')
-  //         quote(k, sb)
-  //         sb.append('"')
-  //         sb.append(':')
-  //         if (v.isDefined) sb.append(v)
-  //         else sb.append("null")
-  //       }
-  //       sb.append('}')
-  //       sb.toString
-  //     }
-  //     read[Map[String, Option[Int]]](json) == i
-  //  }
-  //  val optMissingMapProp = Prop.forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
-  //     val json = {
-  //       val sb = new mutable.StringBuilder()
-  //       sb.append('{')
-  //       var first = true
-  //       i foreach { case (k, v) =>
-  //         if (v.isDefined) {
-  //           if (!first) sb.append(',')
-  //           else first = false
-  //           sb.append('"')
-  //           quote(k, sb)
-  //           sb.append('"')
-  //           sb.append(':')
-  //           sb.append(v)
-  //         }
-  //       }
-  //       sb.append('}')
-  //       sb.toString
-  //     }
-  //     read[Map[String, Option[Int]]](json) == i
-  //  }
+   val mapOptionGen = {
+     for {
+       n <- Gen.nonEmptyListOf(Gen.alphaChar).map(_.mkString).suchThat(_.forall(_.isLetter))
+       m <- Gen.option(Gen.chooseNum(1, 999999999))
+       r <- Gen.mapOf((n, m))
+     } yield  r
+   }
+   val optNullMapProp = Prop.forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
+      val json = {
+        val sb = new mutable.StringBuilder()
+        sb.append('{')
+        var first = true
+        i foreach { case (k, v) =>
+          if (!first) sb.append(',')
+          else first = false
+          sb.append('"')
+          JsonOutput.quote(k, sb)
+          sb.append('"')
+          sb.append(':')
+          if (v.isDefined) sb.append(v)
+          else sb.append("null")
+        }
+        sb.append('}')
+        sb.toString
+      }
+      read[Map[String, Option[Int]]](json) == i
+   }
+   val optMissingMapProp = Prop.forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
+      val json = {
+        val sb = new mutable.StringBuilder()
+        sb.append('{')
+        var first = true
+        i foreach { case (k, v) =>
+          if (v.isDefined) {
+            if (!first) sb.append(',')
+            else first = false
+            sb.append('"')
+            JsonOutput.quote(k, sb)
+            sb.append('"')
+            sb.append(':')
+            sb.append(v)
+          }
+        }
+        sb.append('}')
+        sb.toString
+      }
+      read[Map[String, Option[Int]]](json) == i
+   }
 }
