@@ -273,7 +273,7 @@ trait JsonInputCursor[R] extends InputCursor[R] {
             }
             shouldContinue = iterator.hasNext
           }
-        case '\0' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | '\b' | '\t' | '\n' | 11 | '\f' | '\r' | 14 | 15 |
+        case '\u0000' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | '\b' | '\t' | '\n' | 11 | '\f' | '\r' | 14 | 15 |
              16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 27 | 28 | 29 | 30 | 31 | 127 =>
           throw failParse(s"Unexpected control char at ${iterator.pos}")
         case c =>

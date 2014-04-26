@@ -4,6 +4,10 @@ package muster
 
 import scala.io.Source
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.scalameter.api._
+import org.scalameter.CurveData
+import org.scalameter.utils.Tree
+import org.scalameter.reporting
 
 //import com.fasterxml.jackson.databind.ObjectMapper
 //import org.scalameter.{reporting, CurveData, log}
@@ -14,29 +18,8 @@ object Benchmarks {
   //  val smallJsonGen = Gen.single("small.json")(smallJson)
 
   val json = Source.fromInputStream(getClass.getResourceAsStream("/larger.json")).mkString // 1.2Mb
-  //  val jsonGen = Gen.single("larger.json")(json)
+  val jsonGen = Gen.single("larger.json")(json)
 
-  //  case class LoggingReporter() extends Reporter {
-  //
-  //      def report(result: CurveData, persistor: Persistor) {
-  //        // output context
-  //        log(s"::Benchmark ${result.context.scope}::")
-  ////        for ((key, value) <- result.context.properties.filterKeys(Context.machine.properties.keySet.contains).toSeq.sortBy(_._1)) {
-  ////          log(s"$key: $value")
-  ////        }
-  //
-  //        // output measurements
-  //        for (measurement <- result.measurements) {
-  //          log(s"${measurement.value}")
-  //        }
-  //
-  //        // add a new line
-  //        log("")
-  //      }
-  //
-  //      def report(result: Tree[CurveData], persistor: Persistor) = true
-  //
-  //    }
 }
 
 class JsonParsersBenchmark extends com.google.caliper.SimpleBenchmark {
@@ -107,123 +90,76 @@ class MediumJsonParsersBenchmark extends com.google.caliper.SimpleBenchmark {
 
 }
 
-//class JsonInputCursorBenchmark extends PerformanceTest.Quickbenchmark {
-//  import Benchmarks._
-//
-//  performance of "Json format" in {
-//    measure method "nextNode"  config (
-//        exec.benchRuns -> 500
-//      ) in {
-//      using(jsonGen) in {
-//        r => Json.createCursor(r).nextNode()
-//      }
-//    }
-//  }
-////
-////  performance of "Json format" in {
-////    measure method "nextNode"  config (
-////        exec.benchRuns -> 500
-////      ) in {
-////      using(jsonGen) in {
-////        r => org.json4s.native.parseJson(org.json4s.StringInput(json))
-////      }
-////    }
-////  }
-////
-////  performance of "Json format" in {
-////     measure method "nextNode"  config (
-////         exec.benchRuns -> 500
-////       ) in {
-////       using(jsonGen) in {
-////         r => new ObjectMapper().readTree(json)
-////       }
-////     }
-////   }
-//
-////  def persistor: Persistor = Persistor.None
-//
-//  override def reporter = new reporting.LoggingReporter {
-//    override def report(result: CurveData, persistor: Persistor) {
-//      log(s"::Benchmark ${result.context.scope}::")
-//      for (measurement <- result.measurements) {
-//        log(s"${measurement.value}")
-//      }
-//      log("")
-//    }
-//    override def report(result: Tree[CurveData], persistor: Persistor) = true
-//  }
-//}
-//
-//class Json4sParserBenchmark extends PerformanceTest.Quickbenchmark {
-//  import Benchmarks._
-//  override def reporter = new reporting.LoggingReporter {
-//    override def report(result: CurveData, persistor: Persistor) {
-//      log(s"::Benchmark ${result.context.scope}::")
-//      for (measurement <- result.measurements) {
-//        log(s"${measurement.value}")
-//      }
-//      log("")
-//    }
-//    override def report(result: Tree[CurveData], persistor: Persistor) = true
-//  }
-//  performance of "Json format" in {
-//    measure method "nextNode"  config (
-//        exec.benchRuns -> 500
-//      ) in {
-//      using(jsonGen) in {
-//        r => org.json4s.native.parseJson(org.json4s.StringInput(r))
-//      }
-//    }
-//  }
-//
-//}
-//
-//
-//class JacksonParserBenchmark extends PerformanceTest.Quickbenchmark {
-//  import Benchmarks._
-//  override def reporter = new reporting.LoggingReporter {
-//    override def report(result: CurveData, persistor: Persistor) {
-//      log(s"::Benchmark ${result.context.scope}::")
-//      for (measurement <- result.measurements) {
-//        log(s"${measurement.value}")
-//      }
-//      log("")
-//    }
-//    override def report(result: Tree[CurveData], persistor: Persistor) = true
-//  }
-//  performance of "Json format" in {
-//    measure method "nextNode"  config (
-//        exec.benchRuns -> 500
-//      ) in {
-//      using(jsonGen) in {
-//        r => new ObjectMapper().readTree(r)
-//      }
-//    }
-//  }
-//
-//}
-//
-//class JsonSmartParserBenchmark extends PerformanceTest.Quickbenchmark {
-//  import Benchmarks._
-//  override def reporter = new reporting.LoggingReporter {
-//    override def report(result: CurveData, persistor: Persistor) {
-//      log(s"::Benchmark ${result.context.scope}::")
-//      for (measurement <- result.measurements) {
-//        log(s"${measurement.value}")
-//      }
-//      log("")
-//    }
-//    override def report(result: Tree[CurveData], persistor: Persistor) = true
-//  }
-//  performance of "Json format" in {
-//    measure method "nextNode"  config (
-//        exec.benchRuns -> 500
-//      ) in {
-//      using(jsonGen) in {
-//        r => new net.minidev.json.parser.JSONParser().parse(r)
-//      }
-//    }
-//  }
-//
-//}
+trait CursorBench extends PerformanceTest.Quickbenchmark {
+
+  override def reporter = new reporting.LoggingReporter {
+    override def report(result: CurveData, persistor: Persistor) {
+      org.scalameter.log(s"::Benchmark ${result.context.scope}::")
+      for (measurement <- result.measurements) {
+        org.scalameter.log(s"${measurement.value}")
+      }
+      org.scalameter.log("")
+    }
+    override def report(result: Tree[CurveData], persistor: Persistor) = true
+  }
+
+}
+
+class JsonInputCursorBenchmark extends CursorBench {
+  import Benchmarks._
+
+  performance of "Json format" in {
+    measure method "nextNode"  config (
+        exec.benchRuns -> 500
+      ) in {
+      using(jsonGen) in {
+        r => Muster.consume.Json.createCursor(r).nextNode()
+      }
+    }
+  }
+}
+
+class Json4sParserBenchmark extends CursorBench {
+  import Benchmarks._
+  performance of "Json4s Json format" in {
+    measure method "nextNode"  config (
+        exec.benchRuns -> 500
+      ) in {
+      using(jsonGen) in {
+        r => org.json4s.native.parseJson(org.json4s.StringInput(r))
+      }
+    }
+  }
+
+}
+
+
+class JacksonParserBenchmark extends CursorBench {
+  import Benchmarks._
+
+  performance of "Jackson Json format" in {
+    measure method "nextNode"  config (
+        exec.benchRuns -> 500
+      ) in {
+      using(jsonGen) in {
+        r => new ObjectMapper().readTree(r)
+      }
+    }
+  }
+
+}
+
+class JsonSmartParserBenchmark extends CursorBench {
+  import Benchmarks._
+  performance of "Json Smart format" in {
+    measure method "nextNode"  config (
+        exec.benchRuns -> 500
+      ) in {
+      using(jsonGen) in {
+        r => new net.minidev.json.parser.JSONParser().parse(r)
+      }
+    }
+  }
+
+}
 

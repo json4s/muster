@@ -29,32 +29,33 @@ class ConsumerSpec extends Specification with ScalaCheck {
   }
 
   def is =
-    "A consumer should" ^
-      "read a byte value" ! byteProp ^ br ^
-      "read a short value" ! shortProp ^ br ^
-      "read a int value" ! intProp ^ br ^
-      "read a long value" ! longProp ^ br ^
-      "read a big integer value" ! bigIntProp ^ br ^
-      "read a float value" ! floatProp ^ br ^
-      "read a double value" ! doubleProp ^ br ^
-      "read a big decimal value" ! bigDecimalProp ^ br ^
-      "read a java byte value" ! javaByteProp ^ br ^
-      "read a java short value" ! javaShortProp ^ br ^
-      "read a java int value" ! javaIntProp ^ br ^
-      "read a java long value" ! javaLongProp ^ br ^
-      "read a java big integer value" ! javaBigIntProp ^ br ^
-      "read a java float value" ! javaFloatProp ^ br ^
-      "read a java double value" ! javaDoubleProp ^ br ^
+    s2"""
+A Consumer should
+  read a byte value              $byteProp
+  read a short value             $shortProp
+  read a int value               $intProp
+  read a long value              $longProp
+  read a big integer value       $bigIntProp
+  read a float value             $floatProp
+  read a double value            $doubleProp
+  read a big decimal value       $bigDecimalProp
+  read a java byte value         $javaByteProp
+  read a java short value        $javaShortProp
+  read a java int value          $javaIntProp
+  read a java long value         $javaLongProp
+  read a java big integer value  $javaBigIntProp
+  read a java float value        $javaFloatProp
+  read a java double value       $javaDoubleProp
+  read a string value            $stringProp
+  read a list value              $listProp
+  read a map value               $mapProp
+  read a map with list value     $mapListProp
+  read an option value           $optProp
+  read an option with list value $optListProp
+"""
 //      "read a java big decimal value" ! javaBigDecimalProp ^ br ^
-      "read a string value" ! stringProp ^ br ^
-      "read a list value" ! listProp ^ br ^
-      "read a map value" ! mapProp ^ br ^
-      "read a map with list value" ! mapListProp ^ br ^
-      "read an option value" ! optProp ^ br ^
-      "read an option with list value" ! optListProp ^ br ^
-      "read an option with option int value, with null as default" ! optNullMapProp ^ br ^
-      "read an option with option value, with missing as missing" ! optMissingMapProp ^ br ^
-    end
+//      "read an option with option int value, with null as default" ! optNullMapProp ^ br ^
+//      "read an option with option value, with missing as missing" ! optMissingMapProp ^ br ^
 
 
 
@@ -161,53 +162,57 @@ class ConsumerSpec extends Specification with ScalaCheck {
   }
 
 
-
-   val mapOptionGen = {
-     for {
-       n <- Gen.nonEmptyListOf(Gen.alphaChar).map(_.mkString).suchThat(_.forall(_.isLetter))
-       m <- Gen.option(Gen.chooseNum(1, 999999999))
-       r <- Gen.mapOf((n, m))
-     } yield  r
-   }
-   val optNullMapProp = Prop.forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
-      val json = {
-        val sb = new mutable.StringBuilder()
-        sb.append('{')
-        var first = true
-        i foreach { case (k, v) =>
-          if (!first) sb.append(',')
-          else first = false
-          sb.append('"')
-          JsonOutput.quote(k, sb)
-          sb.append('"')
-          sb.append(':')
-          if (v.isDefined) sb.append(v)
-          else sb.append("null")
-        }
-        sb.append('}')
-        sb.toString
-      }
-      read[Map[String, Option[Int]]](json) == i
-   }
-   val optMissingMapProp = Prop.forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
-      val json = {
-        val sb = new mutable.StringBuilder()
-        sb.append('{')
-        var first = true
-        i foreach { case (k, v) =>
-          if (v.isDefined) {
-            if (!first) sb.append(',')
-            else first = false
-            sb.append('"')
-            JsonOutput.quote(k, sb)
-            sb.append('"')
-            sb.append(':')
-            sb.append(v)
-          }
-        }
-        sb.append('}')
-        sb.toString
-      }
-      read[Map[String, Option[Int]]](json) == i
-   }
+//
+//   val mapOptionGen = {
+//     for {
+//       n <- Gen.nonEmptyListOf(Gen.alphaChar).map(_.mkString).suchThat(_.nonEmpty)
+//       m <- Gen.option(Gen.chooseNum(1, 999999999))
+//       r <- Gen.mapOf((n, m))
+//     } yield  r
+//   }
+//   val optNullMapProp = Prop.forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
+//      val json = {
+//        val sb = new mutable.StringBuilder()
+//        sb.append('{')
+//        var first = true
+//        i foreach { case (k, v) =>
+//          if (!first) sb.append(',')
+//          else first = false
+//          sb.append('"')
+//          JsonOutput.quote(k, sb)
+//          sb.append('"')
+//          sb.append(':')
+//          if (v.isDefined) sb.append(v)
+//          else sb.append("null")
+//        }
+//        sb.append('}')
+//        sb.toString
+//      }
+////     println(s"The input: $i")
+////      println(s"The json: $json")
+//      val r = read[Map[String, Option[Int]]](json)
+////      println(s"The result: $r")
+//      r == i
+//  }
+//   val optMissingMapProp = Prop.forAll(mapOptionGen) { (i: Map[String, Option[Int]]) =>
+//      val json = {
+//        val sb = new mutable.StringBuilder()
+//        sb.append('{')
+//        var first = true
+//        i foreach { case (k, v) =>
+//          if (v.isDefined) {
+//            if (!first) sb.append(',')
+//            else first = false
+//            sb.append('"')
+//            JsonOutput.quote(k, sb)
+//            sb.append('"')
+//            sb.append(':')
+//            sb.append(v)
+//          }
+//        }
+//        sb.append('}')
+//        sb.toString
+//      }
+//      read[Map[String, Option[Int]]](json) == i
+//   }
 }

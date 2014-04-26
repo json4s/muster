@@ -55,5 +55,5 @@ class CompactJsonStringFormatterSpec extends {val format = Muster.produce.Json} 
     }
   }
 
-  val is = "The compact json string formatter should" ^ br ^ sharedFragments ^ end
+  val is = br ^ "The compact json string formatter should" ^ br ^ sharedFragments ^ end
 }

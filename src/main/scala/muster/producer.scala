@@ -83,25 +83,25 @@ object Producer {
 
   implicit def producer[T]: Producer[T] = macro producerImpl[T]
 
-  def producerImpl[T: c.WeakTypeTag](c: Context): c.Expr[Producer[T]] = {
+  def producerImpl[T: c.WeakTypeTag](c: blackbox.Context): c.Expr[Producer[T]] = {
     import c.universe._
     import definitions._
     import Flag._
 
     val helper = new Helper[c.type](c)
-    val tpe = weakTypeOf[T].normalize
+    val tpe = weakTypeOf[T].dealias // TODO: etaExpand
 
     def buildObject(target: Tree, formatter: Tree): Tree = {
       val TypeRef(_, sym: Symbol, _) = tpe
       val fields = helper.getGetters(tpe)
        val fieldTrees = fields map { fld =>
         val tt = fld.asMethod.returnType
-        val on = fld.name.decoded.trim
+        val on = fld.name.decodedName.toString.trim
         val needsLower = on.startsWith("get")
         val stripped = on.replaceFirst("^get", "")
         val fieldName = if (needsLower) stripped(0).toLower + stripped.substring(1) else stripped
         val fieldPath = Select(target, fld.asTerm.name)
-        val startFieldExpr = Apply(Select(formatter, newTermName("startField")), Literal(Constant(fieldName)) :: Nil)
+        val startFieldExpr = Apply(Select(formatter, TermName("startField")), Literal(Constant(fieldName)) :: Nil)
         val pTpe = appliedType(weakTypeOf[Producer[Any]], tt::Nil)
         val fVal: List[Tree] = c.inferImplicitValue(pTpe) match {
           case EmptyTree =>
@@ -110,21 +110,21 @@ object Producer {
             c.abort(c.enclosingPosition, s"Couldn't find an implicit ${pTpe}, try defining one or bringing one into scope")
 //            Nil
           case x =>
-            val pn = c.fresh("producer$")
-            val ptn = newTermName(pn)
+            val pn = c.freshName("producer$")
+            val ptn = TermName(pn)
             val pv: Tree = ValDef(Modifiers(), ptn, TypeTree(pTpe), x)
-            val fn = c.fresh("value$")
-            val ftn = newTermName(fn)
+            val fn = c.freshName("value$")
+            val ftn = TermName(fn)
             val fv: Tree = ValDef(Modifiers(), ftn, TypeTree(tt), fieldPath)
-            val write: Tree = Apply(Select(Ident(ptn), newTermName("produce")), Ident(ftn) :: formatter :: Nil)
+            val write: Tree = Apply(Select(Ident(ptn), TermName("produce")), Ident(ftn) :: formatter :: Nil)
             fv :: pv ::  write :: Nil
         }
         startFieldExpr :: fVal
       }
       Block(
-        Apply(Select(formatter, newTermName("startObject")), Literal(Constant(sym.name.decoded))::Nil) ::
+        Apply(Select(formatter, TermName("startObject")), Literal(Constant(sym.name.decodedName.toString))::Nil) ::
           fieldTrees.reverse.flatten,
-        Apply(Select(formatter, newTermName("endObject")), Nil))
+        Apply(Select(formatter, TermName("endObject")), Nil))
 
     }
 
@@ -133,7 +133,7 @@ object Producer {
       reify {
         new Producer[T] {
           def produce(value: T, formatter: OutputFormatter[_]): Unit = {
-            c.Expr(buildObject(Ident(newTermName("value")), Ident(newTermName("formatter")))).splice
+            c.Expr(buildObject(Ident(TermName("value")), Ident(TermName("formatter")))).splice
           }
         }
       }
@@ -160,8 +160,8 @@ trait Producer[T] {
 //    import Flag._
 //    val helper = new Helper[c.type](c)
 //
-//    val sw = c.Expr[java.io.StringWriter](Ident(newTermName("sw")))
-//    val formatterStack = c.Expr[OutputFormatter[_]](Ident(newTermName("formatter")))
+//    val sw = c.Expr[java.io.StringWriter](Ident(TermName("sw")))
+//    val formatterStack = c.Expr[OutputFormatter[_]](Ident(TermName("formatter")))
 //
 //
 //
@@ -243,7 +243,7 @@ trait Producer[T] {
 //        formatterStack.splice.startArray(c.Expr[String](Literal(Constant(tp.typeSymbol.name.decoded))).splice)
 //        val coll = c.Expr[Seq[Any]](target).splice
 //        coll foreach { ele =>
-//          c.Expr(buildTpe(pTpe, Ident(newTermName("ele")))).splice
+//          c.Expr(buildTpe(pTpe, Ident(TermName("ele")))).splice
 //        }
 //        formatterStack.splice.endArray()
 //      }
@@ -256,12 +256,12 @@ trait Producer[T] {
 //        sw.splice.write('(')
 //        formatterStack.splice.startObject(tp.typeSymbol.name.decoded)
 //        c.Expr[scala.collection.GenMap[_, _]](target).splice.foreach { case (k, v) =>
-//          c.Expr(buildTpe(keyTpe, Ident(newTermName("k")))).splice
+//          c.Expr(buildTpe(keyTpe, Ident(TermName("k")))).splice
 //          sw.splice.write(' ')
 //          sw.splice.write('-')
 //          sw.splice.write('>')
 //          sw.splice.write(' ')
-//          c.Expr(buildTpe(valTpe, Ident(newTermName("v")))).splice
+//          c.Expr(buildTpe(valTpe, Ident(TermName("v")))).splice
 //        }
 //        formatterStack.splice.endObject()
 //      }
@@ -279,9 +279,9 @@ trait Producer[T] {
 ////        val needsLower = on.startsWith("get")
 ////        val stripped = on.replaceFirst("^get", "")
 ////        val fieldName = if (needsLower) stripped(0).toLower + stripped.substring(1) else stripped
-//        val fieldPath = Select(target, newTermName(fieldName))
+//        val fieldPath = Select(target, TermName(fieldName))
 //        val startFieldExpr =
-//          Apply(Select(Ident(newTermName("formatter")), newTermName("startField")), Literal(Constant(fieldName)) :: Nil)
+//          Apply(Select(Ident(TermName("formatter")), TermName("startField")), Literal(Constant(fieldName)) :: Nil)
 ////        val startFieldExpr = reify {
 ////          formatterStack.splice.startField(c.Expr[String](Literal(Constant(fieldName))).splice)
 ////        }
@@ -314,7 +314,7 @@ trait Producer[T] {
 //            val sw = new java.io.StringWriter()
 //            try {
 //              val formatter = outputFormat.createFormatter
-//              c.Expr(buildTpe(tpe, Ident(newTermName("value")))).splice
+//              c.Expr(buildTpe(tpe, Ident(TermName("value")))).splice
 //              formatter.result
 //            } finally {
 //              sw.close()

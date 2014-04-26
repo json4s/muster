@@ -1,9 +1,6 @@
 package muster
 
 import java.io._
-import muster.FileProducible
-import muster.OutputStreamProducible
-import muster.WriterProducible
 
 object Producible {
 

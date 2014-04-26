@@ -77,7 +77,7 @@ class DefaultStringFormatterSpec extends {val format = Muster.produce.String} wi
     }
   }
 
-  val is = "The default string formatter should" ^ br ^ sharedFragments ^ end
+  val is = br ^ "The default string formatter should" ^ br ^ sharedFragments ^ end
 
 }
 

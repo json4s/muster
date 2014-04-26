@@ -239,13 +239,13 @@ object Ast {
 
     def toLong = value.toLong
 
-    def toBigInt = BigDecimal(value).toBigInt()
+    def toBigInt = BigDecimal(value.toDouble).toBigInt()
 
     def toDouble = value.toDouble
 
     def toFloat = value.toFloat
 
-    def toBigDecimal = BigDecimal(value)
+    def toBigDecimal = BigDecimal(value.toDouble)
 
     def toByteAst = ByteNode(value.toByte)
 
@@ -255,13 +255,13 @@ object Ast {
 
     def toLongAst = LongNode(value.toLong)
 
-    def toBigIntAst = BigIntNode(BigDecimal(value).toBigInt())
+    def toBigIntAst = BigIntNode(BigDecimal(value.toDouble).toBigInt())
 
     def toDoubleAst = DoubleNode(value.toDouble)
 
     def toFloatAst = FloatNode(value.toFloat)
 
-    def toBigDecimalAst = BigDecimalNode(BigDecimal(value))
+    def toBigDecimalAst = BigDecimalNode(BigDecimal(value.toDouble))
 
   }
 
