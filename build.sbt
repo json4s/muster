@@ -2,9 +2,8 @@ import scala.xml.Group
 import cappi.Plugin.cappiSettings
 import cappi.Keys._
 import sbtbuildinfo.Plugin._
-import org.sbtidea.SbtIdeaPlugin._
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.11.0"
 
 name := "muster"
 
@@ -17,12 +16,12 @@ buildInfoPackage := "muster"
 buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
 
 sourceGenerators in Compile <+= buildInfo
-
-ideaBasePackage := Some("muster")
-
-ideaExcludeFolders += ".idea"
-
-ideaExcludeFolders += ".idea_modules"
+//
+//ideaBasePackage := Some("muster")
+//
+//ideaExcludeFolders += ".idea"
+//
+//ideaExcludeFolders += ".idea_modules"
 
 scalacOptions ++= Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-optimize", "-feature", "-Yinline-warnings")
 
@@ -40,25 +39,25 @@ javacOptions ++= Seq("-deprecation", "-Xlint")
 
 libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _)
 
-libraryDependencies += "com.github.axel22" %% "scalameter" % "0.4" % "test"
+libraryDependencies += "com.github.axel22" %% "scalameter" % "0.5-M2" % "test"
 
-libraryDependencies += "org.specs2" %% "specs2" % "2.3.7" % "test"
+libraryDependencies += "org.specs2" %% "specs2" % "2.3.11" % "test"
 
-libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.1" % "test"
+libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test"
 
 //libraryDependencies += "nf.fr.eraasoft" % "objectpool" % "1.1.2"
 //
 libraryDependencies += "joda-time" % "joda-time" % "2.3"
 
-libraryDependencies += "org.joda" % "joda-convert" % "1.5"
+libraryDependencies += "org.joda" % "joda-convert" % "1.6"
 
-libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.6" % "test"
+libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.9" % "test"
 
-libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.6" % "test"
+libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9" % "test"
 
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % "2.3.1"
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % "2.3.3"
 
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.3.1"
+libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.3.3"
 
 libraryDependencies += "net.minidev" % "json-smart" % "2.0-RC3" % "test"
 
