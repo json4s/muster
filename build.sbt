@@ -1,85 +1,48 @@
 import scala.xml.Group
-import cappi.Plugin.cappiSettings
-import cappi.Keys._
-import sbtbuildinfo.Plugin._
 
-scalaVersion := "2.11.0"
+lazy val core = project
+
+lazy val json = project in file("codecs/json") dependsOn core
+
+lazy val strings = project in file("codecs/strings") dependsOn core
+
+scalaVersion in ThisBuild := "2.11.0"
 
 name := "muster"
 
-organization := "com.github.casualjim"
+organization := "org.json4s"
 
-buildInfoSettings
+scalacOptions in ThisBuild ++= Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-optimize", "-feature", "-Yinline-warnings")
 
-buildInfoPackage := "muster"
+javacOptions in ThisBuild ++= Seq("-deprecation", "-Xlint")
 
-buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
+libraryDependencies in ThisBuild ++= Seq(
+  Dependencies.Specs2 % "test",
+  Dependencies.ScalaCheck % "test",
+  Dependencies.ScalaMeter % "test"
+)
 
-sourceGenerators in Compile <+= buildInfo
+testOptions in ThisBuild += Tests.Argument(TestFrameworks.Specs2, "console", "junitxml")
+
+testFrameworks in ThisBuild += new TestFramework("org.scalameter.ScalaMeterFramework")
+
+parallelExecution in (ThisBuild, test) := false
+
+logBuffered in ThisBuild := false
 //
-//ideaBasePackage := Some("muster")
+//initialCommands in console := """
+//                                |import muster._
+//                                |import scala.reflect.runtime.{universe => u}
+//                                |def read[T:Consumer](source: String) = Muster.consume.Json.as[T](source)
+//                              """.stripMargin
 //
-//ideaExcludeFolders += ".idea"
-//
-//ideaExcludeFolders += ".idea_modules"
+//initialCommands in(Test, console) := """
+//                                       |import muster._
+//                                       |import scala.reflect.runtime.{universe => u}
+//                                       |def read[T:Consumer](source: String) = Muster.consume.Json.as[T](source)
+//                                     """.stripMargin
 
-scalacOptions ++= Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-optimize", "-feature", "-Yinline-warnings")
-
-javacOptions ++= Seq("-deprecation", "-Xlint")
-
-//scalacOptions += "-Ymacro-debug-lite"
-//
-//scalacOptions += "-Xlog-implicits"
-
-//scalacOptions ++= Seq("-Xprint:parser", "-Ystop-after:parser", "-Yshow-trees-compact")
-
-//scalacOptions += "-Yshow-trees-compact"
-
-// addCompilerPlugin("org.scala-lang.plugins" % "macro-paradise" % "2.0.0-SNAPSHOT" cross CrossVersion.full)
-
-libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _)
-
-libraryDependencies += "com.github.axel22" %% "scalameter" % "0.5-M2" % "test"
-
-libraryDependencies += "org.specs2" %% "specs2" % "2.3.11" % "test"
-
-libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test"
-
-//libraryDependencies += "nf.fr.eraasoft" % "objectpool" % "1.1.2"
-//
-libraryDependencies += "joda-time" % "joda-time" % "2.3"
-
-libraryDependencies += "org.joda" % "joda-convert" % "1.6"
-
-libraryDependencies += "org.json4s" %% "json4s-native" % "3.2.9" % "test"
-
-libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.2.9" % "test"
-
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-core" % "2.3.3"
-
-libraryDependencies += "com.fasterxml.jackson.core" % "jackson-databind" % "2.3.3"
-
-libraryDependencies += "net.minidev" % "json-smart" % "2.0-RC3" % "test"
-
-testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework")
-
-parallelExecution in test := false
-
-logBuffered := false
-
-initialCommands in console := """
-                                |import muster._
-                                |import scala.reflect.runtime.{universe => u}
-                                |def read[T:Consumer](source: String) = Muster.consume.Json.as[T](source)
-                              """.stripMargin
-
-initialCommands in(Test, console) := """
-                                       |import muster._
-                                       |import scala.reflect.runtime.{universe => u}
-                                       |def read[T:Consumer](source: String) = Muster.consume.Json.as[T](source)
-                                     """.stripMargin
-
-packageOptions <+= (name, version, organization) map {
+packageOptions in ThisBuild <+= (name, version, organization) map {
   (title, version, vendor) =>
     Package.ManifestAttributes(
       "Created-By" -> "Simple Build Tool",
@@ -95,7 +58,7 @@ packageOptions <+= (name, version, organization) map {
     )
 }
 
-publishTo <<= version { version: String =>
+publishTo in ThisBuild <<= version { version: String =>
   if (version.trim.endsWith("SNAPSHOT"))
     Some(Opts.resolver.sonatypeSnapshots)
   else
@@ -123,6 +86,6 @@ val mavenCentralFrouFrou = Seq(
   }
 )
 
-cappiSettings
+//cappiSettings
 
 //caliperVersion in cappi := Some("1.0-beta-1")

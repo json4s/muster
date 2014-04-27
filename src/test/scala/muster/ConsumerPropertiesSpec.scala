@@ -3,7 +3,8 @@ package muster
 import org.scalacheck._
 import java.util.TimeZone
 import scala.reflect.ClassTag
-import muster.StringOutputFormatter._
+import muster.codec.string.StringOutputFormatter
+import StringOutputFormatter._
 import org.specs2.{ScalaCheck, Specification}
 import org.specs2.matcher.MatchResult
 //import org.joda.time.DateTime

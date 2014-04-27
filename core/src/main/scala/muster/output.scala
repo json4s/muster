@@ -1,7 +1,7 @@
 package muster
 
 import java.util.Date
-import java.text.{SimpleDateFormat, DateFormat}
+import java.text.DateFormat
 
 trait OutputFormatter[R] extends AutoCloseable {
   def startArray(name: String = ""): Unit

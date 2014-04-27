@@ -5,7 +5,7 @@ import java.text._
 import java.util.{Locale, Date}
 import scala.util.Try
 import scala.reflect.ClassTag
-import com.fasterxml.jackson.databind.util.ISO8601DateFormat
+import muster.jackson.util.ISO8601DateFormat
 
 class ParseException(msg: String) extends Exception(msg)
 
@@ -15,6 +15,7 @@ object SafeSimpleDateFormat {
   val DefaultLocale = Locale.getDefault(Locale.Category.FORMAT)
   val Iso8601Formatter: DateFormat = new ISO8601DateFormat
 }
+
 
 class SafeSimpleDateFormat(pattern: String, locale: Locale = SafeSimpleDateFormat.DefaultLocale) extends DateFormat {
   private[this] val df = new ThreadLocal[SimpleDateFormat] {
@@ -567,8 +568,6 @@ trait AstCursor extends CursorFailures {
 }
 
 trait InputCursor[R] extends AstCursor {
-
-  import InputCursor._
 
   def source: R
 }

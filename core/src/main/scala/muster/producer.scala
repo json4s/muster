@@ -3,11 +3,8 @@ package muster
 import scala.language.experimental.macros
 import scala.reflect.macros._
 import java.util.Date
-import com.fasterxml.jackson.databind.JsonNode
-import scala.util.Try
-import com.fasterxml.jackson.databind.node.MissingNode
 import scala.reflect.ClassTag
-import java.text.{DateFormat, SimpleDateFormat}
+import java.text.DateFormat
 import scala.collection.concurrent.TrieMap
 
 object Producer {
@@ -85,11 +82,8 @@ object Producer {
 
   def producerImpl[T: c.WeakTypeTag](c: blackbox.Context): c.Expr[Producer[T]] = {
     import c.universe._
-    import definitions._
-    import Flag._
-
     val helper = new Helper[c.type](c)
-    val tpe = weakTypeOf[T].dealias // TODO: etaExpand
+    val tpe = weakTypeOf[T].dealias
 
     def buildObject(target: Tree, formatter: Tree): Tree = {
       val TypeRef(_, sym: Symbol, _) = tpe

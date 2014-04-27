@@ -1,14 +1,14 @@
 package muster
+package codec
+package json
 
-import muster.Ast._
+import Ast._
 import java.nio.CharBuffer
 import scala.annotation.{tailrec, switch}
-import com.fasterxml.jackson.databind.{DeserializationFeature, JsonNode, ObjectMapper}
-import com.fasterxml.jackson.databind.node.{ArrayNode => JArrayNode, ObjectNode => JObjectNode}
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper, JsonNode}
+import com.fasterxml.jackson.databind.node.{ ArrayNode => JArrayNode }
 import scala.collection.JavaConverters._
 import java.text.DateFormat
-
-
 
 trait JsonReader[R] extends Iterator[Char] {
   def source: R

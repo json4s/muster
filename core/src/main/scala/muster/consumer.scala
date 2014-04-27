@@ -2,15 +2,13 @@ package muster
 
 import scala.language.experimental.macros
 import scala.reflect.macros._
-import muster.Ast._
 import scala.reflect.ClassTag
 import java.util.Date
-import java.text.SimpleDateFormat
 import scala.collection.{generic, immutable}
-import muster.Ast.TextNode
-import muster.Ast.NumberNode
 import scala.util.Try
 import java.util
+import Ast._
+
 //import org.joda.time.DateTime
 
 trait Consumer[S] {
@@ -75,7 +73,7 @@ object Consumer {
 
   def dateConsumer(pattern: String) = {
     cc[Date]({
-      case TextNode(value) => new SimpleDateFormat(pattern).parse(value)
+      case TextNode(value) => new SafeSimpleDateFormat(pattern).parse(value)
       case m: NumberNodeLike[_] => new Date(m.toLong)
       case NullNode | UndefinedNode => null
     })
@@ -163,6 +161,11 @@ object Consumer {
     case NullNode | UndefinedNode => None
     case v => Try(valueReader.consume(v)).toOption
   }
+//
+//  implicit def eitherConsumer[L, R](implicit leftReader: Consumer[L], rightReader: Consumer[R]): Consumer[Either[L, R]] = cc[Either[L, R]] {
+//    case NullNode | UndefinedNode =>
+//    case v => Try(valueReader.consume(v)).toOption
+//  }
 
   implicit def consumer[T]: Consumer[T] = macro consumerImpl[T]
 
@@ -351,7 +354,7 @@ object Consumer {
         def consume(node: Ast.AstNode[_]): T = {
           node match {
             case obj: Ast.ObjectNode => c.Expr[T](buildObject(thisType, c.Expr[ObjectNode](Ident(TermName("obj"))))).splice
-             case muster.Ast.NullNode | muster.Ast.UndefinedNode => null.asInstanceOf[T]
+            case muster.Ast.NullNode | muster.Ast.UndefinedNode => null.asInstanceOf[T]
             case x => throw new MappingException(s"Got a ${x.getClass.getSimpleName} and expected an ObjectNode")
           }
         }

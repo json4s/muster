@@ -1,12 +1,12 @@
 package muster
 
+import scala.language.experimental.macros
 import scala.reflect.macros._
 import java.util.Date
 import java.sql.Timestamp
 import scala.annotation.tailrec
 
 class Helper[C <: blackbox.Context](val c: C) {
-
   import c.universe._
 
   private val primitiveTypes = Set[Type](c.typeOf[String], c.typeOf[Int], c.typeOf[Long], c.typeOf[Double],

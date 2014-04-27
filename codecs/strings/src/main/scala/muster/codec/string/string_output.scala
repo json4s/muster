@@ -1,9 +1,8 @@
 package muster
+package codec
+package string
 
-import java.util.Date
 import scala.collection.mutable
-import java.text.DateFormat
-import java.io.BufferedWriter
 
 trait StringOutputFormat extends OutputFormat[String] {
   def writer: java.io.Writer = new java.io.StringWriter()
@@ -20,18 +19,7 @@ abstract class DefaultStringFormat extends StringOutputFormat {
 }
 
 
-object StringOutputFormatter {
 
-  object State {
-    val None = 0
-    val ArrayStarted = 1
-    val InArray = 2
-    val ObjectStarted = 3
-    val InObject = 4
-  }
-
-  val HexAlphabet = "0123456789ABCDEF"
-}
 
 class DefaultStringOutputFormatter(writer: java.io.Writer) extends BaseStringOutputFormatter(writer) {
 
@@ -47,7 +35,7 @@ class DefaultStringOutputFormatter(writer: java.io.Writer) extends BaseStringOut
 
 abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: java.io.Writer, quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
 
-  import StringOutputFormatter._
+  import Constants._
 
   protected val stateStack = mutable.Stack[Int]()
 
@@ -80,7 +68,7 @@ abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: 
   def string(value: String) {
     writeComma(State.InArray)
     if (quoteStringWith != null && quoteStringWith.trim.nonEmpty) writer.write(quoteStringWith)
-    if (escapeSpecialChars) JsonOutput.quote(value, writer) else writer.write(value)
+    if (escapeSpecialChars) Quoter.jsonQuote(value, writer) else writer.write(value)
     if (quoteStringWith != null && quoteStringWith.trim.nonEmpty) writer.write(quoteStringWith)
   }
 
