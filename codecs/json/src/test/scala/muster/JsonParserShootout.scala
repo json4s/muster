@@ -8,7 +8,7 @@ import org.scalameter.api._
 import org.scalameter.CurveData
 import org.scalameter.utils.Tree
 import org.scalameter.reporting
-import muster.codec.json.MusterJson
+import muster.codec.json.{api, MusterJson}
 
 //import com.fasterxml.jackson.databind.ObjectMapper
 //import org.scalameter.{reporting, CurveData, log}
@@ -50,7 +50,7 @@ class JsonInputCursorBenchmark extends CursorBench {
         exec.benchRuns -> 500
       ) in {
       using(jsonGen) in {
-        r => JsonTestFormat.createCursor(r).nextNode()
+        r => api.JsonFormat.createCursor(r).nextNode()
       }
     }
   }

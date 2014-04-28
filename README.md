@@ -73,9 +73,9 @@ Currently muster supports JSON through parsing with jackson and it can extract t
 * Support for maps with different keys than String
 * Polymorphic classes/collections through a configurable type hint field and strategy
 
-
 Expected to be added next:
 * Support for using a map as an input source
+* Support for scala enums
 * Support for serializing and deserializing from mongodb
 * Support for writing bytebuffers (through the pickling format)
 * Support for writing akka.util.ByteString (through the pickling format)

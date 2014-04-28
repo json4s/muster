@@ -1,7 +1,7 @@
 package muster
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import muster.codec.json.MusterJson
+import muster.codec.json.{api, MusterJson}
 
 class JsonParsersBenchmark extends com.google.caliper.SimpleBenchmark {
 
@@ -12,7 +12,7 @@ class JsonParsersBenchmark extends com.google.caliper.SimpleBenchmark {
 
 
    def timeMusterJacksonParserForLarge(reps: Int): Unit =
-     for (i <- 0 to reps) JsonTestFormat.createCursor(json).nextNode()
+     for (i <- 0 to reps) api.JsonFormat.createCursor(json).nextNode()
 
    def timeMusterJsonParserForLarge(reps: Int): Unit =
      for (i <- 0 to reps) MusterJson.createCursor(json).nextNode()

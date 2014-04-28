@@ -8,7 +8,7 @@ import java.text.DateFormat
 import scala.collection.concurrent.TrieMap
 
 object Producer {
-  private[Producer] abstract class SP[T](fn: (OutputFormatter[_], T) => Unit) extends Producer[T] {
+  private[Producer] abstract class SP[-T](fn: (OutputFormatter[_], T) => Unit) extends Producer[T] {
     def produce(value: T, formatter: OutputFormatter[_]): Unit = fn(formatter, value)
   }
   private def sp[T](fn: (OutputFormatter[_], T) => Unit): Producer[T] = new Producer[T] {
@@ -52,20 +52,12 @@ object Producer {
       fmt.endObject()
     }
 
-  implicit def seqProducer[T](implicit valueProducer: Producer[T]): Producer[Seq[T]] =
-    sp[Seq[T]] { (fmt, v) =>
+  implicit def traversableProducer[T](implicit valueProducer: Producer[T]) =
+    sp[Traversable[T]] { (fmt, v) =>
       fmt.startArray(v.getClass.getSimpleName)
       v foreach (valueProducer.produce(_, fmt))
       fmt.endArray()
     }
-
-  implicit def setProducer[T](implicit valueProducer: Producer[T]): Producer[Set[T]] =
-    sp[Set[T]] { (fmt, v) =>
-      fmt.startArray(v.getClass.getSimpleName)
-      v foreach (valueProducer.produce(_, fmt))
-      fmt.endArray()
-    }
-
 
   implicit def optionProducer[T](implicit valueProducer: Producer[T]): Producer[Option[T]] =
     sp[Option[T]] { (fmt, v) => v foreach (valueProducer.produce(_, fmt))}
@@ -131,11 +123,13 @@ object Producer {
           }
         }
       }
-    } else c.abort(c.enclosingPosition, "Values, Lists, Options and Maps don't use implicits")
+    } else {
+      c.abort(c.enclosingPosition, "Values, Lists, Options and Maps don't use macros")
+    }
   }
 }
 
-trait Producer[T] {
+trait Producer[-T] {
   def produce(value: T, formatter: OutputFormatter[_])
 }
 

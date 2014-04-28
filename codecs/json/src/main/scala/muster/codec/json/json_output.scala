@@ -32,7 +32,6 @@ class ProducibleJsonOutput[T](producible: Producible[_, T], val indentSpaces: In
 
 trait JsonFormatter[T] extends OutputFormatter[T] {
 
-
   protected def writer: java.io.Writer
 
   protected def spaces: Int
