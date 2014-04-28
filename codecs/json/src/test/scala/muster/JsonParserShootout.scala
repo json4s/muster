@@ -8,6 +8,7 @@ import org.scalameter.api._
 import org.scalameter.CurveData
 import org.scalameter.utils.Tree
 import org.scalameter.reporting
+import muster.codec.json.MusterJson
 
 //import com.fasterxml.jackson.databind.ObjectMapper
 //import org.scalameter.{reporting, CurveData, log}
@@ -22,73 +23,9 @@ object Benchmarks {
 
 }
 
-class JsonParsersBenchmark extends com.google.caliper.SimpleBenchmark {
-
-  import Benchmarks._
-
-  val mapper = new ObjectMapper()
-  val jsonSmart = new net.minidev.json.parser.JSONParser()
 
 
-  def timeMusterJacksonParserForLarge(reps: Int): Unit =
-    for (i <- 0 to reps)
-      Muster.consume.Json.createCursor(json).nextNode()
 
-  def timeMusterJsonParserForLarge(reps: Int): Unit =
-    for (i <- 0 to reps)
-      MusterJson.createCursor(json).nextNode()
-
-  def timeJson4SNativeForLarge(reps: Int): Unit =
-    for (i <- 0 to reps)
-      org.json4s.native.JsonMethods.parse(json)
-
-  def timeJson4SJacksonForLarge(reps: Int): Unit =
-    for (i <- 0 to reps)
-      org.json4s.jackson.JsonMethods.parse(json)
-
-  def timeJacksonForLarge(reps: Int): Unit =
-    for (i <- 0 to reps)
-      mapper.readTree(json)
-
-  def timeJsonSmartForLarge(reps: Int): Unit =
-    for (i <- 0 to reps)
-      jsonSmart.parse(json)
-
-}
-
-class MediumJsonParsersBenchmark extends com.google.caliper.SimpleBenchmark {
-
-  import Benchmarks._
-
-  val mapper = new ObjectMapper()
-  val jsonSmart = new net.minidev.json.parser.JSONParser()
-
-
-  def timeMusterJacksonParserForLarge(reps: Int): Unit =
-    for (i <- 0 to reps)
-      Muster.consume.Json.createCursor(smallJson).nextNode()
-
-  def timeMusterJsonParserForLarge(reps: Int): Unit =
-    for (i <- 0 to reps)
-      MusterJson.createCursor(smallJson).nextNode()
-
-  def timeJson4SNativeForLarge(reps: Int): Unit =
-    for (i <- 0 to reps)
-      org.json4s.native.JsonMethods.parse(smallJson)
-
-  def timeJson4SJacksonForLarge(reps: Int): Unit =
-    for (i <- 0 to reps)
-      org.json4s.jackson.JsonMethods.parse(smallJson)
-
-  def timeJacksonForLarge(reps: Int): Unit =
-    for (i <- 0 to reps)
-      mapper.readTree(smallJson)
-
-  def timeJsonSmartForLarge(reps: Int): Unit =
-    for (i <- 0 to reps)
-      jsonSmart.parse(smallJson)
-
-}
 
 trait CursorBench extends PerformanceTest.Quickbenchmark {
 
@@ -113,7 +50,7 @@ class JsonInputCursorBenchmark extends CursorBench {
         exec.benchRuns -> 500
       ) in {
       using(jsonGen) in {
-        r => Muster.consume.Json.createCursor(r).nextNode()
+        r => JsonTestFormat.createCursor(r).nextNode()
       }
     }
   }

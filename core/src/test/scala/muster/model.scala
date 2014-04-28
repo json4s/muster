@@ -79,6 +79,8 @@ case class Bill(in: Int)
 
 case class WithSeq(in: Seq[Int])
 
+case class Category(id: Int, name: String)
+
 class Billy[U](in: U)
 
 case class BillyB(in: Int) extends Billy[Int](in)

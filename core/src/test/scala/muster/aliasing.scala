@@ -1,6 +1,5 @@
 package muster
 
-
 package object aliasing {
   type Foo = Junk
 

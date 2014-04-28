@@ -2,23 +2,43 @@ package muster
 
 import org.scalacheck._
 import java.util.TimeZone
-import scala.reflect.ClassTag
-import muster.codec.string.StringOutputFormatter
-import StringOutputFormatter._
 import org.specs2.{ScalaCheck, Specification}
 import org.specs2.matcher.MatchResult
+import Ast._
+import codec.json._
+import com.fasterxml.jackson.databind.JsonNode
+import scala.util.Try
+import com.fasterxml.jackson.databind.node.MissingNode
+
 //import org.joda.time.DateTime
+
+object JsonTestFormat extends ProducibleJsonOutput(StringProducible) with JacksonInputFormat[Consumable[_]] {
+
+  private def jic[T](src: T)(fn: (T) => JsonNode): JacksonInputCursor[T] = new JacksonInputCursor[T] {
+    protected val node: JsonNode = Try(fn(src)).getOrElse(MissingNode.getInstance())
+    val source: T = src
+  }
+
+  def createCursor(in: Consumable[_]): JacksonInputCursor[_] = in match {
+    case StringConsumable(src) => jic(src)(mapper.readTree)
+    case FileConsumable(src) => jic(src)(mapper.readTree)
+    case ReaderConsumable(src) => jic(src)(mapper.readTree)
+    case InputStreamConsumable(src) => jic(src)(mapper.readTree)
+    case ByteArrayConsumable(src) => jic(src)(mapper.readTree)
+    case URLConsumable(src) => jic(src)(mapper.readTree)
+  }
+}
 
 class ConsumerSpec extends Specification with ScalaCheck {
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
   //  def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
-  val format = Muster.consume.Json
+  val json = JsonTestFormat
 
-  def read[T: Consumer](js: String) = format.as[T](js)
+  def read[T: Consumer](js: String) = json.as[T](js)
 
   def cp[T](implicit toProp : MatchResult[T] => Prop, a : org.scalacheck.Arbitrary[T], s : org.scalacheck.Shrink[T], cons: Consumer[T]) = {
     prop { (i: T) =>
-      format.as[T](i.toString) must_== i
+      json.as[T](i.toString) must_== i
     }
   }
 
@@ -80,7 +100,7 @@ A Consumer should
   val stringProp = prop { (i: String) =>
     val sb = new StringBuilder()
     sb.append('"')
-    JsonOutput.quote(i, sb)
+    Quoter.jsonQuote(i, sb)
     sb.append('"')
     read[String](sb.toString()) must_== i
   }
@@ -107,7 +127,7 @@ A Consumer should
         if (!first) sb.append(',')
         else first = false
         sb.append('"')
-        JsonOutput.quote(k, sb)
+        Quoter.jsonQuote(k, sb)
         sb.append('"')
         sb.append(':')
         sb.append(v)
@@ -136,7 +156,7 @@ A Consumer should
         if (!first) sb.append(',')
         else first = false
         sb.append('"')
-        JsonOutput.quote(k, sb)
+        Quoter.jsonQuote(k, sb)
         sb.append('"')
         sb.append(':')
         sb.append('[')
