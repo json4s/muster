@@ -80,22 +80,22 @@ object Consumer {
   }
 
 
-  implicit def mapConsumer[V](implicit valueConsumer: Consumer[V]) = cc[immutable.Map[String, V]] {
+  implicit def mapConsumer[K, V](implicit keySerializer: MapKeySerializer[K], valueConsumer: Consumer[V]) = cc[immutable.Map[K, V]] {
     case m: ObjectNode =>
-      val bldr = Map.newBuilder[String, V]
+      val bldr = Map.newBuilder[K, V]
       m.keySet foreach { key =>
-        bldr += key -> valueConsumer.consume(m.readField(key))
+        bldr += keySerializer.deserialize(key) -> valueConsumer.consume(m.readField(key))
       }
       bldr.result()
     case NullNode | UndefinedNode => null
   }
 
 
-  implicit def mutableMapConsumer[V](implicit valueConsumer: Consumer[V]) = cc[scala.collection.mutable.Map[String, V]] {
+  implicit def mutableMapConsumer[K, V](implicit keySerializer: MapKeySerializer[K], valueConsumer: Consumer[V]) = cc[scala.collection.mutable.Map[K, V]] {
     case m: ObjectNode =>
-      val bldr = collection.mutable.Map.newBuilder[String, V]
+      val bldr = collection.mutable.Map.newBuilder[K, V]
       m.keySet foreach { key =>
-        bldr += key -> valueConsumer.consume(m.readField(key))
+        bldr += keySerializer.deserialize(key) -> valueConsumer.consume(m.readField(key))
       }
       bldr.result()
     case NullNode | UndefinedNode => null
@@ -137,14 +137,14 @@ object Consumer {
     case NullNode | UndefinedNode => new util.HashSet[T]()
   }
 
-  implicit def javaMapConsumer[T](implicit valueConsumer: Consumer[T]) = cc[java.util.Map[String, T]] {
+  implicit def javaMapConsumer[K, T](implicit keySerializer: MapKeySerializer[K], valueConsumer: Consumer[T]) = cc[java.util.Map[K, T]] {
     case m: ObjectNode =>
-      val lst = new util.HashMap[String, T]()
+      val lst = new util.HashMap[K, T]()
       m.keySet foreach { key =>
-        lst.put(key, valueConsumer.consume(m.readField(key)))
+        lst.put(keySerializer.deserialize(key), valueConsumer.consume(m.readField(key)))
       }
       lst
-    case NullNode | UndefinedNode => new util.HashMap[String, T]()
+    case NullNode | UndefinedNode => new util.HashMap[K, T]()
   }
 
   implicit def arrayConsumer[T](implicit ct: ClassTag[T], valueReader: Consumer[T]): Consumer[Array[T]] = cc[Array[T]] {

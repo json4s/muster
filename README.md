@@ -59,12 +59,12 @@ Currently muster supports JSON through parsing with jackson and it can extract t
 * Scala case classes
 * Classes initialized through a constructor only
 * Classes with type parameters
+* Support for maps with different keys than String
 
 
 Expected to be added next:
 * Polymorphic classes/collections through a configurable type hint field and strategy
 * Support for using a map as an input source
-* Support for maps with different keys than String
 * Support for writing bytebuffers (through the pickling format)
 * Support for writing akka.util.ByteString (through the pickling format)
 * Support for streaming large collections through a scala iterator, java iterator or scala stream

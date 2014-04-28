@@ -42,11 +42,11 @@ object Producer {
       fmt.endArray()
     }
 
-  implicit def mapProducer[T](implicit valueProducer: Producer[T]): Producer[collection.GenMap[String, T]] =
-    sp[collection.GenMap[String, T]] { (fmt, v) =>
+  implicit def mapProducer[K, T](implicit keySerializer: MapKeySerializer[K], valueProducer: Producer[T]): Producer[collection.GenMap[K, T]] =
+    sp[collection.GenMap[K, T]] { (fmt, v) =>
       fmt.startObject(v.getClass.getSimpleName)
       v foreach { kv =>
-        fmt.startField(kv._1)
+        fmt.startField(keySerializer.serialize(kv._1))
         valueProducer.produce(kv._2, fmt)
       }
       fmt.endObject()
