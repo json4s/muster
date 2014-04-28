@@ -13,24 +13,11 @@ The idea is that things work a little bit like this
 case class Person(id: Long, name: String, age: Int)
 val person = Person(1, "Luke", 38)
 
-import muster.codec.json.api._
+import muster.codec._
+import json.api._
 JsonFormat.from(person)
 JsonFormat.into(new File("luke.json")).from(person)
 JsonFormat.Pretty.from(person)
-
-import muster.codec.string.api._
-StringFormat.from(person)
-
-
-/*
-Not Yet Implemented:
-Muster.produce.ByteBuffer.from(person)
-Muster.produce.ByteString.from(person)
-Muster.produce.Protobuf[Protocol.Person].from(person)
-*/
-/* or */
-
-import muster.codec.json.api._
 person.asJson // calls: JsonFormat.from(person) and produces {"id":1,"name":"Luke","age":38}
 person.asPrettyJson /* calls: JsonFormat.Pretty.from(person) and produces
                        {
@@ -39,8 +26,19 @@ person.asPrettyJson /* calls: JsonFormat.Pretty.from(person) and produces
                          "Luke",
                          "age":38
                        } */
-import muster.codec.string.api._
-person.asString // calls: Muster.produce.String.from(person) and produces Person(id: 1, name: "Luke", age: 38)
+
+
+import string.api._
+StringFormat.from(person)
+person.asString // calls: muster.codec.string.api.StringFormat.from(person) and produces Person(id: 1, name: "Luke", age: 38)
+
+/*
+Not Yet Implemented:
+Muster.produce.ByteBuffer.from(person)
+Muster.produce.ByteString.from(person)
+Muster.produce.Protobuf[Protocol.Person].from(person)
+*/
+
 ```
 
 ## Reading
