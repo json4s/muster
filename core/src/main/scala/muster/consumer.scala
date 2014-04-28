@@ -161,11 +161,6 @@ object Consumer {
     case NullNode | UndefinedNode => None
     case v => Try(valueReader.consume(v)).toOption
   }
-//
-//  implicit def eitherConsumer[L, R](implicit leftReader: Consumer[L], rightReader: Consumer[R]): Consumer[Either[L, R]] = cc[Either[L, R]] {
-//    case NullNode | UndefinedNode =>
-//    case v => Try(valueReader.consume(v)).toOption
-//  }
 
   implicit def consumer[T]: Consumer[T] = macro consumerImpl[T]
 
@@ -259,7 +254,6 @@ object Consumer {
     def buildObject(tpe: Type, reader: c.Expr[Ast.ObjectNode], methodSuffix: String = "", args: List[Tree] = Nil): Tree = {
       if (tpe.typeSymbol.isClass && !(helper.isPrimitive(tpe) || helper.isMap(tpe) || helper.isOption(tpe) || helper.isSeq(tpe))) {
         val TypeRef(_, sym, tpeArgs) = tpe
-        val newObjTypeTree = helper.typeArgumentTree(tpe)
 
         // Builds the if/else tree for checking constructor params and returning a new object
         def pickConstructorTree(argNames: c.Expr[Set[String]]): Tree = {

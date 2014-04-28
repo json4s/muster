@@ -3,8 +3,8 @@ package muster
 import org.specs2.mutable.Specification
 import java.util.{TimeZone, Date}
 import java.util
-import scala.Some
 import org.json4s.DefaultFormats
+import muster.codec.json.api
 
 //import org.joda.time.DateTime
 object Aliased {
@@ -43,7 +43,7 @@ class Ac2 {
 class JacksonDeserializationSpec extends Specification {
 
   implicit val defaultFormats = DefaultFormats
-  val format = JsonTestFormat
+  val format = api.JsonFormat
 
   val refJunk = Junk(2, "cats")
   val refJunkDict: String = org.json4s.jackson.Serialization.write(refJunk)

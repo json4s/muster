@@ -1,0 +1,3 @@
+package muster
+
+class TypeHintsSpec

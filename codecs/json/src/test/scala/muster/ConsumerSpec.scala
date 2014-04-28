@@ -12,27 +12,11 @@ import com.fasterxml.jackson.databind.node.MissingNode
 
 //import org.joda.time.DateTime
 
-object JsonTestFormat extends ProducibleJsonOutput(StringProducible) with JacksonInputFormat[Consumable[_]] {
-
-  private def jic[T](src: T)(fn: (T) => JsonNode): JacksonInputCursor[T] = new JacksonInputCursor[T] {
-    protected val node: JsonNode = Try(fn(src)).getOrElse(MissingNode.getInstance())
-    val source: T = src
-  }
-
-  def createCursor(in: Consumable[_]): JacksonInputCursor[_] = in match {
-    case StringConsumable(src) => jic(src)(mapper.readTree)
-    case FileConsumable(src) => jic(src)(mapper.readTree)
-    case ReaderConsumable(src) => jic(src)(mapper.readTree)
-    case InputStreamConsumable(src) => jic(src)(mapper.readTree)
-    case ByteArrayConsumable(src) => jic(src)(mapper.readTree)
-    case URLConsumable(src) => jic(src)(mapper.readTree)
-  }
-}
 
 class ConsumerSpec extends Specification with ScalaCheck {
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
   //  def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
-  val json = JsonTestFormat
+  val json = api.JsonFormat
 
   def read[T: Consumer](js: String) = json.as[T](js)
 
@@ -71,6 +55,7 @@ class ConsumerSpec extends Specification with ScalaCheck {
     read a java double value                               $javaDoubleProp
     read a string value                                    $stringProp
     read a list value                                      $listProp
+    read a list value                                      $mutableListProp
     read a map with string keys value                      $mapProp
     read a map with string keys and a list value           $mapListProp
     read a map with int keys value                         $mapIntProp

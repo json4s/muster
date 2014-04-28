@@ -1,14 +1,8 @@
 package muster
 
-//import org.scalacheck._
-import java.util.TimeZone
-import org.specs2.{ScalaCheck, Specification}
-import org.scalacheck.{Arbitrary, Gen}
-//import org.joda.time.DateTime
-//import org.joda.time.DateTimeZone
+import muster.codec.json.api
 
-
-class CompactJsonStringFormatterSpec extends {val format = JsonTestFormat} with StringOutputFormatterSpec {
+class CompactJsonStringFormatterSpec extends {val format = api.JsonFormat} with StringOutputFormatterSpec {
 
   val listProp = prop { (lst: List[Int]) =>
     withFormatter { fmt =>
