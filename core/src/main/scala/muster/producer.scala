@@ -6,9 +6,11 @@ import java.util.Date
 import scala.reflect.ClassTag
 import java.text.DateFormat
 import scala.collection.concurrent.TrieMap
+import scala.collection.immutable
+import scala.collection.mutable
 
 object Producer {
-  private[Producer] abstract class SP[-T](fn: (OutputFormatter[_], T) => Unit) extends Producer[T] {
+  private[Producer] abstract class SP[T](fn: (OutputFormatter[_], T) => Unit) extends Producer[T] {
     def produce(value: T, formatter: OutputFormatter[_]): Unit = fn(formatter, value)
   }
   private def sp[T](fn: (OutputFormatter[_], T) => Unit): Producer[T] = new Producer[T] {
@@ -42,7 +44,7 @@ object Producer {
       fmt.endArray()
     }
 
-  implicit def mapProducer[K, T](implicit keySerializer: MapKeySerializer[K], valueProducer: Producer[T]): Producer[collection.GenMap[K, T]] =
+  implicit def genMapProducer[K, T](implicit keySerializer: MapKeySerializer[K], valueProducer: Producer[T]): Producer[collection.GenMap[K, T]] =
     sp[collection.GenMap[K, T]] { (fmt, v) =>
       fmt.startObject(v.getClass.getSimpleName)
       v foreach { kv =>
@@ -52,23 +54,111 @@ object Producer {
       fmt.endObject()
     }
 
-  implicit def traversableProducer[T](implicit valueProducer: Producer[T]) =
-    sp[Traversable[T]] { (fmt, v) =>
+  implicit def mapProducer[K, T](implicit keySerializer: MapKeySerializer[K], valueProducer: Producer[T]): Producer[immutable.Map[K, T]] =
+    sp[immutable.Map[K, T]] { (fmt, v) =>
+      fmt.startObject(v.getClass.getSimpleName)
+      v foreach { kv =>
+        fmt.startField(keySerializer.serialize(kv._1))
+        valueProducer.produce(kv._2, fmt)
+      }
+      fmt.endObject()
+    }
+
+  implicit def javaMapProducer[K, T](implicit keySerializer: MapKeySerializer[K], valueProducer: Producer[T]): Producer[java.util.Map[K, T]] =
+    sp[java.util.Map[K, T]] { (fmt, v) =>
+      fmt.startObject(v.getClass.getSimpleName)
+      val iter = v.entrySet().iterator()
+      while(iter.hasNext) {
+        val kv = iter.next()
+        fmt.startField(keySerializer.serialize(kv.getKey))
+        valueProducer.produce(kv.getValue, fmt)
+      }
+      fmt.endObject()
+    }
+
+
+//  implicit class traversableProducer[C, T <: Traversable[C]]
+  implicit def traversableProducer[C](implicit valueProducer: Producer[C]) =
+    sp[collection.Traversable[C]] { (fmt, v) =>
+      fmt.startArray(v.getClass.getSimpleName)
+      v foreach (valueProducer.produce(_, fmt))
+      fmt.endArray()
+    }
+
+  implicit def listProducer[T](implicit valueProducer: Producer[T]) =
+    sp[immutable.List[T]] { (fmt, v) =>
+      fmt.startArray(v.getClass.getSimpleName)
+      v foreach (valueProducer.produce(_, fmt))
+      fmt.endArray()
+    }
+  implicit def javaListProducer[T](implicit valueProducer: Producer[T]) =
+    sp[java.util.List[T]] { (fmt, v) =>
+      fmt.startArray(v.getClass.getSimpleName)
+      val iter = v.iterator()
+      while(iter.hasNext) {
+        valueProducer.produce(iter.next(), fmt)
+      }
+      fmt.endArray()
+    }
+
+  implicit def vectorProducer[T](implicit valueProducer: Producer[T]) =
+    sp[immutable.Vector[T]] { (fmt, v) =>
+      fmt.startArray(v.getClass.getSimpleName)
+      v foreach (valueProducer.produce(_, fmt))
+      fmt.endArray()
+    }
+
+  implicit def mutableListProducer[T](implicit valueProducer: Producer[T]) =
+    sp[mutable.ListBuffer[T]] { (fmt, v) =>
+      fmt.startArray(v.getClass.getSimpleName)
+      v foreach (valueProducer.produce(_, fmt))
+      fmt.endArray()
+    }
+  implicit def seqProducer[T](implicit valueProducer: Producer[T]) =
+    sp[Seq[T]] { (fmt, v) =>
+      fmt.startArray(v.getClass.getSimpleName)
+      v foreach (valueProducer.produce(_, fmt))
+      fmt.endArray()
+    }
+  implicit def setProducer[T](implicit valueProducer: Producer[T]) =
+    sp[immutable.Set[T]] { (fmt, v) =>
+      fmt.startArray(v.getClass.getSimpleName)
+      v foreach (valueProducer.produce(_, fmt))
+      fmt.endArray()
+    }
+  implicit def javaSetProducer[T](implicit valueProducer: Producer[T]) =
+    sp[java.util.Set[T]] { (fmt, v) =>
+      fmt.startArray(v.getClass.getSimpleName)
+      val iter = v.iterator()
+      while(iter.hasNext) { valueProducer.produce(iter.next(), fmt) }
+      fmt.endArray()
+    }
+  implicit def mutableSeqProducer[T](implicit valueProducer: Producer[T]) =
+    sp[mutable.Seq[T]] { (fmt, v) =>
+      fmt.startArray(v.getClass.getSimpleName)
+      v foreach (valueProducer.produce(_, fmt))
+      fmt.endArray()
+    }
+  implicit def mutableSetProducer[T](implicit valueProducer: Producer[T]) =
+    sp[mutable.Set[T]] { (fmt, v) =>
       fmt.startArray(v.getClass.getSimpleName)
       v foreach (valueProducer.produce(_, fmt))
       fmt.endArray()
     }
 
   implicit def optionProducer[T](implicit valueProducer: Producer[T]): Producer[Option[T]] =
-    sp[Option[T]] { (fmt, v) => v foreach (valueProducer.produce(_, fmt))}
+    sp[Option[T]] { (fmt, v) =>
+      if (v.isDefined) valueProducer.produce(v.get, fmt)
+      else fmt.writeNull()
+    }
 
   private[this] val safeFormatterPool = TrieMap.empty[String, DateFormat]
   def dateProducer(pattern: String) = {
-    dateProducerFromFormat(safeFormatterPool.getOrElseUpdate(pattern, new SafeSimpleDateFormat(pattern)))
+    dateFromFormat(safeFormatterPool.getOrElseUpdate(pattern, new SafeSimpleDateFormat(pattern)))
   }
-  def dateProducerFromFormat(format: DateFormat) = sp[Date]((fmt, v) => fmt string format.format(v))
+  def dateFromFormat(format: DateFormat) = sp[Date]((fmt, v) => fmt string format.format(v))
 
-  implicit val DefaultDateProducer = dateProducerFromFormat(SafeSimpleDateFormat.Iso8601Formatter)
+  implicit val DefaultDateProducer = dateFromFormat(SafeSimpleDateFormat.Iso8601Formatter)
 
   implicit def producer[T]: Producer[T] = macro producerImpl[T]
 
@@ -87,7 +177,9 @@ object Producer {
         val stripped = on.replaceFirst("^get", "")
         val fieldName = if (needsLower) stripped(0).toLower + stripped.substring(1) else stripped
         val fieldPath = Select(target, fld.asTerm.name)
+        // TODO: Add field renaming strategy
         val startFieldExpr = Apply(Select(formatter, TermName("startField")), Literal(Constant(fieldName)) :: Nil)
+
         val pTpe = appliedType(weakTypeOf[Producer[Any]], tt::Nil)
         val fVal: List[Tree] = c.inferImplicitValue(pTpe) match {
           case EmptyTree =>
@@ -96,6 +188,9 @@ object Producer {
             c.abort(c.enclosingPosition, s"Couldn't find an implicit ${pTpe}, try defining one or bringing one into scope")
 //            Nil
           case x =>
+            // val producer$1 = implicitProducer
+            // val value$1 = obj.theProperty
+            // producer$1.produce(value$1, formatter)
             val pn = c.freshName("producer$")
             val ptn = TermName(pn)
             val pv: Tree = ValDef(Modifiers(), ptn, TypeTree(pTpe), x)
@@ -129,7 +224,7 @@ object Producer {
   }
 }
 
-trait Producer[-T] {
+trait Producer[T] {
   def produce(value: T, formatter: OutputFormatter[_])
 }
 
