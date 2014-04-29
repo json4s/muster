@@ -51,7 +51,7 @@ trait OutputFormat[R] {
 
   def from[T](out: T)(implicit producer: Producer[T]): R = {
     val fmt = createFormatter
-      producer.produce(out, fmt)
-      fmt.result
+    producer.produce(out, fmt)
+    fmt.result
   }
 }

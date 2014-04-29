@@ -56,6 +56,9 @@ A Producer should
   write an option value                                   $optProp
   write an option with list value                         $optListProp
 """
+  /*
+
+   */
 
   val byteProp = cp[Byte]
   val shortProp = cp[Short]
@@ -83,10 +86,10 @@ A Producer should
   }
 
   val listProp = prop {
-   (i: List[Int]) => write(i) must_== i.mkString("[", ",", "]")
- }
+    (i: List[Int]) => write(i) must_== i.mkString("[", ",", "]")
+  }
 
- import collection.mutable
+  import collection.mutable
 
   val mutableListProp = prop {
      (i: mutable.ListBuffer[Int]) => write(i) must_== i.mkString("[", ",", "]")
@@ -305,12 +308,12 @@ A Producer should
 
   val optProp = prop {
     (i: Option[Int]) =>
-      write(i) must_== i.fold("")(_.toString)
+      write(i) must_== i.fold("null")(_.toString)
   }
 
   val optListProp = prop {
     (i: List[Option[Int]]) =>
-      write(i) must_== i.flatten.mkString("[", ",", "]")
+      write(i) must_== i.map(_.fold("null")(_.toString)).mkString("[", ",", "]")
   }
 
 
