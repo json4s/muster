@@ -1,6 +1,7 @@
 import cappi.Plugin.cappiSettings
 import cappi.Keys._
 
+
 name := "muster-caliper-benchmarks"
 
 cappiSettings
@@ -15,4 +16,4 @@ publish := {}
 
 publishLocal := {}
 
-publishSigned := {}
+PgpKeys.publishSigned := {}

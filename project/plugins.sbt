@@ -2,8 +2,6 @@ scalacOptions += "-deprecation"
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.2.1")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.1")
-
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.3.0")
 
 resolvers += Resolver.url(
@@ -13,6 +11,8 @@ resolvers += Resolver.url(
 addSbtPlugin("me.lessis" % "cappi" % "0.1.1")
 
 addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.1.3")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.3")
 
 //addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.3")
 

@@ -14,6 +14,8 @@ name := "muster"
 
 organization in ThisBuild := "org.json4s"
 
+organization := "org.json4s"
+
 scalacOptions in ThisBuild ++= Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-optimize", "-feature", "-Yinline-warnings")
 
 javacOptions in ThisBuild ++= Seq("-deprecation", "-Xlint")
