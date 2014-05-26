@@ -69,26 +69,25 @@ publishTo in ThisBuild <<= version { version: String =>
     Some(Opts.resolver.sonatypeStaging)
 }
 
-val mavenCentralFrouFrou = Seq(
-  homepage := Some(new URL("https://github.com/casualjim/muster")),
-  startYear := Some(2013),
-  licenses := Seq(("MIT", new URL("https://github.com/casualjim/muster/raw/HEAD/LICENSE"))),
-  pomExtra <<= (pomExtra, name, description) { (pom, name, desc) =>
-    pom ++ Group(
-      <scm>
-        <url>http://github.com/casualjim/muster</url>
-        <connection>scm:git:git://github.com/casualjim/muster.git</connection>
-      </scm>
-        <developers>
-          <developer>
-            <id>casualjim</id>
-            <name>Ivan Porto Carrero</name>
-            <url>http://flanders.co.nz/</url>
-          </developer>
-        </developers>
-    )
-  }
-)
+homepage in ThisBuild := Some(new URL("https://github.com/json4s/muster"))
+
+startYear in ThisBuild := Some(2013)
+
+licenses in ThisBuild := Seq(("MIT", new URL("https://github.com/json4s/muster/raw/HEAD/LICENSE")))
+
+scmInfo in ThisBuild := Some(ScmInfo(url("http://github.com/json4s/muster"), "scm:git:git://github.com/json4s/muster.git", Some("scm:git:git@github.com:json4s/muster.git")))
+
+pomExtra in ThisBuild <<= (pomExtra, name, description) { (pom, name, desc) =>
+  pom ++ Group(
+     <developers>
+        <developer>
+          <id>casualjim</id>
+          <name>Ivan Porto Carrero</name>
+          <url>http://flanders.co.nz/</url>
+        </developer>
+      </developers>
+  )
+}
 
 //cappiSettings
 
