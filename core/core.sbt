@@ -9,8 +9,6 @@ buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
 
 sourceGenerators in Compile <+= buildInfo
 
-organization := "org.json4s"
-
 name := "muster-core"
 
 //libraryDependencies ++= Seq(JacksonCore, JacksonDatabind)

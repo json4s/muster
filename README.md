@@ -11,7 +11,8 @@ This only works with scala 2.11.
 The library is published to maven central so you can get it with:
 
 ```
-libraryDependencies += "com.github.c
+libraryDependencies += "org.json4s" %% "muster-codec-json" % "0.0.1"
+libraryDependencies += "org.json4s" %% "muster-codec-string" % "0.0.1"
 ```
 
 ## How does it work?
