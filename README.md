@@ -5,9 +5,20 @@ It uses scala macros so no reflection is involved and it will generate code at c
 that kind of looks like it would have been handwritten.  It is written with the idea of extension, so it's easy to
 add your own formats.
 
-The idea is that things work a little bit like this
+## Getting the library
 
-## Writing
+This only works with scala 2.11.
+The library is published to maven central so you can get it with:
+
+```
+libraryDependencies += "com.github.c
+```
+
+## How does it work?
+
+The idea is that things work a little bit like this:
+
+### Writing
 
 ```scala
 case class Person(id: Long, name: String, age: Int)
@@ -41,7 +52,7 @@ Muster.produce.Protobuf[Protocol.Person].from(person)
 
 ```
 
-## Reading
+### Reading
 
 Similarly reading can be achieved with
 
@@ -56,7 +67,7 @@ Muster.consume.ByteBuffer.as[Person](/* file | string | reader | byte array | in
 */
 ```
 
-## What's inside
+### What's inside
 
 Currently muster supports JSON through parsing with jackson and it can extract the following things:
 * Primitive values like String, Int, Date
@@ -71,11 +82,13 @@ Currently muster supports JSON through parsing with jackson and it can extract t
 * Classes initialized through a constructor only
 * Classes with type parameters
 * Support for maps with different keys than String
-* Polymorphic classes/collections through a configurable type hint field and strategy
+* Allows choosing between different option treatments for formats that support omission instead of null
 
 Expected to be added next:
-* Support for using a map as an input source
 * Support for scala enums
+* Support for renaming fields 
+* Polymorphic classes/collections through a configurable type hint field and strategy
+* Support for using a map as an input source
 * Support for serializing and deserializing from mongodb
 * Support for writing bytebuffers (through the pickling format)
 * Support for writing akka.util.ByteString (through the pickling format)
