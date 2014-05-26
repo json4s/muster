@@ -22,7 +22,7 @@ libraryDependencies += "org.scala-lang" %  "scala-reflect" % scalaVersion.value
 compileOrder := CompileOrder.JavaThenScala
 
 //scalacOptions += "-Ymacro-debug-lite"
-//
+
 //scalacOptions += "-Xlog-implicits"
 
 //scalacOptions ++= Seq("-Xprint:parser", "-Ystop-after:parser", "-Yshow-trees-compact")

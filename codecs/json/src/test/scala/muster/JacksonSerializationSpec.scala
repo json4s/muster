@@ -6,6 +6,19 @@ import muster.codec.json.api
 import java.util.{Date, TimeZone}
 import java.util
 
+
+object OptionOverride {
+  private def sp[T](fn: (OutputFormatter[_], T) => Unit): Producer[T] = new Producer[T] {
+    def produce(value: T, formatter: OutputFormatter[_]): Unit = fn(formatter, value)
+  }
+  implicit def optionProducer[T](implicit valueProducer: Producer[T]): Producer[Option[T]] =
+    sp[Option[T]] { (fmt, v) =>
+      if (v.isDefined) valueProducer.produce(v.get, fmt)
+      else fmt.undefined()
+    }
+}
+
+
 class JacksonSerializationSpec extends Specification {
   implicit val defaultFormats = DefaultFormats
   val format = api.JsonFormat
@@ -71,11 +84,12 @@ class JacksonSerializationSpec extends Specification {
       write(WithOption(1, None)) must_== js
     }
 
-//    "write a very simple case class with an option field omitted" in {
-//      val js = """{"one":1}"""
-//      write(WithOption(1, None)) must_== js
-//    }
-//
+    "write a very simple case class with an option field omitted" in {
+      import OptionOverride._
+      val js = """{"one":1}"""
+      write(WithOption(1, None)) must_== js
+    }
+
     "write list of simple case classes" in {
       val js = """[{"one":1,"two":"hello"},{"one":2,"two":"world"}]"""
       write(List(Simple(1, "hello"), Simple(2, "world"))) must_== js
@@ -302,24 +316,24 @@ class JacksonSerializationSpec extends Specification {
       write(Curried(1395, 4059)(395)) must_== js
     }
 
-//    "write an object with a type param" in {
-//      val js = """{"in1":39589}"""
-//      write(WithTpeParams(39589)) must_== js
-//    }
+    "write an object with a type param" in {
+      val js = """{"in1":39589}"""
+      write(WithTpeParams(39589)) must_== js
+    }
 
     "write an object with a seq" in {
       write(WithSeq(Seq(1,3,4))) must_== """{"in":[1,3,4]}"""
     }
 
-//    "write an object with nested type params" in {
-//      val js = """{"in1":12,"in2":{"in1":94}}"""
-//      write(new WithNstedTpeParams(12, WithTpeParams(94))) must_== js
-//    }
-//
-//    "write an object with nested type params and a resolved param" in {
-//      val js = """{"in3":12,"in4":{"in1":94}}"""
-//      write(ResolvedParams(12, WithTpeParams(94))) must_== js
-//    }
+    "write an object with nested type params" in {
+      val js = """{"in1":12,"in2":{"in1":94}}"""
+      write(new WithNstedTpeParams(12, WithTpeParams(94))) must_== js
+    }
+
+    "write an object with nested type params and a resolved param" in {
+      val js = """{"in3":12,"in4":{"in1":94}}"""
+      write(ResolvedParams(12, WithTpeParams(94))) must_== js
+    }
 
     "write an object with date and a name" in {
       val date = new Date

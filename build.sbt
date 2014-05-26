@@ -8,7 +8,7 @@ lazy val strings = project in file("codecs/strings") dependsOn (core % "compile-
 
 lazy val caliperBenchmarks = project in file("benchmarks/caliper") dependsOn (core % "compile->compile;test->test", json % "compile->compile;test->test", strings % "compile->compile;test->test")
 
-scalaVersion in ThisBuild := "2.11.0"
+scalaVersion in ThisBuild := "2.11.1"
 
 name := "muster"
 

@@ -44,28 +44,34 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
 
   private[this] var indentLevel = 0
 
+  private[this] val undefinedEraserBuffer = new mutable.StringBuilder()
+
+  private[this] var appendStrategy: muster.Quoter.Appendable[_] = writer
+
   def startArray(name: String = "") {
     writeComma(State.InArray)
-    writer.write('[')
+    writeStartField(discard = false)
+    appendStrategy.append('[')
     stateStack push State.ArrayStarted
   }
 
   def endArray() {
-    writer.write(']')
+    appendStrategy.append(']')
     stateStack.pop()
   }
 
   def startObject(name: String = "") {
     writeComma(State.InArray)
-    writer.write('{')
+    writeStartField(discard = false)
+    appendStrategy.append('{')
     indentLevel += 1
     stateStack push State.ObjectStarted
   }
 
   private[this] final def indentForPretty() {
     if (spaces > 0) {
-      writer.write('\n')
-      writer.write(" " * spaces * indentLevel)
+      appendStrategy.append('\n')
+      appendStrategy.append(" " * spaces * indentLevel)
     }
   }
 
@@ -73,67 +79,92 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
     stateStack.pop()
     indentLevel -= 1
     indentForPretty()
-    writer.write('}')
+    appendStrategy.append('}')
   }
 
   def string(value: String) {
     writeComma(State.InArray)
-    writer.write('"')
+    writeStartField(discard = false)
+    appendStrategy.append('"')
     Quoter.jsonQuote(value, writer)
-    writer.write('"')
+    appendStrategy.append('"')
   }
 
   def byte(value: Byte) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writeStartField(discard = false)
+    appendStrategy.append(value.toString)
   }
 
   def int(value: Int) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writeStartField(discard = false)
+    appendStrategy.append(value.toString)
   }
 
   def long(value: Long) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writeStartField(discard = false)
+    appendStrategy.append(value.toString)
   }
 
   def bigInt(value: BigInt) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writeStartField(discard = false)
+    appendStrategy.append(value.toString)
   }
 
   def boolean(value: Boolean) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writeStartField(discard = false)
+    appendStrategy.append(value.toString)
   }
 
   def short(value: Short) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writeStartField(discard = false)
+    appendStrategy.append(value.toString)
   }
 
   def float(value: Float) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writeStartField(discard = false)
+    appendStrategy.append(value.toString)
   }
 
   def double(value: Double) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writeStartField(discard = false)
+    appendStrategy.append(value.toString)
   }
 
   def bigDecimal(value: BigDecimal) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writeStartField(discard = false)
+    appendStrategy.append(value.toString)
   }
 
   def writeNull() {
     writeComma(State.InArray)
-    writer.write("null")
+    writeStartField(discard = false)
+    appendStrategy.append("null")
   }
 
-  def undefined() {}
+  def undefined() {
+    writeStartField(discard = true)
+  }
+
+  private[this] def writeStartField(discard: Boolean) {
+    appendStrategy = writer
+    try {
+      if (!discard && undefinedEraserBuffer.nonEmpty) {
+        appendStrategy.append(undefinedEraserBuffer.toString())
+      }
+    } finally {
+      undefinedEraserBuffer.clear()
+    }
+  }
+
 
   private[this] final def writeComma(when: Int*) {
     if (state == State.ArrayStarted) {
@@ -143,17 +174,18 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
       stateStack.pop()
       stateStack push State.InObject
     } else if (when.contains(state)) {
-      writer.write(',')
+      appendStrategy.append(',')
     }
   }
 
   def startField(name: String) {
+    appendStrategy = undefinedEraserBuffer
     writeComma(State.InObject)
     indentForPretty()
-    writer.write('"')
-    writer.write(name)
-    writer.write('"')
-    writer.write(':')
+    appendStrategy.append('"')
+    appendStrategy.append(name)
+    appendStrategy.append('"')
+    appendStrategy.append(':')
   }
 
 

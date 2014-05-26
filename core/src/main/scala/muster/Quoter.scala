@@ -6,13 +6,16 @@ object Quoter {
   object Appendable {
     implicit class StringBuilderAppendable(sb: mutable.StringBuilder) extends  Appendable[StringBuilder] {
       def append(s: String): mutable.StringBuilder = sb.append(s)
+      def append(c: Char): mutable.StringBuilder = sb.append(c)
     }
     implicit class WriterAppendable(sb: java.io.Writer) extends  Appendable[java.io.Writer] {
       def append(s: String): java.io.Writer = sb.append(s)
+      def append(c: Char): java.io.Writer = sb.append(c)
     }
   }
   trait Appendable[T] {
     def append(s: String): T
+    def append(c: Char): T
   }
 
   def jsonQuote(s: String, writer: Appendable[_]) {

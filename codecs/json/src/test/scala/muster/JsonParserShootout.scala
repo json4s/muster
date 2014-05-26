@@ -93,7 +93,7 @@ class JsonSmartParserBenchmark extends CursorBench {
         exec.benchRuns -> 500
       ) in {
       using(jsonGen) in {
-        r => new net.minidev.json.parser.JSONParser().parse(r)
+        r => new net.minidev.json.parser.JSONParser(-1)
       }
     }
   }

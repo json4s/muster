@@ -13,9 +13,7 @@ object Producer {
   private[Producer] abstract class SP[T](fn: (OutputFormatter[_], T) => Unit) extends Producer[T] {
     def produce(value: T, formatter: OutputFormatter[_]): Unit = fn(formatter, value)
   }
-  private def sp[T](fn: (OutputFormatter[_], T) => Unit): Producer[T] = new Producer[T] {
-    def produce(value: T, formatter: OutputFormatter[_]): Unit = fn(formatter, value)
-  }
+  private[Producer] def sp[T](fn: (OutputFormatter[_], T) => Unit): Producer[T] = new SP[T](fn) {}
   implicit object ByteProducer extends SP[Byte](_ byte _)
   implicit object ShortProducer extends SP[Short](_ short _)
   implicit object IntProducer extends SP[Int](_ int _)
@@ -171,7 +169,8 @@ object Producer {
       val TypeRef(_, sym: Symbol, _) = tpe
       val fields = helper.getGetters(tpe)
        val fieldTrees = fields map { fld =>
-        val tt = fld.asMethod.returnType
+        val tt = fld.asMethod.typeSignatureIn(tpe).resultType
+//        val tt = fld.asMethod.returnType
         val on = fld.name.decodedName.toString.trim
         val needsLower = on.startsWith("get")
         val stripped = on.replaceFirst("^get", "")
