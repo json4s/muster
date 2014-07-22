@@ -1,12 +1,10 @@
 import Dependencies._
 
-name := "muster-codec-json"
+name := "muster-codec-jawn"
 
-libraryDependencies ++= Seq(JacksonCore, JacksonDatabind)
+resolvers += "bintray/non" at "http://dl.bintray.com/non/maven"
 
-libraryDependencies ++= Seq(Json4sNative, Json4sJackson).map(_ % "test")
-
-libraryDependencies += JsonSmart % "test"
+libraryDependencies += "org.jsawn" %% "jawn-parser" % "0.5.4"
 
 //scalacOptions += "-Ymacro-debug-lite"
 

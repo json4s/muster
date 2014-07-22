@@ -1,6 +1,6 @@
 package muster
 
-import muster.codec.json.api
+import muster.codec.jackson.api
 
 class CompactJsonStringFormatterSpec extends {val format = api.JsonFormat} with StringOutputFormatterSpec {
 

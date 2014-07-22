@@ -2,11 +2,13 @@ import scala.xml.Group
 
 lazy val core = project
 
-lazy val json = project in file("codecs/json") dependsOn (core % "compile->compile;test->test")
+lazy val jackson = project in file("codecs/jackson") dependsOn (core % "compile->compile;test->test")
+
+lazy val jawn = project in file("codecs/jawn") dependsOn (core % "compile->compile;test->test")
 
 lazy val strings = project in file("codecs/strings") dependsOn (core % "compile->compile;test->test")
 
-lazy val caliperBenchmarks = project in file("benchmarks/caliper") dependsOn (core % "compile->compile;test->test", json % "compile->compile;test->test", strings % "compile->compile;test->test")
+lazy val caliperBenchmarks = project in file("benchmarks/caliper") dependsOn (core % "compile->compile;test->test", jackson % "compile->compile;test->test", strings % "compile->compile;test->test")
 
 scalaVersion in ThisBuild := "2.11.1"
 

@@ -1,10 +1,8 @@
 package muster
 package codec
-package json
+package jawn
 
 import scala.collection.mutable
-import java.util.Date
-import java.text.DateFormat
 
 abstract class JsonOutput[R] extends OutputFormat[R] {
 
@@ -23,8 +21,8 @@ abstract class JsonOutput[R] extends OutputFormat[R] {
 
 class ProducibleJsonOutput[T](producible: Producible[_, T], val indentSpaces: Int = 0) extends JsonOutput[T] {
   def createFormatter: Formatter = {
-    if (producible == StringProducible) new StringJsonFormatter(producible.toWriter, indentSpaces).asInstanceOf[JsonFormatter[T]]
-    else new UnitJsonFormatter(producible.toWriter, indentSpaces).asInstanceOf[JsonFormatter[T]]
+    if (producible == StringProducible) new StringJsonFormatter(producible.toAppendable, indentSpaces).asInstanceOf[JsonFormatter[T]]
+    else new UnitJsonFormatter(producible.toAppendable, indentSpaces).asInstanceOf[JsonFormatter[T]]
   }
 
   protected def withSpaces(spaces: Int): this.type = new ProducibleJsonOutput[T](producible, spaces).asInstanceOf[this.type]
@@ -32,7 +30,7 @@ class ProducibleJsonOutput[T](producible: Producible[_, T], val indentSpaces: In
 
 trait JsonFormatter[T] extends OutputFormatter[T] {
 
-  protected def writer: java.io.Writer
+  protected def writer: muster.Appendable[_]
 
   protected def spaces: Int
 
@@ -46,7 +44,7 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
 
   private[this] val undefinedEraserBuffer = new mutable.StringBuilder()
 
-  private[this] var appendStrategy: muster.Quoter.Appendable[_] = writer
+  private[this] var appendStrategy: muster.Appendable[_] = writer
 
   def startArray(name: String = "") {
     writeComma(State.InArray)
@@ -193,14 +191,14 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
 
 }
 
-private[muster] class StringJsonFormatter(protected val writer: java.io.Writer, protected val spaces: Int = 0) extends JsonFormatter[String] {
+private[muster] class StringJsonFormatter(protected val writer: Appendable[_], protected val spaces: Int = 0) extends JsonFormatter[String] {
   def result: String = {
     writer.flush()
     writer.toString
   }
 }
 
-private[muster] class UnitJsonFormatter(protected val writer: java.io.Writer, protected val spaces: Int = 0) extends JsonFormatter[Unit] {
+private[muster] class UnitJsonFormatter(protected val writer: Appendable[_], protected val spaces: Int = 0) extends JsonFormatter[Unit] {
   def result: Unit = {
     writer.flush()
     ()

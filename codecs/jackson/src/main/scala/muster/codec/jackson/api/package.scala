@@ -1,6 +1,6 @@
 package muster
 package codec
-package json
+package jackson
 
 import com.fasterxml.jackson.databind.node.MissingNode
 import scala.util.Try
@@ -14,10 +14,10 @@ package object api {
       val source: T = src
     }
 
-    def createCursor(in: Consumable[_]): JacksonInputCursor[_] = in match {
+    def createCursor(in: Consumable[_], mode: Mode): JacksonInputCursor[_] = in match {
       case StringConsumable(src) => jic(src)(mapper.readTree)
       case FileConsumable(src) => jic(src)(mapper.readTree)
-      case ReaderConsumable(src) => jic(src)(mapper.readTree)
+//      case ReaderConsumable(src) => jic(src)(mapper.readTree)
       case InputStreamConsumable(src) => jic(src)(mapper.readTree)
       case ByteArrayConsumable(src) => jic(src)(mapper.readTree)
       case URLConsumable(src) => jic(src)(mapper.readTree)

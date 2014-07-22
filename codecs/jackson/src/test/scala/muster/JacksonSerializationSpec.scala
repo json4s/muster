@@ -2,7 +2,7 @@ package muster
 
 import org.specs2.mutable.Specification
 import org.json4s.DefaultFormats
-import muster.codec.json.api
+import muster.codec.jackson.api
 import java.util.{Date, TimeZone}
 import java.util
 

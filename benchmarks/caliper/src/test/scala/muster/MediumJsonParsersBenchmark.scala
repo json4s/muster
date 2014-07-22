@@ -1,7 +1,7 @@
 package muster
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import muster.codec.json.{api, MusterJson}
+import muster.codec.jackson.{api, MusterJson}
 
 class MediumJsonParsersBenchmark extends com.google.caliper.SimpleBenchmark {
 

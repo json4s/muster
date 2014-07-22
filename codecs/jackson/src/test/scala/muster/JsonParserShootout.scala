@@ -8,7 +8,7 @@ import org.scalameter.api._
 import org.scalameter.CurveData
 import org.scalameter.utils.Tree
 import org.scalameter.reporting
-import muster.codec.json.{api, MusterJson}
+import muster.codec.jackson.{api, MusterJson}
 
 //import com.fasterxml.jackson.databind.ObjectMapper
 //import org.scalameter.{reporting, CurveData, log}

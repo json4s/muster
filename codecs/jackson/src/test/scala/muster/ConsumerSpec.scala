@@ -5,7 +5,7 @@ import java.util.TimeZone
 import org.specs2.{ScalaCheck, Specification}
 import org.specs2.matcher.MatchResult
 import Ast._
-import codec.json._
+import codec.jackson._
 import com.fasterxml.jackson.databind.JsonNode
 import scala.util.Try
 import com.fasterxml.jackson.databind.node.MissingNode

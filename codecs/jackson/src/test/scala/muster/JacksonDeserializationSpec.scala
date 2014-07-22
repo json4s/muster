@@ -4,7 +4,7 @@ import org.specs2.mutable.Specification
 import java.util.{TimeZone, Date}
 import java.util
 import org.json4s.DefaultFormats
-import muster.codec.json.api
+import muster.codec.jackson.api
 
 //import org.joda.time.DateTime
 object Aliased {

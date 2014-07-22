@@ -1,7 +1,7 @@
 package muster
 
 import org.specs2.{ScalaCheck, Specification}
-import muster.codec.json.api
+import muster.codec.jackson.api
 import org.specs2.matcher.MatchResult
 import org.scalacheck.{Gen, Prop}
 
