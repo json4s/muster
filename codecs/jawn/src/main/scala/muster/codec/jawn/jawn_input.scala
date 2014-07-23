@@ -39,7 +39,7 @@ final class JawnObjectNode(values: mutable.Map[String, AstNode[_]]) extends Obje
       case NullNode | UndefinedNode => None
       case node: NumberNode => Some(node)
       case node: TextNode => Some(NumberNode(node.value))
-      case node => throw new MappingException(s"Expected a string field but found a ${node.getClass.getSimpleName}")
+      case node => throw new MappingException(s"Expected a number field but found a ${node.getClass.getSimpleName}")
     }
   }
 
@@ -120,7 +120,7 @@ class JawnInputCursor(val source: Consumable[_], mode: Mode) extends JawnInputCu
   implicit object jawnFacade extends _root_.jawn.MutableFacade[AstNode[_]] {
     def jarray(vs: ArrayBuffer[AstNode[_]]): AstNode[_] = new JawnArrayNode(vs)
     def jobject(vs: mutable.Map[String, AstNode[_]]): AstNode[_] = new JawnObjectNode(vs)
-    def jint(s: String): AstNode[_] = Ast.NumberNode(s).toBigIntAst
+    def jint(s: String): AstNode[_] = Ast.NumberNode(s)
     def jfalse(): AstNode[_] = Ast.FalseNode
     def jnum(s: String): AstNode[_] = Ast.NumberNode(s)
     def jnull(): AstNode[_] = Ast.NullNode
