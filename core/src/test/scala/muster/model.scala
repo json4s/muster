@@ -121,3 +121,5 @@ class JavaStyle {
 
   def setName(newName: String) = name = newName
 }
+
+case class ThatsIt(someThings: TheThings.Value = TheThings.Useful)

@@ -1,5 +1,5 @@
-import sbtbuildinfo.Plugin._
 import Dependencies._
+import sbtbuildinfo.Plugin._
 
 buildInfoSettings
 

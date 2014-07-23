@@ -16,24 +16,24 @@ object Producible {
 
 trait Producible[T, R] {
   def value: T
-  def toWriter: java.io.Writer
+  def toAppendable: Appendable[_]
 }
 
 final case class FileProducible(value: File) extends Producible[File, Unit] {
-  def toWriter: Writer = new FileWriter(value)
+  def toAppendable: Appendable[java.io.Writer] = new FileWriter(value)
 }
 
 case object StringProducible extends Producible[String, String] {
   def value: String = ???
 
-  def toWriter: Writer = new java.io.StringWriter()
+  def toAppendable: Appendable[StringBuilder] = new StringBuilder
 }
 
 final case class WriterProducible(value: java.io.Writer) extends Producible[java.io.Writer, Unit] {
-  def toWriter: Writer = value
+  def toAppendable: Appendable[java.io.Writer] = value
 }
 
 final case class OutputStreamProducible(value: java.io.OutputStream) extends Producible[java.io.OutputStream, Unit] {
-  def toWriter: Writer = new PrintWriter(value, true)
+  def toAppendable: Appendable[java.io.Writer] = new PrintWriter(value, true)
 }
 

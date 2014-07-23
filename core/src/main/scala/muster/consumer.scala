@@ -208,7 +208,9 @@ object Consumer {
               Apply(Select(reader.tree, TermName(s"read${nm}${methodSuffix}Opt")), args)
             } else if (helper.isSeq(tpe) || helper.isSet(tpe))
               Apply(Select(reader.tree, TermName(s"readArray${methodSuffix}Opt")), args)
-            else
+            else if (helper.isEnum(tpe)) {
+              Apply(Select(reader.tree, TermName(s"readString${methodSuffix}Opt")), args)
+            } else
               Apply(Select(reader.tree, TermName(s"readObject${methodSuffix}Opt")), args)
           }
 
@@ -252,7 +254,7 @@ object Consumer {
     }
 
     def buildObject(tpe: Type, reader: c.Expr[Ast.ObjectNode], methodSuffix: String = "", args: List[Tree] = Nil): Tree = {
-      if (tpe.typeSymbol.isClass && !(helper.isPrimitive(tpe) || helper.isMap(tpe) || helper.isOption(tpe) || helper.isSeq(tpe))) {
+      if (tpe.typeSymbol.isClass && !(helper.isPrimitive(tpe) || helper.isMap(tpe) || helper.isOption(tpe) || helper.isSeq(tpe) || helper.isEither(tpe) || helper.isEnum(tpe))) {
         val TypeRef(_, sym, tpeArgs) = tpe
 
         // Builds the if/else tree for checking constructor params and returning a new object

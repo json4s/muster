@@ -21,11 +21,11 @@ abstract class DefaultStringFormat extends StringOutputFormat {
 
 
 
-class DefaultStringOutputFormatter(writer: java.io.Writer) extends BaseStringOutputFormatter(writer) {
+class DefaultStringOutputFormatter(writer: muster.Appendable[_]) extends BaseStringOutputFormatter(writer) {
 
-  def withWriter(wrtr: java.io.Writer): this.type = {
+  def withWriter(wrtr: muster.Appendable[_]): this.type = {
     try {
-      wrtr.close()
+      writer.close()
     } catch {
       case _: Throwable =>
     }
@@ -33,7 +33,7 @@ class DefaultStringOutputFormatter(writer: java.io.Writer) extends BaseStringOut
   }
 }
 
-abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: java.io.Writer, quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
+abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: muster.Appendable[_], quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
 
   import Constants._
 
@@ -43,83 +43,83 @@ abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: 
 
   def startArray(name: String) {
     writeComma(State.InArray)
-    writer.write(name)
-    writer.write('(')
+    writer.append(name)
+    writer.append('(')
     stateStack push State.ArrayStarted
   }
 
   def endArray() {
-    writer.write(')')
+    writer.append(')')
     stateStack.pop()
   }
 
   def startObject(name: String) {
     writeComma(State.InArray)
-    writer.write(name)
-    writer.write('(')
+    writer.append(name)
+    writer.append('(')
     stateStack push State.ObjectStarted
   }
 
   def endObject() {
-    writer.write(')')
+    writer.append(')')
     stateStack.pop()
   }
 
   def string(value: String) {
     writeComma(State.InArray)
-    if (quoteStringWith != null && quoteStringWith.trim.nonEmpty) writer.write(quoteStringWith)
-    if (escapeSpecialChars) Quoter.jsonQuote(value, writer) else writer.write(value)
-    if (quoteStringWith != null && quoteStringWith.trim.nonEmpty) writer.write(quoteStringWith)
+    if (quoteStringWith != null && quoteStringWith.trim.nonEmpty) writer.append(quoteStringWith)
+    if (escapeSpecialChars) Quoter.jsonQuote(value, writer) else writer.append(value)
+    if (quoteStringWith != null && quoteStringWith.trim.nonEmpty) writer.append(quoteStringWith)
   }
 
   def byte(value: Byte) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writer.append(value.toString)
   }
 
   def int(value: Int) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writer.append(value.toString)
   }
 
   def long(value: Long) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writer.append(value.toString)
   }
 
   def bigInt(value: BigInt) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writer.append(value.toString)
   }
 
   def boolean(value: Boolean) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writer.append(value.toString)
   }
 
   def short(value: Short) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writer.append(value.toString)
   }
 
   def float(value: Float) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writer.append(value.toString)
   }
 
   def double(value: Double) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writer.append(value.toString)
   }
 
   def bigDecimal(value: BigDecimal) {
     writeComma(State.InArray)
-    writer.write(value.toString)
+    writer.append(value.toString)
   }
 
   def writeNull() {
     writeComma(State.InArray)
-    writer.write("null")
+    writer.append("null")
   }
 
   def undefined() {}
@@ -132,21 +132,21 @@ abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: 
       stateStack.pop()
       stateStack push State.InObject
     } else if (when contains state) {
-      writer.write(',')
-      writer.write(' ')
+      writer.append(',')
+      writer.append(' ')
     }
   }
 
   def startField(name: String) {
     writeComma(State.InObject, State.InArray)
-    writer.write(name.trim)
-    writer.write(':')
-    writer.write(' ')
+    writer.append(name.trim)
+    writer.append(':')
+    writer.append(' ')
   }
 
   def result: String = writer.toString
 
-  def withWriter(wrtr: java.io.Writer): this.type
+  def withWriter(wrtr: muster.Appendable[_]): this.type
 
   def close() {
     writer.close()

@@ -1,10 +1,12 @@
 package muster
+package codec
+package json
 
-import org.specs2.mutable.Specification
-import org.json4s.DefaultFormats
-import muster.codec.json.api
-import java.util.{Date, TimeZone}
 import java.util
+import java.util.{Date, TimeZone}
+
+import org.json4s.DefaultFormats
+import org.specs2.mutable.Specification
 
 
 object OptionOverride {
@@ -19,9 +21,9 @@ object OptionOverride {
 }
 
 
-class JacksonSerializationSpec extends Specification {
+class JsonSerializationSpec extends Specification {
   implicit val defaultFormats = DefaultFormats
-  val format = api.JsonFormat
+  val format = new ProducibleJsonOutput(StringProducible)
 
   val refJunk = Junk(2, "cats")
   val refJunkDict: String = org.json4s.jackson.Serialization.write(refJunk)
@@ -34,7 +36,7 @@ class JacksonSerializationSpec extends Specification {
 
   def write[T](value: T)(implicit cons: Producer[T]): String = format.from(value)
 
-  "muster.codecs.json.api.JsonFormat.asJson" should {
+  "A JSON Writer" should {
     //    "write a dateTime" in {
     //      val date = DateTime.now
     //      val ds = Muster.from.JsonString.dateFormat.print(new DateTime(date))

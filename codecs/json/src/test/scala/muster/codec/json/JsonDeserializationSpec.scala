@@ -1,49 +1,15 @@
-package muster
+package muster.codec.json
 
-import org.specs2.mutable.Specification
-import java.util.{TimeZone, Date}
 import java.util
+import java.util.{Date, TimeZone}
+
+import muster._
 import org.json4s.DefaultFormats
-import muster.codec.json.api
+import org.specs2.mutable.Specification
 
-//import org.joda.time.DateTime
-object Aliased {
-  type Foo = Junk
-
-  //  object WithAlias {
-  //    implicit val WithAliasConsumer = Consumer.consumer[WithAlias]
-  //  }
-
-  case class WithAlias(in: Foo)
-
-}
-
-class Ac {
-  type Foo = Junk
-
-  object WithAlias {
-    implicit val WithAliasConsumer = Consumer.consumer[WithAlias]
-  }
-
-  case class WithAlias(in: Foo)
-
-  case class NoAlias(in: Junk)
-
-}
-
-class Ac2 {
-  type Foo = Junk
-
-  case class WithAlias(in: Foo)
-
-  case class NoAlias(in: Junk)
-
-}
-
-class JacksonDeserializationSpec extends Specification {
+abstract class JsonDeserializationSpec(val format: InputFormat[Consumable[_], _ <: InputCursor[_]]) extends Specification {
 
   implicit val defaultFormats = DefaultFormats
-  val format = api.JsonFormat
 
   val refJunk = Junk(2, "cats")
   val refJunkDict: String = org.json4s.jackson.Serialization.write(refJunk)
@@ -56,7 +22,7 @@ class JacksonDeserializationSpec extends Specification {
 
   def read[T](value: String)(implicit cons: Consumer[T]) = format.as[T](value)(cons)
 
-  "Muster.consume.Json" should {
+  "A JSON Consumer implementation" should {
     //    "read a dateTime" in {
     //      val date = DateTime.now
     //      val ds = Muster.from.JsonString.dateFormat.print(new DateTime(date))

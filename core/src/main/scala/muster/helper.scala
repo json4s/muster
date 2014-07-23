@@ -21,6 +21,8 @@ class Helper[C <: blackbox.Context](val c: C) {
 
   def isString(tpe: c.Type) = c.typeOf[String] =:= tpe || c.typeOf[java.lang.String] =:= tpe
 
+  def isEnum(tpe: c.Type) = tpe <:< c.typeOf[Enumeration#Value]
+
   def caseClassFields(tpe: c.universe.Type): Seq[Symbol] = {
     tpe.decls.toVector.filter {
       v =>
@@ -101,5 +103,11 @@ class Helper[C <: blackbox.Context](val c: C) {
     (tpe.members filter (isJavaOrScalaGetter(varNames ++ valNames ++ ctorParams.map(_.decodedName.toString.trim), _))).toList
   }
 
+  def enumValues(tpe: Type): List[Symbol] = {
+    tpe.member(TermName("Value")).asTerm.alternatives.headOption.fold(List.empty[Symbol])({ vt =>
+      val valueType = vt.asMethod.returnType
+      tpe.members.filter(sym => !sym.isMethod && sym.typeSignature.baseType(valueType.typeSymbol) =:= valueType).toList
+    })
+  }
 
 }
