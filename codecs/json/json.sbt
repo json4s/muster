@@ -4,6 +4,8 @@ name := "muster-codec-json"
 
 libraryDependencies ++= Seq(Json4sNative, Json4sJackson).map(_ % "test")
 
+libraryDependencies += JsonSmart % "test"
+
 //scalacOptions += "-Ymacro-debug-lite"
 
 //scalacOptions += "-Xlog-implicits"

@@ -5,7 +5,7 @@ name := "muster-codec-jackson"
 libraryDependencies ++= Seq(JacksonCore, JacksonDatabind)
 
 
-libraryDependencies += JsonSmart % "test"
+
 
 //scalacOptions += "-Ymacro-debug-lite"
 
