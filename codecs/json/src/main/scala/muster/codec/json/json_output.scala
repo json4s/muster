@@ -1,7 +1,8 @@
 package muster
 package codec
-package jawn
+package json
 
+import Constants._
 import scala.collection.mutable
 
 abstract class JsonOutput[R] extends OutputFormat[R] {
@@ -33,8 +34,6 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
   protected def writer: muster.Appendable[_]
 
   protected def spaces: Int
-
-  import Constants._
 
   private[this] val stateStack = mutable.Stack[Int]()
 

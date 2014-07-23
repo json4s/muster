@@ -2,9 +2,11 @@ import scala.xml.Group
 
 lazy val core = project
 
-lazy val jackson = project in file("codecs/jackson") dependsOn (core % "compile->compile;test->test")
+lazy val json = project in file("codecs/json") dependsOn (core % "compile->compile;test->test")
 
-lazy val jawn = project in file("codecs/jawn") dependsOn (core % "compile->compile;test->test")
+lazy val jackson = project in file("codecs/jackson") dependsOn (core % "compile->compile;test->test", json % "compile->compile;test->test")
+
+lazy val jawn = project in file("codecs/jawn") dependsOn (core % "compile->compile;test->test", json % "compile->compile;test->test")
 
 lazy val strings = project in file("codecs/strings") dependsOn (core % "compile->compile;test->test")
 

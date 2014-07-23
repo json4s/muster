@@ -1,24 +1,19 @@
 package muster
+package codec
+package json
 
-import org.scalacheck._
 import java.util.TimeZone
-import org.specs2.{ScalaCheck, Specification}
+
+import org.scalacheck.{Gen, Prop}
 import org.specs2.matcher.MatchResult
-import Ast._
-import codec.jackson._
-import com.fasterxml.jackson.databind.JsonNode
-import scala.util.Try
-import com.fasterxml.jackson.databind.node.MissingNode
+import org.specs2.{ScalaCheck, Specification}
 
-//import org.joda.time.DateTime
-
-
-class ConsumerSpec extends Specification with ScalaCheck {
+abstract class JsonConsumerSpec(val json: InputFormat[Consumable[_], _ <: InputCursor[_]]) extends Specification with ScalaCheck {
   TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
   //  def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
-  val json = api.JsonFormat
+//  val json = JsonFormat
 
-  def read[T: Consumer](js: String) = json.as[T](js)
+  def read[T: Consumer](js: String) = json.as[T](js, SingleValue)
 
   def cp[T](implicit toProp: MatchResult[T] => Prop, a: org.scalacheck.Arbitrary[T], s: org.scalacheck.Shrink[T], cons: Consumer[T]) = {
     prop {
@@ -37,7 +32,7 @@ class ConsumerSpec extends Specification with ScalaCheck {
 
     def is =
       s2"""
-  A Consumer should
+  A JSON Consumer should
     read a byte value                                      $byteProp
     read a short value                                     $shortProp
     read a int value                                       $intProp
@@ -118,7 +113,7 @@ class ConsumerSpec extends Specification with ScalaCheck {
     (i: List[Int]) => read[List[Int]](i.mkString("[", ",", "]")) must_== i
   }
 
-  import collection.mutable
+  import scala.collection.mutable
 
   val mutableListProp = prop {
     (i: mutable.ListBuffer[Int]) => read[mutable.ListBuffer[Int]](i.mkString("[", ",", "]")) must_== i

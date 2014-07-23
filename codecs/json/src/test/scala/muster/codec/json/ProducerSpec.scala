@@ -1,13 +1,15 @@
 package muster
+package codec
+package json
 
-import org.specs2.{ScalaCheck, Specification}
-import muster.codec.jackson.api
-import org.specs2.matcher.MatchResult
 import org.scalacheck.{Gen, Prop}
+import org.specs2.matcher.MatchResult
+import org.specs2.{ScalaCheck, Specification}
 
 class ProducerSpec extends Specification with ScalaCheck {
 
-  val json = api.JsonFormat
+  sequential
+  val json = new ProducibleJsonOutput(StringProducible)
   def write[T: Producer](obj: T) = json.from(obj)
 
   def cp[T](implicit toProp: MatchResult[T] => Prop, a: org.scalacheck.Arbitrary[T], s: org.scalacheck.Shrink[T], cons: Producer[T]) = {
@@ -27,7 +29,7 @@ class ProducerSpec extends Specification with ScalaCheck {
 
   def is =
 s2"""
-A Producer should
+A JSON Producer should
   write a byte value $byteProp
   write a short value $shortProp
   write a int value $intProp
@@ -55,8 +57,13 @@ A Producer should
   write a map with long keys and a list value             $mapLongListProp
   write an option value                                   $optProp
   write an option with list value                         $optListProp
+
 """
   /*
+
+
+
+"""
 
    */
 
@@ -89,7 +96,7 @@ A Producer should
     (i: List[Int]) => write(i) must_== i.mkString("[", ",", "]")
   }
 
-  import collection.mutable
+  import scala.collection.mutable
 
   val mutableListProp = prop {
      (i: mutable.ListBuffer[Int]) => write(i) must_== i.mkString("[", ",", "]")
@@ -97,7 +104,7 @@ A Producer should
 
   val mapGen = {
     for {
-      n <- Gen.alphaStr.suchThat(s => s != null && s.trim.nonEmpty)
+      n <- Gen.alphaStr.suchThat(s => s != null && s.trim.nonEmpty && s(0).isLetter)
       m <- Gen.chooseNum(1, 999999999)
       t = (n, m)
       r <- Gen.mapOf(t)
@@ -123,7 +130,8 @@ A Producer should
         sb.append('}')
         sb.toString
       }
-      write(i) must_== json
+      val actual = write(i)
+      actual must_== json
   }
 
 
@@ -163,7 +171,9 @@ A Producer should
         sb.append('}')
         sb.toString
       }
-      write(i) must_== json
+      val actual = write(i)
+
+      actual must_== json
   }
 
   val intMapGen = {

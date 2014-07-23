@@ -7,6 +7,8 @@ object Appendable {
      def append(c: Char): StringBuilder = sb.append(c)
      def close() { sb.clear() }
      def flush() { }
+
+     override def toString: String = sb.toString()
    }
 
    implicit class WriterAppendable(sb: java.io.Writer) extends  Appendable[java.io.Writer] {
@@ -14,6 +16,8 @@ object Appendable {
      def append(c: Char): java.io.Writer = sb.append(c)
      def close() { sb.close() }
      def flush() { sb.flush() }
+
+     override def toString: String = sb.toString
    }
  }
 

@@ -1,5 +1,5 @@
-import sbtbuildinfo.Plugin._
 import Dependencies._
+import sbtbuildinfo.Plugin._
 
 buildInfoSettings
 
@@ -19,7 +19,7 @@ libraryDependencies += "org.scala-lang" %  "scala-reflect" % scalaVersion.value
 
 compileOrder := CompileOrder.JavaThenScala
 
-scalacOptions += "-Ymacro-debug-lite"
+//scalacOptions += "-Ymacro-debug-lite"
 
 //scalacOptions += "-Xlog-implicits"
 

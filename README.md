@@ -24,7 +24,7 @@ The idea is that things work a little bit like this:
 case class Person(id: Long, name: String, age: Int)
 val person = Person(1, "Luke", 38)
 
-import muster.codec.jawn.api._
+import muster.codec.jawn._
 JsonFormat.from(person)
 JsonFormat.into(new File("luke.json")).from(person)
 JsonFormat.Pretty.from(person)
@@ -56,7 +56,7 @@ Muster.produce.Protobuf[Protocol.Person].from(person)
 Similarly reading can be achieved with
 
 ```scala
-import muster.codec.jawn.api._
+import muster.codec.jawn._
 JsonFormat.as[Person](/* file | string | reader | byte array | input stream | URL */ input)
 /*
 Not Yet Implemented:

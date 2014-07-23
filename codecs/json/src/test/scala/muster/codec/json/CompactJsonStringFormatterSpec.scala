@@ -1,8 +1,8 @@
 package muster
+package codec
+package json
 
-import muster.codec.jackson.api
-
-class CompactJsonStringFormatterSpec extends {val format = api.JsonFormat} with StringOutputFormatterSpec {
+class CompactJsonStringFormatterSpec extends {val format = new ProducibleJsonOutput(StringProducible)} with StringOutputFormatterSpec {
 
   val listProp = prop { (lst: List[Int]) =>
     withFormatter { fmt =>

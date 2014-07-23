@@ -60,7 +60,7 @@ final class JawnObjectNode(values: mutable.Map[String, AstNode[_]]) extends Obje
   }
 
   def keysIterator: Iterator[String] = values.keysIterator
-  def keySet: collection.Set[String] = values.keySet
+  def keySet: Set[String] = values.keySet.toSet
 }
 
 sealed trait JawnInputCursorBase extends InputCursor[Consumable[_]] {

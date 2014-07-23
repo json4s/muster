@@ -8,7 +8,6 @@ import org.scalameter.api._
 import org.scalameter.CurveData
 import org.scalameter.utils.Tree
 import org.scalameter.reporting
-import muster.codec.jackson.{api, MusterJson}
 
 //import com.fasterxml.jackson.databind.ObjectMapper
 //import org.scalameter.{reporting, CurveData, log}
@@ -22,10 +21,6 @@ object Benchmarks {
   val jsonGen = Gen.single("larger.json")(json)
 
 }
-
-
-
-
 
 trait CursorBench extends PerformanceTest.Quickbenchmark {
 
@@ -50,7 +45,7 @@ class JsonInputCursorBenchmark extends CursorBench {
         exec.benchRuns -> 500
       ) in {
       using(jsonGen) in {
-        r => api.JsonFormat.createCursor(r).nextNode()
+        r => codec.jackson.JsonFormat.createCursor(r, SingleValue).nextNode()
       }
     }
   }

@@ -1,11 +1,8 @@
 import Dependencies._
 
-name := "muster-codec-jackson"
+name := "muster-codec-json"
 
-libraryDependencies ++= Seq(JacksonCore, JacksonDatabind)
-
-
-libraryDependencies += JsonSmart % "test"
+libraryDependencies ++= Seq(Json4sNative, Json4sJackson).map(_ % "test")
 
 //scalacOptions += "-Ymacro-debug-lite"
 
