@@ -155,10 +155,6 @@ sealed trait Json4sInputCursor[R] extends InputCursor[R] {
   }
 }
 
-object JValueConsumable {
-  import scala.language.implicitConversions
-  implicit def jvalueConsumable(value: JValue): Consumable[JValue] = JValueConsumable(value)
-}
 case class JValueConsumable(value: JValue) extends Consumable[JValue]
 
 

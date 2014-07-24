@@ -74,4 +74,6 @@ package object json4s {
     def tryAs[T](implicit consumer: Consumer[T]) = Try(as[T])
     def getAs[T](implicit consumer: Consumer[T]) = tryAs[T].toOption
   }
+
+  implicit def jvalueConsumable(value: JValue): JValueConsumable = JValueConsumable(value)
 }
