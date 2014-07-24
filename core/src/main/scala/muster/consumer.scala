@@ -64,12 +64,6 @@ object Consumer {
     case m: NumberNodeLike[_] => new Date(m.toLong)
     case NullNode | UndefinedNode => null
   })
-//
-//  implicit val Iso8601DateTimeConsumer = cc[DateTime]({
-//    case TextNode(value) => new DateTime(SafeSimpleDateFormat.Iso8601Formatter.parse(value))
-//    case m: NumberNodeLike[_] => new DateTime(m.toLong)
-//    case NullNode | UndefinedNode => null
-//  })
 
   def dateConsumer(pattern: String) = {
     cc[Date]({
