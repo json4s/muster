@@ -6,6 +6,7 @@ import muster.Constants.State
 import org.json4s.JsonAST._
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 private[json4s] case object JValueProducible extends Producible[JValue, JValue] {
   def value: JValue = ???
@@ -15,26 +16,36 @@ private[json4s] case object JValueProducible extends Producible[JValue, JValue] 
 object JValueOutput {
   private final class JValueOutputFormatter extends OutputFormatter[JValue] {
 
-    private[this] var state: Int = State.None
-    private[this] var arr: mutable.ArrayBuffer[JValue] = mutable.ArrayBuffer.empty[JValue]
-    private[this] var obj: mutable.ArrayBuffer[JField] = mutable.ArrayBuffer.empty[JField]
+    private[this] val stateStack = mutable.Stack[Int]()
+    private[this] def state = stateStack.headOption getOrElse State.None
+    private[this] val arrStack: mutable.Stack[mutable.ArrayBuffer[JValue]] =
+      mutable.Stack[ArrayBuffer[JValue]]()
+    private[this] val objStack: mutable.Stack[mutable.ArrayBuffer[JField]] =
+      mutable.Stack[mutable.ArrayBuffer[JField]]()
+    private[this] val fieldNameStack: mutable.Stack[String] = mutable.Stack[String]()
+
     private[this] var _res: Option[JValue] = None
-    private[this] var fieldName: String = null
 
     def startArray(name: String = ""): Unit = {
-      state = State.ArrayStarted
+      stateStack push State.ArrayStarted
+      arrStack push ArrayBuffer.empty[JValue]
     }
 
     def endArray(): Unit = {
-      state = State.None
+      stateStack.pop()
+      val arr = arrStack.pop()
       writeValue(JArray(arr.toList))
       arr.clear()
     }
 
-    def startObject(name: String = ""): Unit = state = State.ObjectStarted
+    def startObject(name: String = ""): Unit = {
+      stateStack push State.ObjectStarted
+      objStack push ArrayBuffer.empty[JField]
+    }
 
     def endObject(): Unit = {
-      state = State.None
+      stateStack.pop()
+      val obj = objStack.pop()
       writeValue(JObject(obj.toList))
       obj.clear()
     }
@@ -61,20 +72,19 @@ object JValueOutput {
 
     def startField(name: String): Unit = {
       if (state == State.ObjectStarted) {
-        state = State.InObject
-        fieldName = name
+        fieldNameStack push name
       }
     }
 
     private[this] def writeValue(value: JValue) {
-      if(state == State.InObject) {
-        obj += fieldName -> value
-        fieldName = null
-      } else if (state == State.InArray) {
-        arr += value
-      } else if (state == State.None) {
+      if(state == State.ObjectStarted) {
+        objStack.head += fieldNameStack.pop() -> value
+      } else if (state == State.ArrayStarted) {
+        arrStack.head += value
+      } else {
         _res = Some(value)
       }
+
     }
 
     def writeNull(): Unit = writeValue(JNull)
@@ -85,16 +95,17 @@ object JValueOutput {
       _res getOrElse (throw new IllegalStateException(s"Can't turn ${_res} into an org.json4s.JsonAST.JValue"))
 
     def close() {
-      arr.clear()
-      obj.clear()
+      arrStack.clear()
+      objStack.clear()
+      stateStack.clear()
+      fieldNameStack.clear()
       _res = None
-      state = State.None
     }
   }
 
 }
 class JValueOutput extends OutputFormat[JValue] {
-  import JValueOutput._
+  import muster.codec.json4s.JValueOutput._
   type Formatter = OutputFormatter[JValue]
 
   def createFormatter: Formatter = new JValueOutputFormatter().asInstanceOf[OutputFormatter[JValue]]
