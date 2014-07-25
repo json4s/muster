@@ -11,7 +11,7 @@ This only works with scala 2.11.
 The library is published to maven central so you can get it with:
 
 ```
-libraryDependencies += "org.json4s" %% "muster" % "0.1.0"
+libraryDependencies += "org.json4s" %% "muster-core" % "0.1.0"
 ```
 
 ## How does it work?
@@ -38,16 +38,19 @@ person.asPrettyJson /* calls: JsonFormat.Pretty.from(person) and produces
                        } */
 
 
+import muster.codec.json4s._
+// decompose to a Json4s AST
+JValueFormat.from(person)
+person.asJValue
+// Serialize Json4s AST's
+JsonFormat.into(new File("jvalues.json")).from(person.asJValue)
+JsonFormat.Pretty.from(person.asJValue)
+
 import muster.codec.string.api._
 StringFormat.from(person)
-person.asString // calls: muster.codec.string.api.StringFormat.from(person) and produces Person(id: 1, name: "Luke", age: 38)
-
-/*
-Not Yet Implemented:
-Muster.produce.ByteBuffer.from(person)
-Muster.produce.ByteString.from(person)
-Muster.produce.Protobuf[Protocol.Person].from(person)
-*/
+// calls muster.codec.string.api.StringFormat.from(person) 
+// and produces Person(id: 1, name: "Luke", age: 38)
+person.asString 
 
 ```
 
@@ -58,17 +61,22 @@ Similarly reading can be achieved with
 ```scala
 import muster.codec.jawn._
 JsonFormat.as[Person](/* file | string | reader | byte array | input stream | URL */ input)
-/*
-Not Yet Implemented:
-Muster.consume.Protobuf[Protocol.Person].as[Person](/* file | string | reader | byte array | input stream | URL */ input)
-Muster.consume.ByteString.as[Person](/* file | string | reader | byte array | input stream | URL */ input)
-Muster.consume.ByteBuffer.as[Person](/* file | string | reader | byte array | input stream | URL */ input)
-*/
+
+import muster.codec.json4s._
+// Extract a person from a Json4s AST
+JValueFormat.as[Person](personJValue)
+// Parse a source to a Json4s AST
+JsonFormat.as[JValue](/* file | string | reader | byte array | input stream | URL */ input)
 ```
 
 ### What's inside
 
-Currently muster supports JSON through parsing with jackson and it can extract the following things:
+Seamless integration with the Json4s AST, it can be used to extract objects from and decompose objects to json4s AST's.
+It can be used to parse Json4s AST's 
+
+Currently muster supports JSON through parsing with jackson or jawn and it can extract the following things:
+
+Object mapping features:
 * Primitive values like String, Int, Date
 * All scala collections
 * Scala maps with string keys
@@ -83,8 +91,10 @@ Currently muster supports JSON through parsing with jackson and it can extract t
 * Support for maps with different keys than String
 * Allows choosing between different option treatments for formats that support omission instead of null
 
-Expected to be added next:
+Possibly added next:
 * Support for scala enums
+* Support for java enums
+* Support for java enums
 * Support for renaming fields 
 * Support for using a map as an input source
 * Support for serializing and deserializing from mongodb
