@@ -7,7 +7,7 @@ import muster._
 import org.json4s.DefaultFormats
 import org.specs2.mutable.Specification
 
-abstract class JsonDeserializationSpec(val format: InputFormat[Consumable[_], _ <: InputCursor[_]]) extends Specification {
+abstract class JsonDeserializationSpec[R <% Consumable[R]](val format: InputFormat[Consumable[_], _ <: InputCursor[_]]) extends Specification {
 
   implicit val defaultFormats = DefaultFormats
 
@@ -19,8 +19,8 @@ abstract class JsonDeserializationSpec(val format: InputFormat[Consumable[_], _ 
 
   case class WithAlias(in: Foo)
 
-
-  def read[T](value: String)(implicit cons: Consumer[T]) = format.as[T](value)(cons)
+  def parse(value: String): R
+  def read[T:Consumer](value: String) = format.as[T](parse(value))
 
   "A JSON Consumer implementation" should {
     //    "read a dateTime" in {

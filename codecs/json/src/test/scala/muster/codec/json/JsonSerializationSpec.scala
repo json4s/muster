@@ -83,6 +83,7 @@ class JsonSerializationSpec extends Specification {
     }
 
     "write a very simple case class with an option field omitted" in {
+      import muster.codec.json.OptionOverride._
       val js = """{"one":1}"""
       write(WithOption(1, None)) must_== js
     }

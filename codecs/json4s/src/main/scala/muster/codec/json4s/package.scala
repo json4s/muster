@@ -22,7 +22,7 @@ package object json4s {
       case FloatNode(i) => JDecimal(i)
       case DoubleNode(i) => JDecimal(i)
       case BigDecimalNode(b) => JDecimal(b)
-      case n: NumberNode => if (n.value.contains(".")) JInt(n.toBigInt) else JDecimal(n.toBigDecimal)
+      case n: NumberNode => if (n.value.contains(".")) JDecimal(n.toBigDecimal) else JInt(n.toBigInt)
       case TextNode(s) => JString(s)
       case node: ArrayNode =>
         val bldr = List.newBuilder[JValue]

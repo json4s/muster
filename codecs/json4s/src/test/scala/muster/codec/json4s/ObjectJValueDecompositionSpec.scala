@@ -11,7 +11,7 @@ import org.json4s._
 import JsonDSL._
 import org.specs2.mutable.Specification
 
-class JValueDeserializationSpec extends Specification {
+class ObjectJValueDecompositionSpec extends Specification {
   implicit val defaultFormats = DefaultFormats
   val format = JValueFormat
 
@@ -26,7 +26,7 @@ class JValueDeserializationSpec extends Specification {
 
   def write[T](value: T)(implicit cons: Producer[T]): JValue = format.from(value)
 
-  "A JSON Writer" should {
+  "A JValue decomposer" should {
 
     "write a date" in {
       val date = new Date()
