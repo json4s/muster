@@ -8,9 +8,11 @@ lazy val jackson = project in file("codecs/jackson") dependsOn (core % "compile-
 
 lazy val jawn = project in file("codecs/jawn") dependsOn (core % "compile->compile;test->test", json % "compile->compile;test->test")
 
+lazy val json4s = project in file("codecs/json4s") dependsOn (core % "compile->compile;test->test", json % "compile->compile;test->test")
+
 lazy val strings = project in file("codecs/strings") dependsOn (core % "compile->compile;test->test")
 
-lazy val caliperBenchmarks = project in file("benchmarks/caliper") dependsOn (core % "compile->compile;test->test", jackson % "compile->compile;test->test", jawn % "compile->compile;test->test", strings % "compile->compile;test->test")
+lazy val caliperBenchmarks = project in file("benchmarks/caliper") dependsOn (core % "compile->compile;test->test", jackson % "compile->compile;test->test", json4s % "compile->compile;test->test", jawn % "compile->compile;test->test", strings % "compile->compile;test->test")
 
 scalaVersion in ThisBuild := "2.11.1"
 

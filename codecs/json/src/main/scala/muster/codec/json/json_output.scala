@@ -7,7 +7,7 @@ import scala.collection.mutable
 
 abstract class JsonOutput[R] extends OutputFormat[R] {
 
-  type Formatter = JsonFormatter[R]
+  type Formatter = OutputFormatter[R]
 
   def indentSpaces: Int
 
