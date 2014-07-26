@@ -16,7 +16,6 @@ lazy val strings = project in file("codecs/strings") dependsOn (core % "compile-
 
 lazy val caliperBenchmarks = project in file("benchmarks/caliper") dependsOn (core % "compile->compile;test->test", jackson % "compile->compile;test->test", json4s % "compile->compile;test->test", jawn % "compile->compile;test->test", strings % "compile->compile;test->test")
 
-
 scalaVersion in ThisBuild := "2.11.1"
 
 name := "muster"
@@ -44,18 +43,6 @@ testFrameworks in ThisBuild += new TestFramework("org.scalameter.ScalaMeterFrame
 parallelExecution in (ThisBuild, test) := false
 
 logBuffered in ThisBuild := false
-//
-//initialCommands in console := """
-//                                |import muster._
-//                                |import scala.reflect.runtime.{universe => u}
-//                                |def read[T:Consumer](source: String) = Muster.consume.Json.as[T](source)
-//                              """.stripMargin
-//
-//initialCommands in(Test, console) := """
-//                                       |import muster._
-//                                       |import scala.reflect.runtime.{universe => u}
-//                                       |def read[T:Consumer](source: String) = Muster.consume.Json.as[T](source)
-//                                     """.stripMargin
 
 packageOptions in ThisBuild <+= (name, version, organization) map {
   (title, version, vendor) =>
@@ -114,7 +101,3 @@ publishMavenStyle := true
 publish := {}
 
 publishLocal := {}
-
-//cappiSettings
-
-//caliperVersion in cappi := Some("1.0-beta-1")

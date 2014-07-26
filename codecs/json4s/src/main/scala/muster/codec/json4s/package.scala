@@ -1,10 +1,9 @@
 package muster
 package codec
 
-import muster.Ast._
+import muster.ast._
 import org.json4s.JsonAST._
 
-import scala.util.Try
 import scala.language.implicitConversions
 
 package object json4s {

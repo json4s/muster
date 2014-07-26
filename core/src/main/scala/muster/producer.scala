@@ -11,7 +11,7 @@ import scala.collection.immutable
 import scala.collection.mutable
 
 
-@implicitNotFound("Couldn't find a producer for ${T}. Try importing muster._ or to implement a muster.Producer")
+@implicitNotFound("Couldn't find a producer for ${T}. Try importing muster._ or to implement a muster.Consumable")
 trait Producer[T] {
   def produce(value: T, formatter: OutputFormatter[_])
 }

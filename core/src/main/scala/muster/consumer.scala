@@ -1,12 +1,12 @@
 package muster
 
 import java.util
-import java.util.{Collections, Locale, Date}
+import java.util.{Locale, Date}
 
-import muster.Ast._
+import muster.ast._
 
 import scala.annotation.implicitNotFound
-import scala.collection.{generic, immutable}
+import scala.collection.generic
 import scala.language.experimental.macros
 import scala.language.higherKinds
 import scala.reflect.ClassTag
@@ -21,7 +21,7 @@ import scala.util.Try
   * @example A string consumer
   *          {{{
   *           implicit object StringConsumer extends Consumer[String] {
-  *             def consume(node: muster.Ast.AstNode[_]): String = node match {
+  *             def consume(node: AstNode[_]): String = node match {
   *               case TextNode(value) => value
   *               case NumberNode(value) => value
   *               case m: NumberNodeLike[_] => m.value.toString
@@ -54,9 +54,9 @@ import scala.util.Try
 @implicitNotFound("Couldn't find a Consumer for ${S}. Try importing muster._ or to implement a muster.Consumer")
 trait Consumer[S] {
 
-  /** Converts a [[muster.Ast.AstNode]] into the type [[S]]
+  /** Converts a [[AstNode]] into the type [[S]]
     *
-    * @param node the [[muster.Ast.AstNode]] to convert
+    * @param node the [[AstNode]] to convert
     * @return a [[S]]
     * @throws a [[muster.MappingException]] when the node couldn't be converted into [[S]]
     * @throws a [[muster.ParseException]] when the source stream contains invalid characters
@@ -299,12 +299,12 @@ object Consumer {
 
     /** Converts a [[AstNode]] into a [[scala.Option]] of type [[T]]
       *
-      * @param node the [[muster.Ast.AstNode]] to convert
+      * @param node the [[AstNode]] to convert
       * @return a [[scala.Option]] for type [[T]]
       * @throws a [[muster.MappingException]] when the node couldn't be converted into [[scala.Option]] of [[T]]
       * @throws a [[muster.ParseException]] when the source stream contains invalid characters
       */
-    def consume(node: _root_.muster.Ast.AstNode[_]): _root_.scala.Option[T] = node match {
+    def consume(node: AstNode[_]): _root_.scala.Option[T] = node match {
       case NullNode | UndefinedNode => None
       case v => Try(valueReader.consume(v)).map(Option(_)).recover(recover).get
     }
@@ -328,7 +328,7 @@ object Consumer {
     * @return a [[muster.Consumer]] for a [[scala.Either]]
     */
   implicit def throwableEitherConsumer[R](implicit valueReader: Consumer[R]) = new Consumer[Either[Throwable, R]] {
-     def consume(node: _root_.muster.Ast.AstNode[_]): scala.Either[scala.Throwable, R] = {
+     def consume(node: AstNode[_]): scala.Either[scala.Throwable, R] = {
        (Try(Right(valueReader.consume(node))) recover {
          case t if valueReader.recover.isDefinedAt(t) => Right(valueReader.recover(t))
          case t => Left(t)
@@ -349,7 +349,7 @@ object Consumer {
     * @return a [[muster.Consumer]] for a [[scala.Either]] of types [[L]] and [[R]]
     */
   implicit def eitherConsumer[L, R](implicit leftReader: Consumer[L], rightReader: Consumer[R]): Consumer[Either[L, R]] = new Consumer[Either[L,R]] {
-     def consume(node: _root_.muster.Ast.AstNode[_]): scala.Either[L, R] =
+     def consume(node: AstNode[_]): scala.Either[L, R] =
       (Try(Right(rightReader.consume(node))) recover {
         case t if rightReader.recover.isDefinedAt(t) => Right(rightReader.recover(t))
         case _ => Left(leftReader.consume(node))
@@ -359,7 +359,7 @@ object Consumer {
   /** The macro implementation of the consumer type class
     *
     * This macro builds deserializers for instances of type [[T]].
-    * The deserializer makes use of a [[muster.Ast.AstNode]] to possibly walk the values for the properties of [[T]]
+    * The deserializer makes use of a [[AstNode]] to possibly walk the values for the properties of [[T]]
     * @tparam T the type to build instances for
     * @return a [[muster.Consumer]] for instance of type [[T]]
     */
@@ -385,7 +385,7 @@ object Consumer {
     val helper = new Helper[c.type](c)
     val thisType = weakTypeOf[T]
 
-    val nullNodeDefault = reify(Ast.NullNode).tree
+    val nullNodeDefault = reify(NullNode).tree
 
     def buildValue(_tpe: Type, reader: c.Expr[Any], methodSuffix: String = "", args: List[Tree] = Nil, default: Tree = nullNodeDefault): (Tree, Tree) = {
       val tpe = _tpe.dealias
@@ -425,11 +425,11 @@ object Consumer {
       defVal match {
         case EmptyTree =>
           val noDefault = Apply(Select(definition, TermName("getOrElse")), nullNodeDefault :: Nil)
-          val ce = c.Expr[Ast.AstNode[_]](Ident(TermName(cn)))
-          val ct: Tree = ValDef(Modifiers(), TermName(cn), TypeTree(weakTypeOf[Ast.AstNode[_]]), noDefault)
+          val ce = c.Expr[AstNode[_]](Ident(TermName(cn)))
+          val ct: Tree = ValDef(Modifiers(), TermName(cn), TypeTree(weakTypeOf[AstNode[_]]), noDefault)
           Block(v :: ct :: Nil, Apply(Select(Ident(vn), TermName("consume")), ce.tree :: Nil))
         case defTree =>
-          val ce = c.Expr[Option[Ast.AstNode[_]]](Ident(TermName(cn)))
+          val ce = c.Expr[Option[AstNode[_]]](Ident(TermName(cn)))
           val ct: Tree = ValDef(Modifiers(), TermName(cn), TypeTree(weakTypeOf[Option[AstNode[_]]]), definition)
           //          val cons = Apply(Select(Ident(vn), TermName("consume")), ce.tree :: Nil)
           val res = reify(
@@ -443,7 +443,7 @@ object Consumer {
 
     }
 
-    def buildObject(tpe: Type, reader: c.Expr[Ast.ObjectNode], methodSuffix: String = "", args: List[Tree] = Nil): Tree = {
+    def buildObject(tpe: Type, reader: c.Expr[ObjectNode], methodSuffix: String = "", args: List[Tree] = Nil): Tree = {
       if (tpe.typeSymbol.isClass && !(helper.isPrimitive(tpe) || helper.isMap(tpe) || helper.isOption(tpe) || helper.isSeq(tpe) || helper.isEither(tpe) || helper.isEnum(tpe))) {
         val TypeRef(_, sym, tpeArgs) = tpe
 
@@ -492,8 +492,8 @@ object Consumer {
 
               // If param has defaults, try to find the val in map, or call
               // default evaluation from its companion object
-              // TODO: is the sym.companionSymbol.isTerm the best way to check for NoSymbol?
-              // TODO: is there a way to get teh default values for the overloaded constructors?
+              // is the sym.companionSymbol.isTerm the best way to check for NoSymbol?
+              // is there a way to get teh default values for the overloaded constructors?
               val tree = if (pSym.asTerm.isParamWithDefault && sym.companion.isTerm) {
                 val defVal = Select(Ident(sym.companion), TermName("$lessinit$greater$default$" + (index + 1).toString))
                 //                val defValG = Apply(Select(New(weakTypeOf[ConstantNode[_]])))
@@ -537,10 +537,10 @@ object Consumer {
 
     reify {
       new Consumer[T] {
-        def consume(node: Ast.AstNode[_]): T = {
+        def consume(node: AstNode[_]): T = {
           node match {
-            case obj: Ast.ObjectNode => c.Expr[T](buildObject(thisType, c.Expr[ObjectNode](Ident(TermName("obj"))))).splice
-            case muster.Ast.NullNode | muster.Ast.UndefinedNode => null.asInstanceOf[T]
+            case obj: ObjectNode => c.Expr[T](buildObject(thisType, c.Expr[ObjectNode](Ident(TermName("obj"))))).splice
+            case NullNode | UndefinedNode => null.asInstanceOf[T]
             case x => throw new MappingException(s"Got a ${x.getClass.getSimpleName} and expected an ObjectNode")
           }
         }

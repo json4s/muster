@@ -8,11 +8,6 @@ import org.json4s.JsonAST._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-private[json4s] case object JValueProducible extends Producible[JValue, JValue] {
-  def value: JValue = ???
-  def toAppendable: Appendable[_] = ???
-}
-
 object JValueRenderer {
   private final class JValueOutputFormatter extends OutputFormatter[JValue] {
 

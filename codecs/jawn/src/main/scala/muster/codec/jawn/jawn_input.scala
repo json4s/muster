@@ -2,13 +2,13 @@ package muster
 package codec
 package jawn
 
-import Ast._
+import ast._
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import scala.util.{Try, Failure, Success}
+import scala.util.Try
 
 object JawnInputCursor {
 
@@ -131,12 +131,12 @@ class JawnInputCursor(val source: Consumable[_]) extends JawnInputCursorBase {
   implicit object jawnFacade extends _root_.jawn.MutableFacade[AstNode[_]] {
     def jarray(vs: ArrayBuffer[AstNode[_]]): AstNode[_] = new JawnArrayNode(vs)
     def jobject(vs: mutable.Map[String, AstNode[_]]): AstNode[_] = new JawnObjectNode(vs)
-    def jint(s: String): AstNode[_] = Ast.NumberNode(s)
-    def jfalse(): AstNode[_] = Ast.FalseNode
-    def jnum(s: String): AstNode[_] = Ast.NumberNode(s)
-    def jnull(): AstNode[_] = Ast.NullNode
-    def jtrue(): AstNode[_] = Ast.TrueNode
-    def jstring(s: String): AstNode[_] = Ast.TextNode(s)
+    def jint(s: String): AstNode[_] = NumberNode(s)
+    def jfalse(): AstNode[_] = FalseNode
+    def jnum(s: String): AstNode[_] = NumberNode(s)
+    def jnull(): AstNode[_] = NullNode
+    def jtrue(): AstNode[_] = TrueNode
+    def jstring(s: String): AstNode[_] = TextNode(s)
   }
 
   def parsed: AstNode[_] = {

@@ -165,7 +165,7 @@ abstract class JsonDeserializationSpec[R <% Consumable[R]](val format: InputForm
     object ImplOverride {
 
       implicit object ImplOverrideReadable extends Consumer[ImplOverride] {
-        def consume(obj: Ast.AstNode[_]): ImplOverride = ImplOverride(3854)
+        def consume(obj: ast.AstNode[_]): ImplOverride = ImplOverride(3854)
       }
 
     }
@@ -345,7 +345,7 @@ abstract class JsonDeserializationSpec[R <% Consumable[R]](val format: InputForm
 
     "read an either with throwable on the left side" in {
       implicit val friendThrowable = new Consumer[Friend]{
-        def consume(node: _root_.muster.Ast.AstNode[_]): _root_.muster.Friend = throw new Throwable("Totally expected") {}
+        def consume(node: _root_.muster.ast.AstNode[_]): _root_.muster.Friend = throw new Throwable("Totally expected") {}
       }
       val js = """{"id":1,"name":"Tom"}"""
       val res = read[Either[Throwable, Friend]](js)

@@ -2,8 +2,8 @@ package muster
 package codec
 package jackson
 
-import Ast._
-import com.fasterxml.jackson.databind.{SerializationFeature, DeserializationFeature, ObjectMapper, JsonNode}
+import ast._
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper, JsonNode}
 import com.fasterxml.jackson.databind.node.{ ArrayNode => JArrayNode }
 import scala.collection.JavaConverters._
 
@@ -18,8 +18,8 @@ private object JacksonInputCursor {
       else if (node.isMissingNode) UndefinedNode
       else if (node.isArray) new JacksonArrayNode(node)
       else if (node.isObject) new JacksonObjectNode(node)
-      else if (node.isTextual) Ast.TextNode(node.asText())
-      else if (node.isNumber) Ast.NumberNode(node.asText())
+      else if (node.isTextual) TextNode(node.asText())
+      else if (node.isNumber) NumberNode(node.asText())
       else if (node.isBoolean) {
         if (node.asBoolean()) TrueNode else FalseNode
       } else throw new MappingException("Unable to determine the type of this json")
@@ -133,8 +133,8 @@ private[jackson] trait JacksonInputCursor[R] extends InputCursor[R] {
       else if (node.isMissingNode) UndefinedNode
       else if (node.isArray) new JacksonArrayNode(node)
       else if (node.isObject) new JacksonObjectNode(node)
-      else if (node.isTextual) Ast.TextNode(node.asText())
-      else if (node.isNumber) Ast.NumberNode(node.asText())
+      else if (node.isTextual) TextNode(node.asText())
+      else if (node.isNumber) NumberNode(node.asText())
       else if (node.isBoolean) {
         if (node.asBoolean()) TrueNode else FalseNode
       } else throw new MappingException("Unable to determine the type of this json")

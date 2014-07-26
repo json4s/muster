@@ -2,7 +2,7 @@ package muster
 package codec
 package json4s
 
-import Ast._
+import ast._
 import org.json4s.JsonAST._
 
 object Json4sInputCursor {
@@ -66,7 +66,7 @@ object Json4sInputCursor {
         case JNull | JNothing => None
         case JInt(i) => Some(NumberNode(i.toString()))
         case JDecimal(d) => Some(NumberNode(d.toString()))
-        case JDouble(d) => Some(NumberNode(d.toString()))
+        case JDouble(d) => Some(NumberNode(d.toString))
         case JString(s) => Some(NumberNode(s))
         case node => throw new MappingException(s"Expected a number field but found a ${node.getClass.getSimpleName}")
       }
