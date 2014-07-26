@@ -4,11 +4,11 @@ package jackson
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.MissingNode
-import muster.codec.json.ProducibleJsonOutput
+import muster.codec.json.JsonRenderer
 
 import scala.util.Try
 
-object JacksonCodec extends ProducibleJsonOutput(StringProducible) with JacksonInputFormat[Consumable[_]] {
+object JacksonCodec extends JsonRenderer(StringProducible) with JacksonInputFormat[Consumable[_]] {
   private def jic[T](src: T)(fn: (T) => JsonNode): JacksonInputCursor[T] = new JacksonInputCursor[T] {
     protected val node: JsonNode = Try(fn(src)).getOrElse(MissingNode.getInstance())
     val source: T = src

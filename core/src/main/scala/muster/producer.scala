@@ -10,10 +10,10 @@ import scala.collection.immutable
 import scala.collection.mutable
 
 object Producer {
-  private[Producer] abstract class SP[T](fn: (Renderer[_], T) => Unit) extends Producer[T] {
-    def produce(value: T, formatter: Renderer[_]): Unit = fn(formatter, value)
+  private[Producer] abstract class SP[T](fn: (OutputFormatter[_], T) => Unit) extends Producer[T] {
+    def produce(value: T, formatter: OutputFormatter[_]): Unit = fn(formatter, value)
   }
-  private[Producer] def sp[T](fn: (Renderer[_], T) => Unit): Producer[T] = new SP[T](fn) {}
+  private[Producer] def sp[T](fn: (OutputFormatter[_], T) => Unit): Producer[T] = new SP[T](fn) {}
   implicit object ByteProducer extends SP[Byte](_ byte _)
   implicit object ShortProducer extends SP[Short](_ short _)
   implicit object IntProducer extends SP[Int](_ int _)
@@ -209,7 +209,7 @@ object Producer {
     if (tpe.typeSymbol.isClass && !(helper.isPrimitive(tpe) || helper.isMap(tpe) || helper.isOption(tpe) || helper.isSeq(tpe))) {
       reify {
         new Producer[T] {
-          def produce(value: T, formatter: Renderer[_]): Unit = {
+          def produce(value: T, formatter: OutputFormatter[_]): Unit = {
             c.Expr(buildObject(Ident(TermName("value")), Ident(TermName("formatter")))).splice
           }
         }
@@ -221,5 +221,5 @@ object Producer {
 }
 
 trait Producer[T] {
-  def produce(value: T, formatter: Renderer[_])
+  def produce(value: T, formatter: OutputFormatter[_])
 }

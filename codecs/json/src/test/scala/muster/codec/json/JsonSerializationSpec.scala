@@ -10,8 +10,8 @@ import org.specs2.mutable.Specification
 
 
 object OptionOverride {
-  private def sp[T](fn: (Renderer[_], T) => Unit): Producer[T] = new Producer[T] {
-    def produce(value: T, formatter: Renderer[_]): Unit = fn(formatter, value)
+  private def sp[T](fn: (OutputFormatter[_], T) => Unit): Producer[T] = new Producer[T] {
+    def produce(value: T, formatter: OutputFormatter[_]): Unit = fn(formatter, value)
   }
   implicit def optionProducer[T](implicit valueProducer: Producer[T]): Producer[Option[T]] =
     sp[Option[T]] { (fmt, v) =>
@@ -23,7 +23,7 @@ object OptionOverride {
 
 class JsonSerializationSpec extends Specification {
   implicit val defaultFormats = DefaultFormats
-  val format = new ProducibleJsonOutput(StringProducible)
+  val format = new JsonRenderer(StringProducible)
 
   val refJunk = Junk(2, "cats")
   val refJunkDict: String = org.json4s.jackson.Serialization.write(refJunk)
@@ -168,7 +168,7 @@ class JsonSerializationSpec extends Specification {
     object ImplOverride {
 
       implicit object ImplOverrideWritable extends Producer[ImplOverride] {
-        def produce(value: ImplOverride, formatter: Renderer[_]): Unit = {
+        def produce(value: ImplOverride, formatter: OutputFormatter[_]): Unit = {
           formatter.startObject()
           formatter.startField("number")
           formatter.int(value.nr)

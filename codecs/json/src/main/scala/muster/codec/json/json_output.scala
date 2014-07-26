@@ -5,31 +5,38 @@ package json
 import Constants._
 import scala.collection.mutable
 
-abstract class JsonOutput[R] extends OutputFormat[R] {
+object JsonRenderer {
+  private final class StringJsonFormatter(protected val writer: Appendable[_], protected val spaces: Int = 0) extends JsonFormatter[String] {
+    def result: String = {
+      writer.flush()
+      writer.toString
+    }
+  }
 
-  type Formatter = Renderer[R]
-
-  def indentSpaces: Int
-
-  def createFormatter: Formatter
-
-  def Pretty: JsonOutput[R] = withSpaces(2)
-
-  def into[T](producible: Producible[_, T]): JsonOutput[T] = new ProducibleJsonOutput[T](producible)
-
-  protected def withSpaces(spaces: Int): this.type
+  private final class UnitJsonFormatter(protected val writer: Appendable[_], protected val spaces: Int = 0) extends JsonFormatter[Unit] {
+    def result: Unit = {
+      writer.flush()
+      ()
+    }
+  }
 }
 
-class ProducibleJsonOutput[T](producible: Producible[_, T], val indentSpaces: Int = 0) extends JsonOutput[T] {
+class JsonRenderer[T](producible: Producible[_, T], val indentSpaces: Int = 0) extends Renderer[T] {
+  import JsonRenderer._
+  type Formatter = OutputFormatter[T]
   def createFormatter: Formatter = {
     if (producible == StringProducible) new StringJsonFormatter(producible.toAppendable, indentSpaces).asInstanceOf[JsonFormatter[T]]
     else new UnitJsonFormatter(producible.toAppendable, indentSpaces).asInstanceOf[JsonFormatter[T]]
   }
 
-  protected def withSpaces(spaces: Int): this.type = new ProducibleJsonOutput[T](producible, spaces).asInstanceOf[this.type]
+  protected def withSpaces(spaces: Int): this.type = new JsonRenderer[T](producible, spaces).asInstanceOf[this.type]
+  
+  def Pretty: JsonRenderer[T] = withSpaces(2)
+  
+  def into[R](producible: Producible[_, R]): JsonRenderer[R] = new JsonRenderer[R](producible)
 }
 
-trait JsonFormatter[T] extends Renderer[T] {
+trait JsonFormatter[T] extends OutputFormatter[T] {
 
   protected def writer: muster.Appendable[_]
 
@@ -190,16 +197,4 @@ trait JsonFormatter[T] extends Renderer[T] {
 
 }
 
-private[muster] class StringJsonFormatter(protected val writer: Appendable[_], protected val spaces: Int = 0) extends JsonFormatter[String] {
-  def result: String = {
-    writer.flush()
-    writer.toString
-  }
-}
 
-private[muster] class UnitJsonFormatter(protected val writer: Appendable[_], protected val spaces: Int = 0) extends JsonFormatter[Unit] {
-  def result: Unit = {
-    writer.flush()
-    ()
-  }
-}

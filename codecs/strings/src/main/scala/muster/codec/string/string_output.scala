@@ -4,36 +4,12 @@ package string
 
 import scala.collection.mutable
 
-trait StringOutputFormat extends OutputFormat[String] {
-  def writer: java.io.Writer = new java.io.StringWriter()
+abstract class StringRenderer extends Renderer[String] {
+  type Formatter = StringOutputFormatter
+  def createFormatter: Formatter = new StringOutputFormatter(new java.io.StringWriter())
 }
 
-abstract class DefaultStringFormat extends StringOutputFormat {
-  type Formatter = DefaultStringRenderer
-
-  def createFormatter: Formatter = new DefaultStringRenderer(writer)
-
-  def freezeFormatter(fmt: Formatter): DefaultStringFormat = new DefaultStringFormat {
-    override val createFormatter: Formatter = fmt
-  }
-}
-
-
-
-
-class DefaultStringRenderer(writer: muster.Appendable[_]) extends BaseStringRenderer(writer) {
-
-  def withWriter(wrtr: muster.Appendable[_]): this.type = {
-    try {
-      writer.close()
-    } catch {
-      case _: Throwable =>
-    }
-    new DefaultStringRenderer(wrtr).asInstanceOf[this.type]
-  }
-}
-
-abstract class BaseStringRenderer[T <: OutputFormat[String]](val writer: muster.Appendable[_], quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends Renderer[String] {
+class StringOutputFormatter(val writer: muster.Appendable[_], quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
 
   import Constants._
 
@@ -145,8 +121,6 @@ abstract class BaseStringRenderer[T <: OutputFormat[String]](val writer: muster.
   }
 
   def result: String = writer.toString
-
-  def withWriter(wrtr: muster.Appendable[_]): this.type
 
   def close() {
     writer.close()

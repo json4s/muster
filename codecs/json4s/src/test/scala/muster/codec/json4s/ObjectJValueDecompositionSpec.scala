@@ -159,7 +159,7 @@ class ObjectJValueDecompositionSpec extends Specification {
     object ImplOverride {
 
       implicit object ImplOverrideWritable extends Producer[ImplOverride] {
-        def produce(value: ImplOverride, formatter: Renderer[_]): Unit = {
+        def produce(value: ImplOverride, formatter: OutputFormatter[_]): Unit = {
           formatter.startObject()
           formatter.startField("number")
           formatter.int(value.nr)

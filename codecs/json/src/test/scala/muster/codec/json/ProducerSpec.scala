@@ -9,7 +9,7 @@ import org.specs2.{ScalaCheck, Specification}
 class ProducerSpec extends Specification with ScalaCheck {
 
   sequential
-  val json = new ProducibleJsonOutput(StringProducible)
+  val json = new JsonRenderer(StringProducible)
   def write[T: Producer](obj: T) = json.from(obj)
 
   def cp[T](implicit toProp: MatchResult[T] => Prop, a: org.scalacheck.Arbitrary[T], s: org.scalacheck.Shrink[T], cons: Producer[T]) = {

@@ -3,7 +3,7 @@ package muster
 import java.util.Date
 import java.text.DateFormat
 
-trait Renderer[R] extends AutoCloseable {
+trait OutputFormatter[R] extends AutoCloseable {
   def startArray(name: String = ""): Unit
 
   def endArray(): Unit
@@ -44,8 +44,8 @@ trait Renderer[R] extends AutoCloseable {
 }
 
 
-trait OutputFormat[R] {
-  type Formatter <: Renderer[R]
+trait Renderer[R] {
+  type Formatter <: OutputFormatter[R]
 
   def createFormatter: Formatter
 

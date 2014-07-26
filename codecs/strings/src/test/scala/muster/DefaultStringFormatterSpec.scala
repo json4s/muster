@@ -1,11 +1,8 @@
 package muster
 
-import org.scalacheck._
-import java.util.TimeZone
-import org.specs2.matcher.MatchResult
-import muster.codec.string.DefaultStringFormat
+import muster.codec.string.StringRenderer
 
-object TestStringFormat extends DefaultStringFormat
+object TestStringFormat extends StringRenderer
 
 class DefaultStringFormatterSpec extends {val format = TestStringFormat } with  StringOutputFormatterSpec {
 

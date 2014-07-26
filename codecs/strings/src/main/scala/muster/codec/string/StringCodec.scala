@@ -1,3 +1,3 @@
 package muster.codec.string
 
-object StringCodec extends DefaultStringFormat
+object StringCodec extends StringRenderer

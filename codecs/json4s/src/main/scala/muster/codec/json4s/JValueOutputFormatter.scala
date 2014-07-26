@@ -13,8 +13,8 @@ private[json4s] case object JValueProducible extends Producible[JValue, JValue] 
   def toAppendable: Appendable[_] = ???
 }
 
-object JValueOutput {
-  private final class JValueRenderer extends Renderer[JValue] {
+object JValueRenderer {
+  private final class JValueOutputFormatter extends OutputFormatter[JValue] {
 
     private[this] val stateStack = mutable.Stack[Int]()
     private[this] def state = stateStack.headOption getOrElse State.None
@@ -104,10 +104,10 @@ object JValueOutput {
   }
 
 }
-class JValueOutput extends OutputFormat[JValue] {
-  import muster.codec.json4s.JValueOutput._
-  type Formatter = Renderer[JValue]
+class JValueRenderer extends Renderer[JValue] {
+  import muster.codec.json4s.JValueRenderer._
+  type Formatter = OutputFormatter[JValue]
 
-  def createFormatter: Formatter = new JValueRenderer().asInstanceOf[Renderer[JValue]]
+  def createFormatter: Formatter = new JValueOutputFormatter().asInstanceOf[OutputFormatter[JValue]]
 }
 

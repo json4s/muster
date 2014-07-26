@@ -6,7 +6,7 @@ import org.scalacheck.{Gen, Arbitrary}
 
 trait FormatterSpec[T] extends Specification with ScalaCheck {
    TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
-   val format: OutputFormat[T]
+   val format: Renderer[T]
  //
  //   implicit lazy val arbDateTime: Arbitrary[DateTime] = Arbitrary(for {
  //     l <- Arbitrary.arbitrary[Long]
