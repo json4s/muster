@@ -73,7 +73,7 @@ JsonFormat.Pretty.from(person.asJValue)
 import muster.codec.string._
 StringFormat.from(person)
 
-import muster.codec.string._
+import muster.codec.string.api._
 person.asString 
 // calls muster.codec.string.api.StringFormat.from(person) 
 // and produces Person(id: 1, name: "Luke", age: 38)
