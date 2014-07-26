@@ -158,6 +158,7 @@ class JawnInputCursor(val source: Consumable[_]) extends JawnInputCursorBase {
     }
     (tryResult recover {
       case t: _root_.jawn.IncompleteParseException => throw new EndOfInput
+      case _root_.jawn.ParseException(msg, _, line, col) => throw new ParseException(msg, Some(ParseLocation(line, col)))
     }).get
   }
 }

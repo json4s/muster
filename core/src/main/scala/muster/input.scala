@@ -1,6 +1,5 @@
 package muster
 
-import scala.collection.immutable.BitSet
 import java.text._
 import java.util.{Locale, Date}
 import scala.util.Try
@@ -23,21 +22,7 @@ class SafeSimpleDateFormat(pattern: String, locale: Locale = SafeSimpleDateForma
   def parse(source: String, pos: ParsePosition): Date = df.get.parse(source, pos)
 }
 
-
-//object InputCursor {
-//  val NumberChars = BitSet('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', 'e', 'E', '-', '+')
-//  val WhiteSpace = BitSet(' ', '\r', '\n', '\t')
-//
-//  def isNumberChar(c: Char): Boolean = NumberChars(c)
-//
-//  def isWhitespace(c: Char): Boolean = c == '\r' || c == '\n' || c == '\t' || c == ' '
-//
-//  def isSpecialChar(c: Char): Boolean = c == '\b' || c == '\f' || c == '\n'
-//}
-
 trait CursorFailures {
-  protected def failParse(msg: String) = throw new ParseException(msg)
-
   protected def failStructure(msg: String) = throw new MappingException(msg)
 }
 

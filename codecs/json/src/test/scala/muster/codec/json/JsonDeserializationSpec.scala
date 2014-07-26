@@ -23,11 +23,7 @@ abstract class JsonDeserializationSpec[R <% Consumable[R]](val format: InputForm
   def read[T:Consumer](value: String) = format.as[T](parse(value))
 
   "A JSON Consumer implementation" should {
-    //    "read a dateTime" in {
-    //      val date = DateTime.now
-    //      val ds = Muster.from.JsonString.dateFormat.print(new DateTime(date))
-    //      read[DateTime]("\""+ds+"\"") must_== Muster.from.JsonString.dateFormat.parseDateTime(ds)
-    //    }
+
     "read a date" in {
       val date = new Date()
       val ds = SafeSimpleDateFormat.Iso8601Formatter.format(date)
@@ -98,14 +94,6 @@ abstract class JsonDeserializationSpec[R <% Consumable[R]](val format: InputForm
       val js = s"""{"date":"$ds"}"""
       read[WithDate](js) must_== WithDate(pd)
     }
-//
-//    "read an object with a datetime" in {
-//      val date = DateTime.now.toDate
-//      val ds = SafeSimpleDateFormat.Iso8601Formatter.format(date)
-//      val pd = SafeSimpleDateFormat.Iso8601Formatter.parse(ds)
-//      val js = s"""{"date":"$ds"}"""
-//      read[WithDateTime](js) must_== WithDateTime(new DateTime(pd))
-//    }
 
     "read an object with a Symbol" in {
       val js = """{"symbol":"baz"}"""
@@ -141,11 +129,11 @@ abstract class JsonDeserializationSpec[R <% Consumable[R]](val format: InputForm
       val ac = new Ac
       read[ac.WithAlias]( s"""{"in":{"in1":123,"in2":"456"}}""") must_== ac.WithAlias(junk)
     }
-
-    //    "read type aliased thing with junk when alias is defined in another class without companion object" in {
-    //      val ac = new Ac2
-    //      read[ac.WithAlias](s"""{"in":{"in1":123,"in2":"456"}}""") must_== ac.WithAlias(junk)
-    //    }.pendingUntilFixed
+//
+//    "read type aliased thing with junk when alias is defined in another class without companion object" in {
+//      val ac = new Ac2
+//      read[ac.WithAlias](s"""{"in":{"in1":123,"in2":"456"}}""") must_== ac.WithAlias(junk)
+//    }.pendingUntilFixed
 
     "read a crazy thing" in {
       val js = s"""{"name":"bar","thg":$thingWithJunkJson}"""
