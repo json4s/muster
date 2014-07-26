@@ -1,6 +1,6 @@
-# muster
+# Muster
 
-A library for macro based serializers to many different formats.
+A library for macro based serializers to different formats.
 It uses scala macros so no reflection is involved and it will generate code at compile time
 that kind of looks like it would have been handwritten.  It is written with the idea of extension, so it's easy to
 add your own formats.
@@ -74,9 +74,10 @@ import muster.codec.string._
 StringFormat.from(person)
 
 import muster.codec.string._
+person.asString 
 // calls muster.codec.string.api.StringFormat.from(person) 
 // and produces Person(id: 1, name: "Luke", age: 38)
-person.asString 
+
 
 ```
 
@@ -85,13 +86,16 @@ person.asString
 Similarly reading can be achieved with
 
 ```scala
+// Extract a person from a json stream
 import muster.codec.jawn._
 JsonFormat.as[Person](/* file | string | reader | byte array | input stream | URL */ input)
 
-import muster.codec.json4s._
 // Extract a person from a Json4s AST
+import muster.codec.json4s._
 JValueFormat.as[Person](personJValue)
+
 // Parse a source to a Json4s AST
+import muster.codec.json4s._
 JsonFormat.as[JValue](/* file | string | reader | byte array | input stream | URL */ input)
 ```
 
