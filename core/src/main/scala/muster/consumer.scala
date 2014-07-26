@@ -1,5 +1,6 @@
 package muster
 
+import scala.annotation.implicitNotFound
 import scala.language.experimental.macros
 import scala.reflect.macros._
 import scala.reflect.ClassTag
@@ -9,8 +10,7 @@ import scala.util.Try
 import java.util
 import Ast._
 
-//import org.joda.time.DateTime
-
+@implicitNotFound("Couldn't find a Consumer for ${T}. Try importing muster._ or to implement a muster.Consumer")
 trait Consumer[S] {
   def consume(node: AstNode[_]): S
 }

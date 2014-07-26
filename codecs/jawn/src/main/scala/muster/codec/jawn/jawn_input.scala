@@ -140,18 +140,21 @@ class JawnInputCursor(val source: Consumable[_]) extends JawnInputCursorBase {
   def parsed: AstNode[_] = {
     val p = _root_.jawn.Parser
     source match {
-      case StringConsumable(src) => p.parseFromString(src).getOrElse(UndefinedNode)
-      case FileConsumable(src) => p.parseFromFile(src).getOrElse(UndefinedNode)
-      case InputStreamConsumable(src) => p.parseFromChannel(Channels.newChannel(src)).getOrElse(UndefinedNode)
-      case ByteArrayConsumable(src) => p.parseFromByteBuffer(ByteBuffer.wrap(src)).getOrElse(UndefinedNode)
-      case URLConsumable(src) => {
-        val strm = src.openConnection().getInputStream
+      case StringConsumable(src) => p.parseFromString(src).get
+      case FileConsumable(src) => p.parseFromFile(src).get
+      case InputStreamConsumable(src) => p.parseFromChannel(Channels.newChannel(src)).get
+      case ByteArrayConsumable(src) => p.parseFromByteBuffer(ByteBuffer.wrap(src)).get
+      case URLConsumable(src) =>
+        val stream = src.openConnection().getInputStream
         try {
-          p.parseFromChannel(Channels.newChannel(strm)).getOrElse(UndefinedNode)
+          p.parseFromChannel(Channels.newChannel(stream)).get
         } finally {
-          strm.close()
+          stream.close()
         }
-      }
+      case ByteChannelConsumable(src) => p.parseFromChannel(src).get
+      case ByteBufferConsumable(src) => p.parseFromByteBuffer(src).get
+      case ReaderConsumable(src) => p.parseFromChannel(Consumable.readerChannel(src)).get
     }
   }
 }
+

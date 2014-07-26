@@ -3,7 +3,7 @@ package codec
 package jackson
 
 import Ast._
-import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper, JsonNode}
+import com.fasterxml.jackson.databind.{SerializationFeature, DeserializationFeature, ObjectMapper, JsonNode}
 import com.fasterxml.jackson.databind.node.{ ArrayNode => JArrayNode }
 import scala.collection.JavaConverters._
 
@@ -146,6 +146,7 @@ private[jackson] trait JacksonInputCursor[R] extends InputCursor[R] {
 trait JacksonInputFormat[R] extends InputFormat[R, JacksonInputCursor[_]] {
   val mapper: ObjectMapper = new ObjectMapper()
   mapper.configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
+
   def typeHintFieldName: String = "$typeName"
 }
 

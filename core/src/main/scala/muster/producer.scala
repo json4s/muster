@@ -1,5 +1,6 @@
 package muster
 
+import scala.annotation.implicitNotFound
 import scala.language.experimental.macros
 import scala.reflect.macros._
 import java.util.Date
@@ -8,6 +9,12 @@ import java.text.DateFormat
 import scala.collection.concurrent.TrieMap
 import scala.collection.immutable
 import scala.collection.mutable
+
+
+@implicitNotFound("Couldn't find a producer for ${T}. Try importing muster._ or to implement a muster.Producer")
+trait Producer[T] {
+  def produce(value: T, formatter: OutputFormatter[_])
+}
 
 object Producer {
   private[Producer] abstract class SP[T](fn: (OutputFormatter[_], T) => Unit) extends Producer[T] {
@@ -218,8 +225,4 @@ object Producer {
       c.abort(c.enclosingPosition, "Values, Lists, Options and Maps don't use macros")
     }
   }
-}
-
-trait Producer[T] {
-  def produce(value: T, formatter: OutputFormatter[_])
 }

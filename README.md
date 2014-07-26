@@ -127,4 +127,7 @@ Possibly added next:
 * Support for renaming fields 
 * Support for using a map as an input source
 * Support for serializing and deserializing from mongodb
+* Provide a way to use custom producibles
+* Provide a way to use custom consumables
 * Support for common annotations like @JsonProperty and so on to provide overrides for behavior
+

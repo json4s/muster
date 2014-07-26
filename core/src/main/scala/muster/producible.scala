@@ -2,6 +2,8 @@ package muster
 
 import java.io._
 
+import scala.annotation.implicitNotFound
+
 object Producible {
 
   import scala.language.implicitConversions
@@ -14,6 +16,7 @@ object Producible {
 
 }
 
+@implicitNotFound("Couldn't find a producible for ${T}. Try importing muster._ or to implement a muster.Producible")
 trait Producible[T, R] {
   def value: T
   def toAppendable: Appendable[_]
@@ -36,4 +39,10 @@ final case class WriterProducible(value: java.io.Writer) extends Producible[java
 final case class OutputStreamProducible(value: java.io.OutputStream) extends Producible[java.io.OutputStream, Unit] {
   def toAppendable: Appendable[java.io.Writer] = new PrintWriter(value, true)
 }
-
+//
+//case object ByteArrayProducer extends Producible[Array[Byte], Array[Byte]] {
+//  val value: Array[Byte] = Array.empty[Byte]
+//  private[this] val bas = new ByteArrayInputStream(value)
+//
+//  def toAppendable: Appendable[_] = new PrintWriter(bas)
+//}

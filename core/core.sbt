@@ -11,10 +11,6 @@ sourceGenerators in Compile <+= buildInfo
 
 name := "muster-core"
 
-//libraryDependencies ++= Seq(JacksonCore, JacksonDatabind)
-
-libraryDependencies += JacksonCore
-
 libraryDependencies += "org.scala-lang" %  "scala-reflect" % scalaVersion.value
 
 compileOrder := CompileOrder.JavaThenScala
