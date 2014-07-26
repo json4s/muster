@@ -11,7 +11,7 @@ class JawnBenchmark extends CursorBench {
         exec.benchRuns -> 500
       ) in {
       using(jsonGen) in {
-        r => codec.jawn.JsonFormat.createCursor(r, SingleValue).nextNode()
+        r => codec.jawn.JawnCodec.createCursor(r).nextNode()
       }
     }
   }

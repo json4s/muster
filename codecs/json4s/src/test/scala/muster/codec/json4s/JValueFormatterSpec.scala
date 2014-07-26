@@ -27,7 +27,7 @@ A JValue Formatter should
   read a long list map $mapLongListProp
 """
 
-  def read[T:Consumer](value: JValue) = JValueFormat.as[T](value, SingleValue)
+  def read[T:Consumer](value: JValue) = Json4sCodec.as[T](value)
 
   val jstringGen = for {
     s <- Gen.alphaStr

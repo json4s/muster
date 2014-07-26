@@ -13,7 +13,7 @@ import org.specs2.mutable.Specification
 
 class ObjectJValueDecompositionSpec extends Specification {
   implicit val defaultFormats = DefaultFormats
-  val format = JValueFormat
+  val format = Json4sCodec
 
   val refJunk = Junk(2, "cats")
   val refJunkDict: String = org.json4s.jackson.Serialization.write(refJunk)

@@ -65,15 +65,5 @@ package object json4s {
     }
   }
 
-  implicit class JValueProducingObject[T:Producer](p: T) {
-    def asJValue = JValueFormat.from(p)
-  }
-
-  implicit class JValueConsumingObject(jv: JValue) {
-    def as[T](implicit consumer: Consumer[T]) = JValueFormat.as[T](JValueConsumable(jv), SingleValue)
-    def tryAs[T](implicit consumer: Consumer[T]) = Try(as[T])
-    def getAs[T](implicit consumer: Consumer[T]) = tryAs[T].toOption
-  }
-
   implicit def jvalueConsumable(value: JValue): JValueConsumable = JValueConsumable(value)
 }

@@ -12,10 +12,10 @@ class JsonParsersBenchmark extends com.google.caliper.SimpleBenchmark {
 
 
    def timeMusterJacksonParserForLarge(reps: Int): Unit =
-     for (i <- 0 to reps) codec.jackson.JsonFormat.createCursor(json, SingleValue).nextNode()
+     for (i <- 0 to reps) codec.jackson.JacksonCodec.createCursor(json).nextNode()
 
    def timeMusterJawnParserForLarge(reps: Int): Unit =
-     for (i <- 0 to reps) codec.jawn.JsonFormat.createCursor(json, SingleValue).nextNode()
+     for (i <- 0 to reps) codec.jawn.JawnCodec.createCursor(json).nextNode()
 
    def timeJson4sNativeForLarge(reps: Int): Unit =
      for (i <- 0 to reps) org.json4s.native.JsonMethods.parse(json)

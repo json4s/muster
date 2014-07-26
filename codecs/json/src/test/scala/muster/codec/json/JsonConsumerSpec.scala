@@ -13,7 +13,7 @@ abstract class JsonConsumerSpec(val json: InputFormat[Consumable[_], _ <: InputC
   //  def read[T](source: String)(implicit rdr: Readable[T]) = rdr.readFormatted(source, Muster.from.JsonString)
 //  val json = JsonFormat
 
-  def read[T: Consumer](js: String) = json.as[T](js, SingleValue)
+  def read[T: Consumer](js: String) = json.as[T](js)
 
   def cp[T](implicit toProp: MatchResult[T] => Prop, a: org.scalacheck.Arbitrary[T], s: org.scalacheck.Shrink[T], cons: Consumer[T]) = {
     prop {

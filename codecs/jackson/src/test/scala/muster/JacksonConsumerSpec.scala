@@ -5,6 +5,6 @@ import muster.codec.json.JsonConsumerSpec
 
 //import org.joda.time.DateTime
 
-class JacksonConsumerSpec extends JsonConsumerSpec(JsonFormat)
+class JacksonConsumerSpec extends JsonConsumerSpec(JacksonCodec)
 
 

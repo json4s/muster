@@ -568,21 +568,14 @@ trait AstCursor extends CursorFailures {
 }
 
 trait InputCursor[R] extends AstCursor {
-
   def source: R
 }
 
-sealed trait Mode
-case object SingleValue extends Mode
-case object UnwrapArray extends Mode
-case object ValueStream extends Mode
-
-
 trait InputFormat[R, C <: InputCursor[_]] {
-  def createCursor(in: R, mode: Mode): C
+  def createCursor(in: R): C
 
-  def as[T](source: R, mode: Mode = SingleValue)(implicit consumer: Consumer[T]): T = {
-    val cursor = createCursor(source, mode)
+  def as[T](source: R)(implicit consumer: Consumer[T]): T = {
+    val cursor = createCursor(source)
     consumer.consume(cursor.nextNode())
   }
 

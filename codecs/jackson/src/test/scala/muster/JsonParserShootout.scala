@@ -23,7 +23,7 @@ class JacksonInputCursorBenchmark extends CursorBench {
         exec.benchRuns -> 500
       ) in {
       using(jsonGen) in {
-        r => codec.jackson.JsonFormat.createCursor(r, SingleValue).nextNode()
+        r => codec.jackson.JacksonCodec.createCursor(r).nextNode()
       }
     }
   }

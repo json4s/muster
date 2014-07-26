@@ -124,7 +124,7 @@ sealed trait JawnInputCursorBase extends InputCursor[Consumable[_]] {
   def nextNode(): AstNode[_] = parsed
 }
 
-class JawnInputCursor(val source: Consumable[_], mode: Mode) extends JawnInputCursorBase {
+class JawnInputCursor(val source: Consumable[_]) extends JawnInputCursorBase {
   import JawnInputCursor._
   implicit object jawnFacade extends _root_.jawn.MutableFacade[AstNode[_]] {
     def jarray(vs: ArrayBuffer[AstNode[_]]): AstNode[_] = new JawnArrayNode(vs)
