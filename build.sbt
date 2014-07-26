@@ -1,5 +1,7 @@
 import scala.xml.Group
 
+unidocSettings
+
 lazy val core = project
 
 lazy val json = project in file("codecs/json") dependsOn (core % "compile->compile;test->test")
@@ -14,6 +16,7 @@ lazy val strings = project in file("codecs/strings") dependsOn (core % "compile-
 
 lazy val caliperBenchmarks = project in file("benchmarks/caliper") dependsOn (core % "compile->compile;test->test", jackson % "compile->compile;test->test", json4s % "compile->compile;test->test", jawn % "compile->compile;test->test", strings % "compile->compile;test->test")
 
+
 scalaVersion in ThisBuild := "2.11.1"
 
 name := "muster"
@@ -25,6 +28,8 @@ organization := "org.json4s"
 scalacOptions in ThisBuild ++= Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-optimize", "-feature", "-Yinline-warnings")
 
 javacOptions in ThisBuild ++= Seq("-deprecation", "-Xlint")
+
+scalacOptions in (ScalaUnidoc, UnidocKeys.unidoc) += "-Ymacro-expand:none" // 2.10 => "-Ymacro-no-expand"
 
 libraryDependencies in ThisBuild ++= Seq(
   Dependencies.Specs2 % "test",
@@ -94,6 +99,21 @@ pomExtra in ThisBuild <<= (pomExtra, name, description) { (pom, name, desc) =>
       </developers>
   )
 }
+
+publishMavenStyle in ThisBuild := true
+
+publishArtifact in Test in ThisBuild := false
+
+pomIncludeRepository in ThisBuild := { x => false }
+
+// root project specific settings
+publishTo := None
+
+publishMavenStyle := true
+
+publish := {}
+
+publishLocal := {}
 
 //cappiSettings
 

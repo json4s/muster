@@ -33,24 +33,20 @@ import scala.util.Try
   *
   * @example A custom serializer for a person
   *          {{{
-  *           case class Person(id: Long, name: String, age: Int)
+  *          case class Person(id: Long, name: String, age: Int)
   *
-  *           implicit object PersonProducer extends Producer[Person] {
-  *             def produce(value: Person, formatter: OutputFormatter[_]) {
-  *               formatter.startObject()
-  *
-  *               formatter.startField("id")
-  *               formatter.int(value.id)
-  *
-  *               formatter.startField("name")
-  *               formatter.string(person.name)
-  *
-  *               val arrProducer = implicitly[Producer[Seq[Address]]]
-  *               arrProducer.produce(value.addresses, formatter)
-  *
-  *               formatter.endObject()
-  *             }
-  *           }
+  *          implicit object PersonConsumer extends Consumer[Person] {
+  *            def consume(node: AstNode[_]): Person = node match {
+  *              case obj: ObjectNode =>
+  *                val addressesConsumer = implicitly[Consumer[Seq[Address]]]
+  *                Person(
+  *                  obj.readIntField("id"),
+  *                  obj.readStringField("name"),
+  *                  addressesConsumer.consume(obj.readArrayField("addresses"))
+  *                )
+  *              case _ => throw new MappingException(s"Can't convert a ${node.getClass} to a Person")
+  *            }
+  *          }
   *          }}}
   *
   * @tparam S The type of object this consumer builds
@@ -388,11 +384,6 @@ object Consumer {
 
     val helper = new Helper[c.type](c)
     val thisType = weakTypeOf[T]
-
-    //    val importExpr = c.parse(s"import ${thisType.normalize.typeConstructor.typeSymbol.fullName}")
-
-    //    def buildPrimitive(tpe: Type, cursor: c.Expr[Any], methodNameSuffix: String = "", args: List[Tree] = Nil): Tree = EmptyTree
-    //    def buildArray(tpe: Type, cursor: c.Expr[Any], methodNameSuffix: String = "", args: List[Tree] = Nil): Tree = EmptyTree
 
     val nullNodeDefault = reify(Ast.NullNode).tree
 
