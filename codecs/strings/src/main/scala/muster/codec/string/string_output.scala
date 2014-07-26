@@ -9,9 +9,9 @@ trait StringOutputFormat extends OutputFormat[String] {
 }
 
 abstract class DefaultStringFormat extends StringOutputFormat {
-  type Formatter = DefaultStringOutputFormatter
+  type Formatter = DefaultStringRenderer
 
-  def createFormatter: Formatter = new DefaultStringOutputFormatter(writer)
+  def createFormatter: Formatter = new DefaultStringRenderer(writer)
 
   def freezeFormatter(fmt: Formatter): DefaultStringFormat = new DefaultStringFormat {
     override val createFormatter: Formatter = fmt
@@ -21,7 +21,7 @@ abstract class DefaultStringFormat extends StringOutputFormat {
 
 
 
-class DefaultStringOutputFormatter(writer: muster.Appendable[_]) extends BaseStringOutputFormatter(writer) {
+class DefaultStringRenderer(writer: muster.Appendable[_]) extends BaseStringRenderer(writer) {
 
   def withWriter(wrtr: muster.Appendable[_]): this.type = {
     try {
@@ -29,11 +29,11 @@ class DefaultStringOutputFormatter(writer: muster.Appendable[_]) extends BaseStr
     } catch {
       case _: Throwable =>
     }
-    new DefaultStringOutputFormatter(wrtr).asInstanceOf[this.type]
+    new DefaultStringRenderer(wrtr).asInstanceOf[this.type]
   }
 }
 
-abstract class BaseStringOutputFormatter[T <: OutputFormat[String]](val writer: muster.Appendable[_], quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
+abstract class BaseStringRenderer[T <: OutputFormat[String]](val writer: muster.Appendable[_], quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends Renderer[String] {
 
   import Constants._
 

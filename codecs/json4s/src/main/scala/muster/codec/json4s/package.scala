@@ -42,7 +42,7 @@ package object json4s {
   }
 
   implicit object JValueProducer extends Producer[JValue] {
-    def produce(value: JValue, formatter: OutputFormatter[_]): Unit = value match {
+    def produce(value: JValue, formatter: Renderer[_]): Unit = value match {
       case JNull => formatter.writeNull()
       case JNothing => formatter.undefined()
       case JString(s) => formatter.string(s)

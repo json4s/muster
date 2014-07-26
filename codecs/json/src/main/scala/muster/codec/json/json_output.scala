@@ -7,7 +7,7 @@ import scala.collection.mutable
 
 abstract class JsonOutput[R] extends OutputFormat[R] {
 
-  type Formatter = OutputFormatter[R]
+  type Formatter = Renderer[R]
 
   def indentSpaces: Int
 
@@ -29,7 +29,7 @@ class ProducibleJsonOutput[T](producible: Producible[_, T], val indentSpaces: In
   protected def withSpaces(spaces: Int): this.type = new ProducibleJsonOutput[T](producible, spaces).asInstanceOf[this.type]
 }
 
-trait JsonFormatter[T] extends OutputFormatter[T] {
+trait JsonFormatter[T] extends Renderer[T] {
 
   protected def writer: muster.Appendable[_]
 

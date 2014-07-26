@@ -1,10 +1,5 @@
 package muster
 
-import scala.collection.mutable
-
-
-
-
 object Quoter {
 
   def jsonQuote(s: String, writer: Appendable[_]) {
