@@ -20,7 +20,7 @@ object Json4sInputCursor {
         case JDouble(d) => DoubleNode(d)
         case JBool(true) => TrueNode
         case JBool(false) => FalseNode
-        case node: JArray => new Json4sArrayNode(node)
+        case node: JArray => new JArrayNode(node)
         case node: JObject => new Json4sObjectNode(node)
       }
     }
@@ -31,7 +31,7 @@ object Json4sInputCursor {
     def readArrayFieldOpt(fieldName: String): Option[ArrayNode] = {
       readFieldFromParent(fieldName) match {
         case JNull | JNothing => None
-        case node: JArray => Some(new Json4sArrayNode(node))
+        case node: JArray => Some(new JArrayNode(node))
         case node => throw new MappingException(s"Expected an array field but found a ${node.getClass.getSimpleName}")
       }
     }
@@ -78,7 +78,7 @@ object Json4sInputCursor {
     def keysIterator: Iterator[String] = fields.keysIterator
   }
 
-  private final class Json4sArrayNode(val source: JArray) extends ArrayNode(null) with Json4sInputCursor[JArray] {
+  private final class JArrayNode(val source: JArray) extends ArrayNode(null) with Json4sInputCursor[JArray] {
     private[this] val iter = source.arr.iterator
     protected def node = iter.next()
     override def hasNextNode: Boolean = iter.hasNext
@@ -86,7 +86,7 @@ object Json4sInputCursor {
 
 }
 
-class EntryJson4sInputCursor(val source: JValue) extends Json4sInputCursor[JValue] {
+class EntryJValueInputCursor(val source: JValue) extends Json4sInputCursor[JValue] {
   protected def node: JValue = source
 }
 sealed trait Json4sInputCursor[R] extends InputCursor[R] {
@@ -98,7 +98,7 @@ sealed trait Json4sInputCursor[R] extends InputCursor[R] {
   def readArrayOpt(): Option[ArrayNode] = {
     this.node match {
       case JNull | JNothing => None
-      case node: JArray => Some(new Json4sArrayNode(node))
+      case node: JArray => Some(new JArrayNode(node))
       case node => throw new MappingException(s"Expected an array value but found a ${node.getClass.getSimpleName}")
     }
   }
@@ -149,7 +149,7 @@ sealed trait Json4sInputCursor[R] extends InputCursor[R] {
       case JDouble(d) => DoubleNode(d)
       case JBool(true) => TrueNode
       case JBool(false) => FalseNode
-      case node: JArray => new Json4sArrayNode(node)
+      case node: JArray => new JArrayNode(node)
       case node: JObject => new Json4sObjectNode(node)
     }
   }
