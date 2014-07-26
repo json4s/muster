@@ -2,6 +2,8 @@ package muster
 package codec
 package jackson
 
+import java.nio.charset.StandardCharsets
+
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.MissingNode
 import muster.codec.json.JsonRenderer
@@ -22,7 +24,7 @@ object JacksonCodec extends JsonRenderer(StringProducible) with JacksonInputForm
     case ByteArrayConsumable(src) => jic(src)(mapper.readTree)
     case URLConsumable(src) => jic(src)(mapper.readTree)
     case ByteChannelConsumable(src) => jic(src) { ch =>
-      mapper.readTree(java.nio.channels.Channels.newInputStream(ch))
+      mapper.readTree(java.nio.channels.Channels.newReader(ch, StandardCharsets.UTF_8.name()))
     }
     case ByteBufferConsumable(src) => jic(src) { ch =>
       mapper.readTree(Consumable.byteBufferInputStream(ch))

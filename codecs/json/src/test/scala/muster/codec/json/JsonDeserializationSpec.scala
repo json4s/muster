@@ -338,6 +338,26 @@ abstract class JsonDeserializationSpec[R <% Consumable[R]](val format: InputForm
       read[ObjWithDefJunk](js) must_== ObjWithDefJunk("junk with default")
     }
 
+    "read an either on the right side" in {
+      val js = """{"id":1,"name":"Tom"}"""
+      read[Either[Throwable, Friend]](js) must_== Right(Friend(1, "Tom"))
+    }
+
+    "read an either with throwable on the left side" in {
+      implicit val friendThrowable = new Consumer[Friend]{
+        def consume(node: _root_.muster.Ast.AstNode[_]): _root_.muster.Friend = throw new Throwable("Totally expected") {}
+      }
+      val js = """{"id":1,"name":"Tom"}"""
+      val res = read[Either[Throwable, Friend]](js)
+      res must beLeft[Throwable]
+      res.left.get.getMessage must_== "Totally expected"
+    }
+
+    "read an either with on the left side" in {
+      val js = """{"id":1,"name":"Tom"}"""
+      read[Either[Friend, NotSimple]](js) must_== Left(Friend(1, "Tom"))
+    }
+
     /*
 
     class Billy[U](in: U)

@@ -68,8 +68,14 @@ object Consumable {
     private[this] var opened = true
     def read(dst: ByteBuffer): Int = {
       val buf = CharBuffer.allocate(dst.remaining())
-      val len = reader.read(buf)
-      charset.decode(dst)
+
+      // We don't use Reader#read(CharBuffer) here because it is more efficient
+      // to write directly to the underlying char array (the default implementation
+      // copies data to a temporary char array).
+      // see: https://github.com/apache/commons-io/blob/trunk/src/main/java/org/apache/commons/io/input/ReaderInputStream.java#L199-L201
+      val len = reader.read(buf.array())
+      charset.newEncoder().encode(buf, dst, len == -1)
+      dst.flip()
       len
     }
 

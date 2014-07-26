@@ -5,8 +5,10 @@ package jawn
 import Ast._
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.util.{Try, Failure, Success}
 
 object JawnInputCursor {
 
@@ -139,22 +141,24 @@ class JawnInputCursor(val source: Consumable[_]) extends JawnInputCursorBase {
 
   def parsed: AstNode[_] = {
     val p = _root_.jawn.Parser
-    source match {
-      case StringConsumable(src) => p.parseFromString(src).get
-      case FileConsumable(src) => p.parseFromFile(src).get
-      case InputStreamConsumable(src) => p.parseFromChannel(Channels.newChannel(src)).get
-      case ByteArrayConsumable(src) => p.parseFromByteBuffer(ByteBuffer.wrap(src)).get
+    val tryResult = source match {
+      case StringConsumable(src) => p.parseFromString(src)
+      case FileConsumable(src) => p.parseFromFile(src)
+      case InputStreamConsumable(src) => p.parseFromChannel(Channels.newChannel(src))
+      case ByteArrayConsumable(src) => p.parseFromByteBuffer(ByteBuffer.wrap(src))
       case URLConsumable(src) =>
-        val stream = src.openConnection().getInputStream
-        try {
-          p.parseFromChannel(Channels.newChannel(stream)).get
-        } finally {
-          stream.close()
-        }
-      case ByteChannelConsumable(src) => p.parseFromChannel(src).get
-      case ByteBufferConsumable(src) => p.parseFromByteBuffer(src).get
-      case ReaderConsumable(src) => p.parseFromChannel(Consumable.readerChannel(src)).get
+        for {
+          stream <- Try(Channels.newChannel(src.openConnection().getInputStream))
+          parsed <- p.parseFromChannel(stream)
+          _ <- Try(stream.close())
+        } yield parsed
+      case ByteChannelConsumable(src) => p.parseFromChannel(src)
+      case ByteBufferConsumable(src) => p.parseFromByteBuffer(src)
+      case ReaderConsumable(src) => p.parseFromChannel(Consumable.readerChannel(src))
     }
+    (tryResult recover {
+      case t: _root_.jawn.IncompleteParseException => throw new EndOfInput
+    }).get
   }
 }
 

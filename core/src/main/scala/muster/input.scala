@@ -7,9 +7,11 @@ import scala.util.Try
 import scala.reflect.ClassTag
 import muster.jackson.util.ISO8601DateFormat
 
-class ParseException(msg: String) extends Exception(msg)
+import scala.util.control.NoStackTrace
 
-class MappingException(msg: String) extends Exception(msg)
+class ParseException(msg: String) extends Throwable(msg) with NoStackTrace
+class MappingException(msg: String) extends Throwable(msg) with NoStackTrace
+class EndOfInput extends Throwable("end of input") with NoStackTrace
 
 object SafeSimpleDateFormat {
   val DefaultLocale = Locale.getDefault(Locale.Category.FORMAT)
@@ -575,8 +577,12 @@ trait InputFormat[R, C <: InputCursor[_]] {
   def createCursor(in: R): C
 
   def as[T](source: R)(implicit consumer: Consumer[T]): T = {
-    val cursor = createCursor(source)
-    consumer.consume(cursor.nextNode())
+    try {
+      val cursor = createCursor(source)
+      consumer.consume(cursor.nextNode())
+    } catch {
+      case t: Throwable => consumer.recover.applyOrElse(t, (i: Throwable) => throw i)
+    }
   }
 
   def tryAs[T](source: R)(implicit consumer: Consumer[T]): Try[T] = Try(as(source))
