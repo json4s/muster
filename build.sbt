@@ -1,7 +1,5 @@
 import scala.xml.Group
 
-unidocSettings
-
 lazy val core = project
 
 lazy val json = project in file("codecs/json") dependsOn (core % "compile->compile;test->test")
@@ -27,8 +25,6 @@ organization := "org.json4s"
 scalacOptions in ThisBuild ++= Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-optimize", "-feature", "-Yinline-warnings")
 
 javacOptions in ThisBuild ++= Seq("-deprecation", "-Xlint")
-
-scalacOptions in (ScalaUnidoc, UnidocKeys.unidoc) += "-Ymacro-expand:none" // 2.10 => "-Ymacro-no-expand"
 
 libraryDependencies in ThisBuild ++= Seq(
   Dependencies.Specs2 % "test",
@@ -93,7 +89,15 @@ publishArtifact in Test in ThisBuild := false
 
 pomIncludeRepository in ThisBuild := { x => false }
 
+
 // root project specific settings
+
+unidocSettings
+
+site.settings
+
+ghpages.settings
+
 publishTo := None
 
 publishMavenStyle := true
@@ -101,3 +105,9 @@ publishMavenStyle := true
 publish := {}
 
 publishLocal := {}
+
+scalacOptions in (ScalaUnidoc, UnidocKeys.unidoc) += "-Ymacro-expand:none" // 2.10 => "-Ymacro-no-expand"
+
+site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "latest/api")
+
+git.remoteRepo := "git@github.com:json4s/muster.git"

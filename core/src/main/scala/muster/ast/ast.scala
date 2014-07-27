@@ -8,30 +8,43 @@ import scala.reflect.ClassTag
 // This no longer seems to be a problem, if it comes back will put the hack back in
 //private[this] val BrokenDouble = BigDecimal("2.2250738585072012e-308")
 
+/** Represents an AST node in musters view of the world
+  *
+  * @tparam T the value type of this AST node
+  */
 sealed trait AstNode[T] {
   def value: T
 }
 
+/** Represents an undefined or missing entity */
 case object UndefinedNode extends AstNode[Unit] {
   def value: Unit = ()
 }
 
+/** Represents a null entity */
 case object NullNode extends AstNode[Null] {
   def value: Null = null
 }
 
+/** Represents a boolean entity */
 trait BoolNode extends AstNode[Boolean] {
   def value: Boolean
 }
 
+/** Represents a true value */
 case object TrueNode extends BoolNode {
   val value = true
 }
 
+/** Represents a false value */
 case object FalseNode extends BoolNode {
   val value = false
 }
 
+/** Represents a byte entity
+  *
+  * @param value the value of this entity
+  */
 case class ByteNode(value: Byte) extends AstNode[Byte] with NumberNodeLike[Byte] {
   def toByte = value
 

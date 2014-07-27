@@ -6,6 +6,7 @@ import java.util.Date
 import java.sql.Timestamp
 import scala.annotation.tailrec
 
+/** A utility class for the generator macros */
 class Helper[C <: blackbox.Context](val c: C) {
   import c.universe._
 

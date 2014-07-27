@@ -1,7 +1,7 @@
 package muster
 package output
 
-/** Formats output for use when a producer renders to a producible
+/** Formats output for use when a [[muster.output.Producer]] renders to a [[muster.output.Producible]]
   *
   * @example A better toString for case classes
   *          {{{
@@ -146,40 +146,40 @@ trait OutputFormatter[R] extends AutoCloseable {
   /** End object mode */
   def endObject(): Unit
 
-  /** Push the a string */
+  /** Push a string */
   def string(value: String): Unit
 
-  /** Push the a byte number */
+  /** Push a byte number */
   def byte(value: Byte): Unit
 
-  /** Push the an int number */
+  /** Push an int number */
   def int(value: Int): Unit
 
-  /** Push the a long number */
+  /** Push a long number */
   def long(value: Long): Unit
 
-  /** Push the a big int number */
+  /** Push a big int number */
   def bigInt(value: BigInt): Unit
 
-  /** Push the a boolean */
+  /** Push a boolean */
   def boolean(value: Boolean): Unit
 
-  /** Push the a short number */
+  /** Push a short number */
   def short(value: Short): Unit
 
-  /** Push the a float number */
+  /** Push a float number */
   def float(value: Float): Unit
 
-  /** Push the a double number */
+  /** Push a double number */
   def double(value: Double): Unit
 
-  /** Push the a big decimal number */
+  /** Push a big decimal number */
   def bigDecimal(value: BigDecimal): Unit
 
   /** Push the field name if we're currently in object mode */
   def startField(name: String): Unit
 
-  /** Push the a null value */
+  /** Push a null value */
   def writeNull(): Unit
 
   /** discard field value if any */
@@ -192,7 +192,7 @@ trait OutputFormatter[R] extends AutoCloseable {
   def close()
 }
 
-/** Renders a value through a [[muster.Producer]] into a [[muster.Producible]]
+/** Renders a value through a [[muster.output.Producer]] into a [[muster.output.Producible]]
   *
   * @tparam R the type of value for the formatter in this renderer
   */
@@ -206,7 +206,7 @@ trait Renderer[R] {
   /** Perform the rendering
     *
     * @param out the subject to render
-    * @param producer the [[muster.Producer]] for [[T]]
+    * @param producer the [[muster.output.Producer]] for T
     * @tparam T the type of subject to render
     * @return the result of the rendering, as dictacted by the formatter
     */

@@ -2,9 +2,7 @@ package muster
 
 import scala.annotation.implicitNotFound
 
-/**
- * Companion object with default map key serialzers
- */
+/** Companion object with default map key serialzers */
 object MapKeySerializer {
 
   /** A string key serializer, identity basically */
@@ -35,7 +33,7 @@ object MapKeySerializer {
 /** A map key serializer type class
   *
   * This is used to serialize keys for maps and map like values to and from string.
-  * @tparam T
+  * @tparam T the type of key this serializer can deal with
   */
 @implicitNotFound("Couldn't find a map key serializer for ${T}, try to import muster._ or implement a muster.MapKeySerializer[${T}]")
 trait MapKeySerializer[T] {
