@@ -80,66 +80,65 @@ private object JacksonInputCursor {
 
     override def hasNextNode: Boolean = source.asInstanceOf[JArrayNode].size() > idx
   }
-
-
 }
 
 private[jackson] trait JacksonInputCursor[R] extends InputCursor[R] {
 
-    import JacksonInputCursor._
-    protected def node: JsonNode
+  import JacksonInputCursor._
 
-    def readArrayOpt(): Option[ArrayNode] = {
-      val node = this.node
-      if (node.isNull || node.isMissingNode) None
-      else if (node.isArray) Some(new JacksonArrayNode(node))
-      else throw new MappingException(s"Expected an array but found a ${node.getClass.getSimpleName}")
-    }
+  protected def node: JsonNode
 
-    def readObjectOpt(): Option[ObjectNode] = {
-      val node = this.node
-      if (node.isNull || node.isMissingNode) None
-      else if (node.isObject) Some(new JacksonObjectNode(node))
-      else throw new MappingException(s"Expected an object but found a ${node.getClass.getSimpleName}")
-    }
-
-    def readStringOpt(): Option[TextNode] = {
-      val node = this.node
-      if (node.isNull || node.isMissingNode) None
-      else if (node.isTextual) Some(TextNode(node.asText()))
-      else throw new MappingException(s"Expected a string but found a ${node.getClass.getSimpleName}")
-    }
-
-    def readBooleanOpt(): Option[BoolNode] = {
-      val node = this.node
-      if (node.isNull || node.isMissingNode) None
-      else if (node.isBoolean) {
-        Some(if (node.asBoolean()) TrueNode else FalseNode)
-      }
-      else throw new MappingException(s"Expected a boolean but found a ${node.getClass.getSimpleName}")
-    }
-
-    def readNumberOpt(): Option[NumberNode] = {
-      val node = this.node
-      if (node.isNull || node.isMissingNode) None
-      else if (node.isNumber) Some(NumberNode(node.asText()))
-      else if (node.isTextual) Some(NumberNode(node.asText()))
-      else throw new MappingException(s"Expected a number but found a ${node.getClass.getSimpleName}")
-    }
-
-    def nextNode(): AstNode[_] = {
-      val node = this.node
-      if (node.isNull) NullNode
-      else if (node.isMissingNode) UndefinedNode
-      else if (node.isArray) new JacksonArrayNode(node)
-      else if (node.isObject) new JacksonObjectNode(node)
-      else if (node.isTextual) TextNode(node.asText())
-      else if (node.isNumber) NumberNode(node.asText())
-      else if (node.isBoolean) {
-        if (node.asBoolean()) TrueNode else FalseNode
-      } else throw new MappingException("Unable to determine the type of this json")
-    }
+  def readArrayOpt(): Option[ArrayNode] = {
+    val node = this.node
+    if (node.isNull || node.isMissingNode) None
+    else if (node.isArray) Some(new JacksonArrayNode(node))
+    else throw new MappingException(s"Expected an array but found a ${node.getClass.getSimpleName}")
   }
+
+  def readObjectOpt(): Option[ObjectNode] = {
+    val node = this.node
+    if (node.isNull || node.isMissingNode) None
+    else if (node.isObject) Some(new JacksonObjectNode(node))
+    else throw new MappingException(s"Expected an object but found a ${node.getClass.getSimpleName}")
+  }
+
+  def readStringOpt(): Option[TextNode] = {
+    val node = this.node
+    if (node.isNull || node.isMissingNode) None
+    else if (node.isTextual) Some(TextNode(node.asText()))
+    else throw new MappingException(s"Expected a string but found a ${node.getClass.getSimpleName}")
+  }
+
+  def readBooleanOpt(): Option[BoolNode] = {
+    val node = this.node
+    if (node.isNull || node.isMissingNode) None
+    else if (node.isBoolean) {
+      Some(if (node.asBoolean()) TrueNode else FalseNode)
+    }
+    else throw new MappingException(s"Expected a boolean but found a ${node.getClass.getSimpleName}")
+  }
+
+  def readNumberOpt(): Option[NumberNode] = {
+    val node = this.node
+    if (node.isNull || node.isMissingNode) None
+    else if (node.isNumber) Some(NumberNode(node.asText()))
+    else if (node.isTextual) Some(NumberNode(node.asText()))
+    else throw new MappingException(s"Expected a number but found a ${node.getClass.getSimpleName}")
+  }
+
+  def nextNode(): AstNode[_] = {
+    val node = this.node
+    if (node.isNull) NullNode
+    else if (node.isMissingNode) UndefinedNode
+    else if (node.isArray) new JacksonArrayNode(node)
+    else if (node.isObject) new JacksonObjectNode(node)
+    else if (node.isTextual) TextNode(node.asText())
+    else if (node.isNumber) NumberNode(node.asText())
+    else if (node.isBoolean) {
+      if (node.asBoolean()) TrueNode else FalseNode
+    } else throw new MappingException("Unable to determine the type of this json")
+  }
+}
 
 
 
