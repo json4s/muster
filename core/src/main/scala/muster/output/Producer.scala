@@ -1,6 +1,8 @@
 package muster
+package output
 
 import muster.jackson.util.ISO8601Utils
+import muster.util.SafeSimpleDateFormat
 
 import scala.annotation.implicitNotFound
 import scala.language.experimental.macros
@@ -11,51 +13,7 @@ import scala.reflect.ClassTag
 import java.text.DateFormat
 import scala.collection.concurrent.TrieMap
 
-
-/** Receives a value and pushes that into the output formatter
-  *
-  * This is the main extension point for registering custom serializers
-  *
-  * @example a custom serializer for a person
-  *          {{{
-  *          case class Address(firstLine: String, secondLine: Option[String], postcode: String, state: String, country: String)
-  *          case class Person(id: Int, name: String, addresses: Seq[Address])
-  *
-  *          implicit object PersonProducer extends Producer[Person] {
-  *            def produce(value: Person, formatter: OutputFormatter[_]) {
-  *              formatter.startObject()
-  *
-  *              formatter.startField("id")
-  *              formatter.int(value.id)
-  *
-  *              formatter.startField("name")
-  *              formatter.string(person.name)
-  *
-  *              val arrProducer = implicitly[Producer[Seq[Address]]]
-  *              arrProducer.produce(value.addresses, formatter)
-  *
-  *              formatter.endObject()
-  *            }
-  *          }
-  *          }}}
-  *
-  * @example a producer for a string
-  *          {{{
-  *            new Producer[String] {
-  *              def produce(value: String, formatter: OutputFormatter[_]) {
-  *                formatter.string(value)
-  *              }
-  *            }
-  *          }}}
-  *
-  * @tparam T the type of value this producer knows about
-  */
-@implicitNotFound("Couldn't find a producer for ${T}. Try importing muster._ or to implement a muster.Consumable")
-trait Producer[T] {
-  def produce(value: T, formatter: OutputFormatter[_])
-}
-
-/** The companion object for a [[muster.Producer]]
+/** The companion object for a [[muster.output.Producer]]
   *
   * This object holds the macro that generates the ad-hoc producers and all the predefined conversions
   */
@@ -199,19 +157,19 @@ object Producer {
   private[this] val safeFormatterPool = TrieMap.empty[String, DateFormat]
 
   /** Creates a date producer for the specified pattern
-    * 
+    *
     * The date producer is backed by a java.text.DateFormat but a thread-safe one
     * @param pattern the [[java.text.SimpleDateFormat]] pattern to use
-    * @return 
+    * @return
     */
   def dateProducer(pattern: String): Producer[Date] = {
-    dateProducerFromFormat(safeFormatterPool.getOrElseUpdate(pattern, new util.SafeSimpleDateFormat(pattern)))
+    dateProducerFromFormat(safeFormatterPool.getOrElseUpdate(pattern, new SafeSimpleDateFormat(pattern)))
   }
 
   /** Creates a date producer from a date format, make sure the date format is thread safe
     *
     * @param format the [[java.text.DateFormat]] to use for this date producer
-    * @return the [[muster.Producer]] for a [[java.util.Date]]
+    * @return the [[muster.output.Producer]] for a [[java.util.Date]]
     */
   def dateProducerFromFormat(format: DateFormat): Producer[Date] = sp[Date]((fmt, v) => fmt string format.format(v))
 
@@ -258,8 +216,8 @@ object Producer {
       }
       Block(
         Apply(
-          Select(formatter, TermName("startObject")), 
-          Literal(Constant(sym.name.decodedName.toString))::Nil) :: 
+          Select(formatter, TermName("startObject")),
+          Literal(Constant(sym.name.decodedName.toString))::Nil) ::
         fieldTrees.reverse.flatten,
         Apply(Select(formatter, TermName("endObject")), Nil))
 
@@ -278,4 +236,47 @@ object Producer {
       c.abort(c.enclosingPosition, "Values, Lists, Options and Maps don't use macros")
     }
   }
+}
+
+/** Receives a value and pushes that into the output formatter
+  *
+  * This is the main extension point for registering custom serializers
+  *
+  * @example a custom serializer for a person
+  *          {{{
+  *          case class Address(firstLine: String, secondLine: Option[String], postcode: String, state: String, country: String)
+  *          case class Person(id: Int, name: String, addresses: Seq[Address])
+  *
+  *          implicit object PersonProducer extends Producer[Person] {
+  *            def produce(value: Person, formatter: OutputFormatter[_]) {
+  *              formatter.startObject()
+  *
+  *              formatter.startField("id")
+  *              formatter.int(value.id)
+  *
+  *              formatter.startField("name")
+  *              formatter.string(person.name)
+  *
+  *              val arrProducer = implicitly[Producer[Seq[Address]]]
+  *              arrProducer.produce(value.addresses, formatter)
+  *
+  *              formatter.endObject()
+  *            }
+  *          }
+  *          }}}
+  *
+  * @example a producer for a string
+  *          {{{
+  *            new Producer[String] {
+  *              def produce(value: String, formatter: OutputFormatter[_]) {
+  *                formatter.string(value)
+  *              }
+  *            }
+  *          }}}
+  *
+  * @tparam T the type of value this producer knows about
+  */
+@implicitNotFound("Couldn't find a producer for ${T}. Try importing muster._ or to implement a muster.Consumable")
+trait Producer[T] {
+  def produce(value: T, formatter: OutputFormatter[_])
 }

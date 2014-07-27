@@ -2,6 +2,7 @@ package muster
 package codec
 package string
 
+import muster.output.{Renderer, OutputFormatter}
 import muster.util.Quoter
 
 import scala.collection.mutable

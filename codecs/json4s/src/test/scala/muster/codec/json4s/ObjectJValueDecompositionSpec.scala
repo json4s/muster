@@ -7,6 +7,7 @@ import java.util.{Date, TimeZone}
 import java.util
 
 import muster.codec.json.{Aliased, Ac}
+import muster.output.OutputFormatter
 import muster.util.SafeSimpleDateFormat
 import org.json4s._
 import JsonDSL._

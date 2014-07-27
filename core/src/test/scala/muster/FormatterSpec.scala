@@ -1,5 +1,6 @@
 package muster
 
+import muster.output.Renderer
 import org.specs2.{ScalaCheck, Specification}
 import java.util.TimeZone
 import org.scalacheck.{Gen, Arbitrary}

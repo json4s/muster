@@ -22,4 +22,23 @@ package object muster {
   type Consumer[T] = input.Consumer[T]
   val Consumer = input.Consumer
 
+  type Producible[T, R] = output.Producible[T, R]
+  val Producible = output.Producible
+  type FileProducible = output.FileProducible
+  val FileProducible = output.FileProducible
+  type OutputStreamProducible = output.OutputStreamProducible
+  val OutputStreamProducible = output.OutputStreamProducible
+  type ByteChannelProducible = output.ByteChannelProducible
+  val ByteChannelProducible = output.ByteChannelProducible
+  type WriterProducible = output.WriterProducible
+  val WriterProducible = output.WriterProducible
+  val ByteArrayProducible = output.ByteArrayProducible
+  val ByteBufferProducible = output.ByteBufferProducible
+  val StringProducible = output.StringProducible
+  
+  
+  type Producer[T] = output.Producer[T]
+  val Producer = output.Producer
+  
+
 }

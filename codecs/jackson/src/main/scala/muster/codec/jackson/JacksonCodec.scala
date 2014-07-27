@@ -11,12 +11,13 @@ import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper, Jso
 import com.fasterxml.jackson.databind.node.MissingNode
 import muster.codec.json.JsonRenderer
 import muster.input.InputFormat
+import muster.output.Renderer
 
 import scala.util.Try
 
 /** Provides a codec using the jackson library for dealing with json
   *
-  * It combines a [[muster.Renderer]] with a [[muster.input.InputFormat]] to provide
+  * It combines a [[Renderer]] with a [[muster.input.InputFormat]] to provide
   * bidirectional encoding and decoding of JSON streams
   */
 object JacksonCodec extends JsonRenderer(StringProducible) with InputFormat[Consumable[_], JacksonInputCursor[_]] {

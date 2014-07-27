@@ -8,6 +8,7 @@ import java.nio.channels.Channels
 import muster.ast._
 import muster.codec.json.JsonRenderer
 import muster.input.InputFormat
+import muster.output.Renderer
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -15,7 +16,7 @@ import scala.util.Try
 
 /** Provides a codec using the jawn library for dealing with json
   *
-  * It combines a [[muster.Renderer]] with a [[InputFormat]] to provide
+  * It combines a [[Renderer]] with a [[InputFormat]] to provide
   * bidirectional encoding and decoding of JSON streams
   */
 object JawnCodec extends JsonRenderer(StringProducible) with InputFormat[Consumable[_], JawnInputCursor] {

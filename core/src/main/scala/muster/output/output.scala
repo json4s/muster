@@ -1,4 +1,5 @@
 package muster
+package output
 
 /** Formats output for use when a producer renders to a producible
   *

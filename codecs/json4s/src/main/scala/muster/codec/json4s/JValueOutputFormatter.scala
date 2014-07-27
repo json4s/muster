@@ -2,6 +2,7 @@ package muster
 package codec
 package json4s
 
+import muster.output.{Renderer, OutputFormatter}
 import muster.util.State
 import org.json4s.JsonAST._
 

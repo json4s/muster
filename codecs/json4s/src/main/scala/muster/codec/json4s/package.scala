@@ -2,6 +2,7 @@ package muster
 package codec
 
 import muster.ast._
+import muster.output.OutputFormatter
 import org.json4s.JsonAST._
 
 import scala.language.implicitConversions

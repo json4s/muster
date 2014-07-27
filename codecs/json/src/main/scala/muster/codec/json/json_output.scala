@@ -5,6 +5,7 @@ package json
 import java.io._
 import java.nio.ByteBuffer
 
+import muster.output.{Renderer, OutputFormatter}
 import muster.util.State
 import muster.util.Quoter
 import scala.collection.mutable

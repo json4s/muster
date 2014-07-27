@@ -1,4 +1,5 @@
 package muster
+package output
 
 import java.io._
 import java.nio.ByteBuffer
@@ -6,24 +7,6 @@ import java.nio.channels.{FileChannel, WritableByteChannel}
 import java.nio.file.Paths
 
 import scala.annotation.implicitNotFound
-
-/** The companion object for a Producible, contains the default implicit conversions */
-object Producible {
-
-  import scala.language.implicitConversions
-
-  /** Implicit conversion from a [[java.io.File]] to a [[muster.Producible]] */
-  implicit def fileProducible(value: File) = FileProducible(value)
-
-  /** Implicit conversion from a [[java.io.Writer]] to a [[muster.Producible]] */
-  implicit def writerProducible(value: java.io.Writer) = WriterProducible(value)
-
-  /** Implicit conversion from a [[java.io.OutputStream]] to a [[muster.Producible]] */
-  implicit def outputStreamProducible(value: java.io.OutputStream) = OutputStreamProducible(value)
-
-  /** Implicit conversion from a [[java.nio.channels.WritableByteChannel]] to a [[muster.Producible]] */
-  implicit def byteChannelProducible(value: WritableByteChannel) = WritableByteChannelProducible(value)
-}
 
 /** Wraps an output target so that it can be used by a renderer
   *
@@ -34,6 +17,24 @@ object Producible {
 trait Producible[T, R] {
   def value: T
   def toAppendable: util.Appendable[R]
+}
+
+/** The companion object for a Producible, contains the default implicit conversions */
+object Producible {
+
+  import scala.language.implicitConversions
+
+  /** Implicit conversion from a [[java.io.File]] to a [[muster.output.Producible]] */
+  implicit def fileProducible(value: File) = FileProducible(value)
+
+  /** Implicit conversion from a [[java.io.Writer]] to a [[muster.output.Producible]] */
+  implicit def writerProducible(value: java.io.Writer) = WriterProducible(value)
+
+  /** Implicit conversion from a [[java.io.OutputStream]] to a [[muster.output.Producible]] */
+  implicit def outputStreamProducible(value: java.io.OutputStream) = OutputStreamProducible(value)
+
+  /** Implicit conversion from a [[java.nio.channels.WritableByteChannel]] to a [[muster.output.Producible]] */
+  implicit def byteChannelProducible(value: WritableByteChannel) = ByteChannelProducible(value)
 }
 
 /** Wraps a file as an output target, renderers will produce their output into this file
@@ -86,6 +87,6 @@ case object ByteBufferProducible extends Producible[ByteBuffer, ByteBuffer] {
   *
   * @param value the channel to produce the output onto
   */
-final case class WritableByteChannelProducible(value: WritableByteChannel) extends Producible[WritableByteChannel, Unit] {
+final case class ByteChannelProducible(value: WritableByteChannel) extends Producible[WritableByteChannel, Unit] {
   def toAppendable: util.Appendable[Unit] = util.Appendable.forWritableByteChannel(value)
 }
