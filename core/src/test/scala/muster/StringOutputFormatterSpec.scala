@@ -45,7 +45,7 @@ trait StringOutputFormatterSpec extends FormatterSpec[String] {
        fmt.string(x)
        val sb = new StringBuilder
        sb.append('"')
-       Quoter.jsonQuote(x, sb)
+       Quoter.jsonQuote(x, Appendable.forString(sb))
        sb.append('"')
        fmt.result must_== sb.toString()
      }

@@ -6,10 +6,10 @@ import scala.collection.mutable
 
 abstract class StringRenderer extends Renderer[String] {
   type Formatter = StringOutputFormatter
-  def createFormatter: Formatter = new StringOutputFormatter(new StringBuilder())
+  def createFormatter: Formatter = new StringOutputFormatter(Appendable.forString())
 }
 
-class StringOutputFormatter(val writer: Appendable[_, String], quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
+class StringOutputFormatter(val writer: Appendable[String], quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
 
   import Constants._
 

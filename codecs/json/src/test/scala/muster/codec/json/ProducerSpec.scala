@@ -87,7 +87,7 @@ A JSON Producer should
     (i: String) =>
       val sb = new StringBuilder()
       sb.append('"')
-      Quoter.jsonQuote(i, sb)
+      Quoter.jsonQuote(i, Appendable.forString(sb))
       sb.append('"')
       write(i) must_== sb.toString()
   }
@@ -122,7 +122,7 @@ A JSON Producer should
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k, sb)
+            Quoter.jsonQuote(k, Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append(v)
@@ -155,7 +155,7 @@ A JSON Producer should
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k, sb)
+            Quoter.jsonQuote(k, Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append('[')
@@ -196,7 +196,7 @@ A JSON Producer should
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k.toString, sb)
+            Quoter.jsonQuote(k.toString, Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append(v)
@@ -227,7 +227,7 @@ A JSON Producer should
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k.toString, sb)
+            Quoter.jsonQuote(k.toString, Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append('[')
@@ -266,7 +266,7 @@ A JSON Producer should
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k.toString, sb)
+            Quoter.jsonQuote(k.toString, Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append(v)
@@ -297,7 +297,7 @@ A JSON Producer should
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k.toString, sb)
+            Quoter.jsonQuote(k.toString, Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append('[')

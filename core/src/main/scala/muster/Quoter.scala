@@ -2,7 +2,7 @@ package muster
 
 object Quoter {
 
-  def jsonQuote(s: String, writer: Appendable[_, _]) {
+  def jsonQuote(s: String, writer: Appendable[_]) {
     var i = 0
     val l = s.length
     while (i < l) {
