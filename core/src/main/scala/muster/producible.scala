@@ -1,7 +1,7 @@
 package muster
 
 import java.io._
-import java.nio.ByteBuffer
+import java.nio.{CharBuffer, ByteBuffer}
 import java.nio.channels.{WritableByteChannel, Channels}
 
 import muster.Appendable.ByteArrayAppendable
@@ -17,6 +17,8 @@ object Producible {
   implicit def writerProducible(value: java.io.Writer) = WriterProducible(value)
 
   implicit def outputStreamProducible(value: java.io.OutputStream) = OutputStreamProducible(value)
+
+  implicit def byteChannleProducible(value: WritableByteChannel) = WritableByteChannelProducible(value)
 }
 
 @implicitNotFound("Couldn't find a producible for ${T}. Try importing muster._ or to implement a muster.Producible")
@@ -54,4 +56,24 @@ case object ByteBufferProducible extends Producible[ByteBuffer, ByteBuffer] {
   def value: ByteBuffer = ???
 
   def toAppendable: Appendable[ByteBuffer, ByteBuffer] = new ByteArrayOutputStream()
+}
+
+final case class WritableByteChannelProducible(value: WritableByteChannel) extends Producible[WritableByteChannel, Unit] {
+  def toAppendable: Appendable[WritableByteChannel, Unit] = new Appendable[WritableByteChannel, Unit] {
+    def append(s: String): Appendable[WritableByteChannel, Unit] = {
+      value.write(scala.io.Codec.UTF8.encoder.encode(CharBuffer.wrap(s)))
+      this
+    }
+
+    def result() {}
+
+    def flush() {}
+
+    def append(c: Char): Appendable[WritableByteChannel, Unit] = {
+      value.write(scala.io.Codec.UTF8.encoder.encode(CharBuffer.wrap(Array(c))))
+      this
+    }
+
+    def close() { value.close() }
+  }
 }
