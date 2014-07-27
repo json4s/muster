@@ -3,6 +3,7 @@ package codec
 package jawn
 
 import muster.ast._
+import muster.input.InputCursor
 
 import scala.collection.mutable
 

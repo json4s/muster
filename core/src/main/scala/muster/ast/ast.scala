@@ -1,6 +1,8 @@
 package muster
 package ast
 
+import muster.input.{AstCursor, CursorFailures}
+
 import scala.reflect.ClassTag
 
 // This no longer seems to be a problem, if it comes back will put the hack back in

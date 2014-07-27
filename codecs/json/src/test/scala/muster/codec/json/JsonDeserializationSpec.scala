@@ -4,6 +4,7 @@ import java.{util => jutil }
 import java.util.{Date, TimeZone}
 
 import muster._
+import muster.input.{InputFormat, InputCursor}
 import muster.util.SafeSimpleDateFormat
 import org.json4s.DefaultFormats
 import org.specs2.mutable.Specification

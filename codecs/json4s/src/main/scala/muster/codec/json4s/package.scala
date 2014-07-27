@@ -64,5 +64,5 @@ package object json4s {
     }
   }
 
-  implicit def jvalueConsumable(value: JValue): JValueConsumable = JValueConsumable(value)
+  implicit class JvalueConsumable(val value: JValue) extends Consumable[JValue]
 }

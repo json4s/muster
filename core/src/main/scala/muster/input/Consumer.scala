@@ -1,80 +1,24 @@
 package muster
+package input
 
 import java.{util => jutil}
 import java.util.{Locale, Date}
 
 import muster.ast._
 import muster.jackson.util.ISO8601Utils
+import muster.util.SafeSimpleDateFormat
 
 import scala.annotation.implicitNotFound
-import scala.collection.generic
 import scala.language.experimental.macros
 import scala.language.higherKinds
-import scala.reflect.ClassTag
 import scala.reflect.macros._
+import scala.collection.generic
+import scala.reflect.ClassTag
 import scala.util.Try
 
-/** The type class that allows for reading streams and building objects from those streams.
+/** Contains the macro implementation for the [[muster.input.Consumer]] type class and a bunch of default implementations
   *
-  * It receives an AST node and is expected to return the resulting target type from that node.
-  * Typically this happens with some pattern matches.
-  *
-  * @example A string consumer
-  *          {{{
-  *           implicit object StringConsumer extends Consumer[String] {
-  *             def consume(node: AstNode[_]): String = node match {
-  *               case TextNode(value) => value
-  *               case NumberNode(value) => value
-  *               case m: NumberNodeLike[_] => m.value.toString
-  *               case NullNode => null
-  *               case _ => throw new MappingException(s"Couldn't convert $node to String")
-  *             }
-  *           }
-  *          }}}
-  *
-  * @example A custom serializer for a person
-  *          {{{
-  *          case class Person(id: Long, name: String, age: Int)
-  *
-  *          implicit object PersonConsumer extends Consumer[Person] {
-  *            def consume(node: AstNode[_]): Person = node match {
-  *              case obj: ObjectNode =>
-  *                val addressesConsumer = implicitly[Consumer[Seq[Address]]]
-  *                Person(
-  *                  obj.readIntField("id"),
-  *                  obj.readStringField("name"),
-  *                  addressesConsumer.consume(obj.readArrayField("addresses"))
-  *                )
-  *              case _ => throw new MappingException(s"Can't convert a ${node.getClass} to a Person")
-  *            }
-  *          }
-  *          }}}
-  *
-  * @tparam S The type of object this consumer builds
-  */
-@implicitNotFound("Couldn't find a Consumer for ${S}. Try importing muster._ or to implement a muster.Consumer")
-trait Consumer[S] {
-
-  /** Converts a [[AstNode]] into the type [[S]]
-    *
-    * @param node the [[AstNode]] to convert
-    * @return a [[S]]
-    * @throws a [[muster.MappingException]] when the node couldn't be converted into [[S]]
-    * @throws a [[muster.ParseException]] when the source stream contains invalid characters
-    */
-  def consume(node: AstNode[_]): S
-
-  /** Provides a recovery mechanism for certain exceptions
-    *
-    * This is useful for options and disjunctions
-    * @return the recovered value if there is one for the provided exception
-    */
-  def recover: Consumer.ErrorHandler[S] = PartialFunction.empty[Throwable, S]
-}
-
-/** Contains the macro implementation for the [[muster.Consumer]] type class and a bunch of default implementations
-  *
-  * @see [[muster.Consumer]]
+  * @see [[muster.input.Consumer]]
   */
 object Consumer {
 
@@ -168,11 +112,11 @@ object Consumer {
     * @see http://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html
     * @param pattern the simple date format pattern
     * @param locale the locale to use for this date consumer
-    * @return a [[muster.Consumer]] that produces a [[java.util.Date]]
+    * @return a [[muster.input.Consumer]] that produces a [[java.util.Date]]
     */
-  def dateConsumer(pattern: String, locale: Locale = util.SafeSimpleDateFormat.DefaultLocale) = {
+  def dateConsumer(pattern: String, locale: Locale = SafeSimpleDateFormat.DefaultLocale) = {
     cc[Date]({
-      case TextNode(value) => new util.SafeSimpleDateFormat(pattern, locale).parse(value)
+      case TextNode(value) => new SafeSimpleDateFormat(pattern, locale).parse(value)
       case m: NumberNodeLike[_] => new Date(m.toLong)
       case NullNode => null
     })
@@ -181,11 +125,11 @@ object Consumer {
   /** A map consumer, reads scala map objects
     *
     * @param keySerializer the [[muster.MapKeySerializer]] to use for serializing keys of type [[K]] to a string
-    * @param valueConsumer the [[muster.Consumer]] to use for reading the values into the map
+    * @param valueConsumer the [[muster.input.Consumer]] to use for reading the values into the map
     * @tparam F the type of map to build
     * @tparam K the type for the key of the [[F]]
     * @tparam V the type for the value of the [[F]]
-    * @return a [[muster.Consumer]] that consumes [[F]] for types [[K]] and [[V]]
+    * @return a [[muster.input.Consumer]] that consumes [[F]] for types [[K]] and [[V]]
     */
   implicit def mapConsumer[F[_, _], K, V](implicit cbf: generic.CanBuildFrom[F[_, _], (K, V), F[K, V]], keySerializer: MapKeySerializer[K], valueConsumer: Consumer[V]) = new Consumer[F[K, V]] {
     def consume(node: AstNode[_]) = node match {
@@ -203,10 +147,10 @@ object Consumer {
   /** A traversable consumer, reads scala collections
     *
     * @param cbf the [[scala.collection.generic.CanBuildFrom]] for the traversable to build
-    * @param valueReader the [[muster.Consumer]] to read the values for this traversable
+    * @param valueReader the [[muster.input.Consumer]] to read the values for this traversable
     * @tparam F the type of collection to build
     * @tparam V the value type for the collection elements
-    * @return a [[muster.Consumer]] for the traversable defined by [[F]]
+    * @return a [[muster.input.Consumer]] for the traversable defined by [[F]]
     */
   implicit def traversableConsumer[F[_], V](implicit cbf: generic.CanBuildFrom[F[_], V, F[V]], valueReader: Consumer[V]): Consumer[F[V]] =
     new Consumer[F[V]] {
@@ -276,9 +220,9 @@ object Consumer {
   /** An array consumer, reads an array
     *
     * @param ct the class tag of the element type
-    * @param valueReader the [[muster.Consumer]] for the element type
+    * @param valueReader the [[muster.input.Consumer]] for the element type
     * @tparam T the element type
-    * @return a [[muster.Consumer]] for a [[scala.Array]] of type [[T]]
+    * @return a [[muster.input.Consumer]] for a [[scala.Array]] of type [[T]]
     */
   implicit def arrayConsumer[T](implicit ct: ClassTag[T], valueReader: Consumer[T]): Consumer[Array[T]] = cc[Array[T]] {
     case m: ArrayNode =>
@@ -294,7 +238,7 @@ object Consumer {
     *
     * @param valueReader the reader for the type [[T]]
     * @tparam T the value type of the option
-    * @return a [[muster.Consumer]] for a [[scala.Option]] of type [[T]]
+    * @return a [[muster.input.Consumer]] for a [[scala.Option]] of type [[T]]
     */
   implicit def optionConsumer[T](implicit valueReader: Consumer[T]): Consumer[Option[T]] = new Consumer[Option[T]] {
 
@@ -326,7 +270,7 @@ object Consumer {
     *
     * @param valueReader the reader for the right side of the either
     * @tparam R The value type for the right side of the either
-    * @return a [[muster.Consumer]] for a [[scala.Either]]
+    * @return a [[muster.input.Consumer]] for a [[scala.Either]]
     */
   implicit def throwableEitherConsumer[R](implicit valueReader: Consumer[R]) = new Consumer[Either[Throwable, R]] {
      def consume(node: AstNode[_]): scala.Either[scala.Throwable, R] = {
@@ -347,7 +291,7 @@ object Consumer {
     * @param rightReader the reader to use for the right side of the either
     * @tparam L the type for the left side of the either
     * @tparam R the type for the right side of the either
-    * @return a [[muster.Consumer]] for a [[scala.Either]] of types [[L]] and [[R]]
+    * @return a [[muster.input.Consumer]] for a [[scala.Either]] of types [[L]] and [[R]]
     */
   implicit def eitherConsumer[L, R](implicit leftReader: Consumer[L], rightReader: Consumer[R]): Consumer[Either[L, R]] = new Consumer[Either[L,R]] {
      def consume(node: AstNode[_]): scala.Either[L, R] =
@@ -362,7 +306,7 @@ object Consumer {
     * This macro builds deserializers for instances of type [[T]].
     * The deserializer makes use of a [[AstNode]] to possibly walk the values for the properties of [[T]]
     * @tparam T the type to build instances for
-    * @return a [[muster.Consumer]] for instance of type [[T]]
+    * @return a [[muster.input.Consumer]] for instance of type [[T]]
     */
   implicit def consumer[T]: Consumer[T] = macro consumerImpl[T]
 
@@ -392,7 +336,7 @@ object Consumer {
       val tpe = _tpe.dealias
       val t = appliedType(weakTypeOf[Consumer[Any]].typeConstructor, tpe :: Nil)
       c.inferImplicitValue(t) match {
-        case EmptyTree => c.abort(c.enclosingPosition, s"Couldn't find a muster.Consumer[${t.typeSymbol.name.decodedName.toString}], try bringing an implicit value for ${tpe.typeSymbol.name.decodedName.toString} in scope by importing one or defining one.")
+        case EmptyTree => c.abort(c.enclosingPosition, s"Couldn't find a muster.input.Consumer[${t.typeSymbol.name.decodedName.toString}], try bringing an implicit value for ${tpe.typeSymbol.name.decodedName.toString} in scope by importing one or defining one.")
         case resolved =>
 
           val rdrOpt: Tree = {
@@ -548,4 +492,62 @@ object Consumer {
       }
     }
   }
+}
+
+/** The type class that allows for reading streams and building objects from those streams.
+  *
+  * It receives an AST node and is expected to return the resulting target type from that node.
+  * Typically this happens with some pattern matches.
+  *
+  * @example A string consumer
+  *          {{{
+  *           implicit object StringConsumer extends Consumer[String] {
+  *             def consume(node: AstNode[_]): String = node match {
+  *               case TextNode(value) => value
+  *               case NumberNode(value) => value
+  *               case m: NumberNodeLike[_] => m.value.toString
+  *               case NullNode => null
+  *               case _ => throw new MappingException(s"Couldn't convert $node to String")
+  *             }
+  *           }
+  *          }}}
+  *
+  * @example A custom serializer for a person
+  *          {{{
+  *          case class Person(id: Long, name: String, age: Int)
+  *
+  *          implicit object PersonConsumer extends Consumer[Person] {
+  *            def consume(node: AstNode[_]): Person = node match {
+  *              case obj: ObjectNode =>
+  *                val addressesConsumer = implicitly[Consumer[Seq[Address]]]
+  *                Person(
+  *                  obj.readIntField("id"),
+  *                  obj.readStringField("name"),
+  *                  addressesConsumer.consume(obj.readArrayField("addresses"))
+  *                )
+  *              case _ => throw new MappingException(s"Can't convert a ${node.getClass} to a Person")
+  *            }
+  *          }
+  *          }}}
+  *
+  * @tparam S The type of object this consumer builds
+  */
+@implicitNotFound("Couldn't find a Consumer for ${S}. Try importing muster._ or to implement a muster.input.Consumer")
+trait Consumer[S] {
+
+  /** Converts a [[AstNode]] into the type [[S]]
+    *
+    * @param node the [[AstNode]] to convert
+    * @return a [[S]]
+    * @throws a [[muster.MappingException]] when the node couldn't be converted into [[S]]
+    * @throws a [[muster.ParseException]] when the source stream contains invalid characters
+    */
+  def consume(node: AstNode[_]): S
+
+  /** Provides a recovery mechanism for certain exceptions
+    *
+    * This is useful for options and disjunctions
+    * @return the recovered value if there is one for the provided exception
+    */
+  def recover: Consumer.ErrorHandler[S] = PartialFunction.empty[Throwable, S]
 }

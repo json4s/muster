@@ -1,18 +1,48 @@
 package muster
+package input
 
-import java.nio.charset.Charset
 import java.nio.{CharBuffer, ByteBuffer}
 import java.nio.channels.ReadableByteChannel
+import java.nio.charset.{StandardCharsets, Charset}
 
 import scala.annotation.implicitNotFound
-import scala.io.Codec
+
+trait ImplementationForwarders {
+  type ByteArrayConsumable = input.ByteArrayConsumable
+  val ByteArrayConsumable = input.ByteArrayConsumable
+  type ByteBufferConsumable = input.ByteBufferConsumable
+  val ByteBufferConsumable = input.ByteBufferConsumable
+  type ByteChannelConsumable = input.ByteChannelConsumable
+  val ByteChannelConsumable = input.ByteChannelConsumable
+  type FileConsumable = input.FileConsumable
+  val FileConsumable = input.FileConsumable
+  type InputStreamConsumable = input.InputStreamConsumable
+  val InputStreamConsumable = input.InputStreamConsumable
+  type ReaderConsumable = input.ReaderConsumable
+  val ReaderConsumable = input.ReaderConsumable
+  type StringConsumable = input.StringConsumable
+  val StringConsumable = input.StringConsumable
+  type URLConsumable = input.URLConsumable
+  val URLConsumable = input.URLConsumable
+}
+
+/**
+ * A Consumable abstracts over various input sources and allows for picking a particular type of adapter
+ * based on the type of the concrete consumer
+ *
+ * @tparam T the type of resource to read from
+ */
+@implicitNotFound("Couldn't find a consumable for ${T}. Try importing muster._ or to implement a muster.Consumable")
+trait Consumable[T] {
+  def value: T
+}
 
 /**
  * The Consumable companion object contains the default implicit conversions
  */
 object Consumable {
   import scala.language.implicitConversions
-  
+
   /** Creates a file consumable from a file */
   implicit def fileConsumable(value: java.io.File): Consumable[java.io.File] = FileConsumable(value)
 
@@ -61,7 +91,7 @@ object Consumable {
     }
   }
 
-  def readerChannel(reader: java.io.Reader, charset: Charset = Codec.UTF8.charSet): ReadableByteChannel =
+  def readerChannel(reader: java.io.Reader, charset: Charset = StandardCharsets.UTF_8): ReadableByteChannel =
     new ReaderReadableChannel(reader, charset)
 
   private final class ReaderReadableChannel(reader: java.io.Reader, charset: Charset) extends ReadableByteChannel {
@@ -86,17 +116,6 @@ object Consumable {
       reader.close()
     }
   }
-}
-
-/**
- * A Consumable abstracts over various input sources and allows for picking a particular type of adapter
- * based on the type of the concrete consumer
- *
- * @tparam T the type of resource to read from
- */
-@implicitNotFound("Couldn't find a consumable for ${T}. Try importing muster._ or to implement a muster.Consumable")
-trait Consumable[T] {
-  def value: T
 }
 
 /**

@@ -12,9 +12,9 @@ package object api {
   }
 
   implicit class JValueConsumingObject(jv: JValue) {
-    def as[T](implicit consumer: Consumer[T]) = Json4sCodec.as[T](JValueConsumable(jv))
-    def tryAs[T](implicit consumer: Consumer[T]) = Try(as[T])
-    def getAs[T](implicit consumer: Consumer[T]) = jv match {
+    @inline def as[T](implicit consumer: Consumer[T]) = Json4sCodec.as[T](jv)
+    @inline def tryAs[T](implicit consumer: Consumer[T]) = Try(as[T])
+    @inline def getAs[T](implicit consumer: Consumer[T]) = jv match {
       case JNull | JNothing => None
       case _ => tryAs[T].toOption
     }

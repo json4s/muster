@@ -3,6 +3,7 @@ package codec
 package json4s
 
 import ast._
+import muster.input.InputCursor
 import org.json4s.JsonAST._
 
 object Json4sInputCursor {
@@ -85,11 +86,7 @@ object Json4sInputCursor {
   }
 
 }
-
-class EntryJValueInputCursor(val source: JValue) extends Json4sInputCursor[JValue] {
-  protected def node: JValue = source
-}
-sealed trait Json4sInputCursor[R] extends InputCursor[R] {
+private[json4s] trait Json4sInputCursor[R] extends InputCursor[R] {
 
   import Json4sInputCursor._
 
@@ -155,7 +152,6 @@ sealed trait Json4sInputCursor[R] extends InputCursor[R] {
   }
 }
 
-case class JValueConsumable(value: JValue) extends Consumable[JValue]
 
 
 

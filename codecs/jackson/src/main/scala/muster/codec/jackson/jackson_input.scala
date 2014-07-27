@@ -5,6 +5,7 @@ package jackson
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.{ArrayNode => JArrayNode}
 import muster.ast._
+import muster.input.InputCursor
 
 import scala.collection.JavaConverters._
 

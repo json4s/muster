@@ -4,6 +4,7 @@ package json
 
 import java.util.TimeZone
 
+import muster.input.{InputFormat, InputCursor}
 import muster.util
 import muster.util.Quoter
 import org.scalacheck.{Gen, Prop}
