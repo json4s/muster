@@ -2,39 +2,109 @@ package muster
 
 import scala.annotation.implicitNotFound
 import scala.language.experimental.macros
+import scala.language.higherKinds
 import scala.reflect.macros._
 import java.util.Date
 import scala.reflect.ClassTag
 import java.text.DateFormat
 import scala.collection.concurrent.TrieMap
 import scala.collection.immutable
-import scala.collection.mutable
 
 
+/** Receives a value and pushes that into the output formatter
+  *
+  * This is the main extension point for registering custom serializers
+  *
+  * @example a custom serializer for a person
+  *          {{{
+  *          case class Address(firstLine: String, secondLine: Option[String], postcode: String, state: String, country: String)
+  *          case class Person(id: Int, name: String, addresses: Seq[Address])
+  *
+  *          implicit object PersonProducer extends Producer[Person] {
+  *            def produce(value: Person, formatter: OutputFormatter[_]) {
+  *              formatter.startObject()
+  *
+  *              formatter.startField("id")
+  *              formatter.int(value.id)
+  *
+  *              formatter.startField("name")
+  *              formatter.string(person.name)
+  *
+  *              val arrProducer = implicitly[Producer[Seq[Address]]]
+  *              arrProducer.produce(value.addresses, formatter)
+  *
+  *              formatter.endObject()
+  *            }
+  *          }
+  *          }}}
+  *
+  * @example a producer for a string
+  *          {{{
+  *            new Producer[String] {
+  *              def produce(value: String, formatter: OutputFormatter[_]) {
+  *                formatter.string(value)
+  *              }
+  *            }
+  *          }}}
+  *
+  * @tparam T the type of value this producer knows about
+  */
 @implicitNotFound("Couldn't find a producer for ${T}. Try importing muster._ or to implement a muster.Consumable")
 trait Producer[T] {
   def produce(value: T, formatter: OutputFormatter[_])
 }
 
+/** The companion object for a [[muster.Producer]]
+  *
+  * This object holds the macro that generates the ad-hoc producers and all the predefined conversions
+  */
 object Producer {
   private[Producer] abstract class SP[T](fn: (OutputFormatter[_], T) => Unit) extends Producer[T] {
     def produce(value: T, formatter: OutputFormatter[_]): Unit = fn(formatter, value)
   }
   private[Producer] def sp[T](fn: (OutputFormatter[_], T) => Unit): Producer[T] = new SP[T](fn) {}
+
+  /** formats byte values */
   implicit object ByteProducer extends SP[Byte](_ byte _)
+
+  /** formats short values */
   implicit object ShortProducer extends SP[Short](_ short _)
+
+  /** formats int values */
   implicit object IntProducer extends SP[Int](_ int _)
+
+  /** formats long values */
   implicit object LongProducer extends SP[Long](_ long _)
+
+  /** formats big int values */
   implicit object BigIntProducer extends SP[BigInt](_ bigInt _)
+
+  /** formats float values */
   implicit object FloatProducer extends SP[Float](_ float _)
+
+  /** formats double values */
   implicit object DoubleProducer extends SP[Double](_ double _)
   implicit object BigDecimalProducer extends SP[BigDecimal](_ bigDecimal _)
+
+  /** formats byte values */
   implicit object JavaByteProducer extends SP[java.lang.Byte](_ byte _)
+
+  /** formats short values */
   implicit object JavaShortProducer extends SP[java.lang.Short](_ short _)
+
+  /** formats int values */
   implicit object JavaIntProducer extends SP[java.lang.Integer](_ int _)
+
+  /** formats long values */
   implicit object JavaLongProducer extends SP[java.lang.Long](_ long _)
+
+  /** formats big int values */
   implicit object JavaBigIntProducer extends SP[java.math.BigInteger](_ bigInt _)
+
+  /** formats float values */
   implicit object JavaFloatProducer extends SP[java.lang.Float](_ float _)
+
+  /** formats double values */
   implicit object JavaDoubleProducer extends SP[java.lang.Double](_ double _)
   implicit object JavaBigDecimalProducer extends SP[java.math.BigDecimal](_ bigDecimal _)
   implicit object BooleanProducer extends SP[Boolean](_ boolean _)
@@ -42,32 +112,19 @@ object Producer {
   implicit object StringProducer extends SP[String](_ string _)
   implicit object SymbolProducer extends SP[scala.Symbol](_ string _.name)
 
-  implicit def arrayProducer[T](implicit ct: ClassTag[T], valueProducer: Producer[T]): Producer[Array[T]] =
-    sp[Array[T]] { (fmt, arr) =>
-      fmt.startArray("Array")
-      arr.foreach(valueProducer.produce(_, fmt))
-      fmt.endArray()
-    }
-
-  implicit def genMapProducer[K, T](implicit keySerializer: MapKeySerializer[K], valueProducer: Producer[T]): Producer[collection.GenMap[K, T]] =
-    sp[collection.GenMap[K, T]] { (fmt, v) =>
-      fmt.startObject(v.getClass.getSimpleName)
-      v foreach { kv =>
-        fmt.startField(keySerializer.serialize(kv._1))
-        valueProducer.produce(kv._2, fmt)
+  implicit def mapProducer[F[_, _] <: collection.Map[_, _], K, V](implicit keySerializer: MapKeySerializer[K], valueProducer: Producer[V]): Producer[F[K, V]] = {
+    new Producer[F[K, V]] {
+      def produce(value: F[K, V], formatter: OutputFormatter[_]) {
+        formatter.startObject(v.getClass.getName)
+        val v = value.asInstanceOf[collection.Map[K, V]]
+        v.foreach { (kv: (K, V)) =>
+          formatter.startField(keySerializer.serialize(kv._1))
+          valueProducer.produce(kv._2, formatter)
+        }
+        formatter.endObject()
       }
-      fmt.endObject()
     }
-
-  implicit def mapProducer[K, T](implicit keySerializer: MapKeySerializer[K], valueProducer: Producer[T]): Producer[immutable.Map[K, T]] =
-    sp[immutable.Map[K, T]] { (fmt, v) =>
-      fmt.startObject(v.getClass.getSimpleName)
-      v foreach { kv =>
-        fmt.startField(keySerializer.serialize(kv._1))
-        valueProducer.produce(kv._2, fmt)
-      }
-      fmt.endObject()
-    }
+  }
 
   implicit def javaMapProducer[K, T](implicit keySerializer: MapKeySerializer[K], valueProducer: Producer[T]): Producer[java.util.Map[K, T]] =
     sp[java.util.Map[K, T]] { (fmt, v) =>
@@ -82,20 +139,21 @@ object Producer {
     }
 
 
-//  implicit class traversableProducer[C, T <: Traversable[C]]
-  implicit def traversableProducer[C](implicit valueProducer: Producer[C]) =
-    sp[collection.Traversable[C]] { (fmt, v) =>
-      fmt.startArray(v.getClass.getSimpleName)
-      v foreach (valueProducer.produce(_, fmt))
+  implicit def arrayProducer[T](implicit ct: ClassTag[T], valueProducer: Producer[T]): Producer[Array[T]] =
+    sp[Array[T]] { (fmt, arr) =>
+      fmt.startArray("Array")
+      arr.foreach(valueProducer.produce(_, fmt))
       fmt.endArray()
     }
 
-  implicit def listProducer[T](implicit valueProducer: Producer[T]) =
-    sp[immutable.List[T]] { (fmt, v) =>
+
+  implicit def traversableProducer[C[_] <: Traversable[_], T](implicit valueProducer: Producer[T]): Producer[C[T]] =
+    sp[C[T]] { (fmt, v) =>
       fmt.startArray(v.getClass.getSimpleName)
-      v foreach (valueProducer.produce(_, fmt))
+      v.asInstanceOf[Traversable[T]].foreach(vv => valueProducer.produce(vv, fmt))
       fmt.endArray()
     }
+
   implicit def javaListProducer[T](implicit valueProducer: Producer[T]) =
     sp[java.util.List[T]] { (fmt, v) =>
       fmt.startArray(v.getClass.getSimpleName)
@@ -106,48 +164,11 @@ object Producer {
       fmt.endArray()
     }
 
-  implicit def vectorProducer[T](implicit valueProducer: Producer[T]) =
-    sp[immutable.Vector[T]] { (fmt, v) =>
-      fmt.startArray(v.getClass.getSimpleName)
-      v foreach (valueProducer.produce(_, fmt))
-      fmt.endArray()
-    }
-
-  implicit def mutableListProducer[T](implicit valueProducer: Producer[T]) =
-    sp[mutable.ListBuffer[T]] { (fmt, v) =>
-      fmt.startArray(v.getClass.getSimpleName)
-      v foreach (valueProducer.produce(_, fmt))
-      fmt.endArray()
-    }
-  implicit def seqProducer[T](implicit valueProducer: Producer[T]) =
-    sp[Seq[T]] { (fmt, v) =>
-      fmt.startArray(v.getClass.getSimpleName)
-      v foreach (valueProducer.produce(_, fmt))
-      fmt.endArray()
-    }
-  implicit def setProducer[T](implicit valueProducer: Producer[T]) =
-    sp[immutable.Set[T]] { (fmt, v) =>
-      fmt.startArray(v.getClass.getSimpleName)
-      v foreach (valueProducer.produce(_, fmt))
-      fmt.endArray()
-    }
   implicit def javaSetProducer[T](implicit valueProducer: Producer[T]) =
     sp[java.util.Set[T]] { (fmt, v) =>
       fmt.startArray(v.getClass.getSimpleName)
       val iter = v.iterator()
       while(iter.hasNext) { valueProducer.produce(iter.next(), fmt) }
-      fmt.endArray()
-    }
-  implicit def mutableSeqProducer[T](implicit valueProducer: Producer[T]) =
-    sp[mutable.Seq[T]] { (fmt, v) =>
-      fmt.startArray(v.getClass.getSimpleName)
-      v foreach (valueProducer.produce(_, fmt))
-      fmt.endArray()
-    }
-  implicit def mutableSetProducer[T](implicit valueProducer: Producer[T]) =
-    sp[mutable.Set[T]] { (fmt, v) =>
-      fmt.startArray(v.getClass.getSimpleName)
-      v foreach (valueProducer.produce(_, fmt))
       fmt.endArray()
     }
 
