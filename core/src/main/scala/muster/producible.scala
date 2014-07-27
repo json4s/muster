@@ -1,6 +1,8 @@
 package muster
 
 import java.io._
+import java.nio.ByteBuffer
+import java.nio.channels.{WritableByteChannel, Channels}
 
 import scala.annotation.implicitNotFound
 
@@ -14,6 +16,18 @@ object Producible {
 
   implicit def outputStreamProducible(value: java.io.OutputStream) = OutputStreamProducible(value)
 
+  class ByteBufferBackedOutputStream(buffer: ByteBuffer) extends OutputStream {
+    @throws(classOf[IOException])
+    def write(b: Int) {
+      buffer.put(b.toByte)
+    }
+
+    @throws(classOf[IOException])
+    override def write(bytes: Array[Byte], off: Int, len: Int) {
+      buffer.put(bytes, off, len)
+    }
+
+  }
 }
 
 @implicitNotFound("Couldn't find a producible for ${T}. Try importing muster._ or to implement a muster.Producible")
@@ -28,7 +42,6 @@ final case class FileProducible(value: File) extends Producible[File, Unit] {
 
 case object StringProducible extends Producible[String, String] {
   def value: String = ???
-
   def toAppendable: Appendable[StringBuilder] = new StringBuilder
 }
 
@@ -39,10 +52,14 @@ final case class WriterProducible(value: java.io.Writer) extends Producible[java
 final case class OutputStreamProducible(value: java.io.OutputStream) extends Producible[java.io.OutputStream, Unit] {
   def toAppendable: Appendable[java.io.Writer] = new PrintWriter(value, true)
 }
-//
-//case object ByteArrayProducer extends Producible[Array[Byte], Array[Byte]] {
-//  val value: Array[Byte] = Array.empty[Byte]
-//  private[this] val bas = new ByteArrayInputStream(value)
-//
-//  def toAppendable: Appendable[_] = new PrintWriter(bas)
-//}
+
+final case class ByteArrayProducible(value: Array[Byte]) extends Producible[Array[Byte], Array[Byte]] {
+  import Producible._
+  def toAppendable: Appendable[java.io.Writer] = new PrintWriter(new ByteArrayOutputStream(), true)
+}
+
+final case class ByteBufferProducible(value: ByteBuffer) extends Producible[ByteBuffer, ByteBuffer] {
+  import Producible._
+
+  def toAppendable: Appendable[java.io.Writer] = new PrintWriter(new ByteBufferBackedOutputStream(value), true)
+}

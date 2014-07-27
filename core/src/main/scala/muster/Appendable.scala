@@ -1,5 +1,7 @@
 package muster
 
+import java.io.{PrintWriter, ByteArrayOutputStream}
+
 object Appendable {
 
   /**
@@ -7,8 +9,14 @@ object Appendable {
    * @param sb the string builder backing this appendable.
    */
    implicit class StringBuilderAppendable(sb: StringBuilder) extends  Appendable[StringBuilder] {
-     def append(s: String): StringBuilder = sb.append(s)
-     def append(c: Char): StringBuilder = sb.append(c)
+      def append(s: String): Appendable[StringBuilder] = {
+       sb.append(s)
+       this
+     }
+     def append(c: Char): Appendable[StringBuilder] = {
+       sb.append(c)
+       this
+     }
      def close() { sb.clear() }
      def flush() { }
 
@@ -20,12 +28,39 @@ object Appendable {
    * @param sb the writer backing this appendable
    */
    implicit class WriterAppendable(sb: java.io.Writer) extends  Appendable[java.io.Writer] {
-     def append(s: String): java.io.Writer = sb.append(s)
-     def append(c: Char): java.io.Writer = sb.append(c)
+     def append(s: String): Appendable[java.io.Writer] = {
+       sb.write(s)
+       this
+     }
+     def append(c: Char): Appendable[java.io.Writer] = {
+       sb.append(c)
+       this
+     }
      def close() { sb.close() }
      def flush() { sb.flush() }
 
      override def toString: String = sb.toString
+   }
+
+   implicit class ByteArrayAppendable(arr: Array[Byte]) extends Appendable[Array[Byte]] {
+     private[this] val strm = new PrintWriter(new ByteArrayOutputStream(), true)
+     def append(s: String): Appendable[Array[Byte]] = {
+       strm.append(s)
+       this
+     }
+
+     def flush() {
+       strm.flush()
+     }
+
+     def append(c: Char): Appendable[Array[Byte]] = {
+       strm.append(c)
+       this
+     }
+
+     def close(){
+       strm.close()
+     }
    }
  }
 
@@ -41,7 +76,7 @@ trait Appendable[T] extends AutoCloseable {
    * @param s the string to append
    * @return return the underlying object
    */
-  def append(s: String): T
-  def append(c: Char): T
+  def append(s: String): Appendable[T]
+  def append(c: Char): Appendable[T]
   def flush()
 }

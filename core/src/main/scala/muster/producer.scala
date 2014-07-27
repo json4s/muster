@@ -188,9 +188,9 @@ object Producer {
         val pTpe = appliedType(weakTypeOf[Producer[Any]], tt::Nil)
         val fVal: List[Tree] = c.inferImplicitValue(pTpe) match {
           case EmptyTree =>
-            c.error(c.enclosingPosition, s"Couldn't find an implicit ${pTpe}, try defining one or bringing one into scope")
+            c.error(c.enclosingPosition, s"Couldn't find an implicit $pTpe, try defining one or bringing one into scope")
             // error returns unit
-            c.abort(c.enclosingPosition, s"Couldn't find an implicit ${pTpe}, try defining one or bringing one into scope")
+            c.abort(c.enclosingPosition, s"Couldn't find an implicit $pTpe, try defining one or bringing one into scope")
           case x =>
             val pn = c.freshName("producer$")
             val ptn = TermName(pn)

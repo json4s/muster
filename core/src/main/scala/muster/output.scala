@@ -1,8 +1,9 @@
 package muster
 
-import java.util.Date
-import java.text.DateFormat
-
+/** Formats output for use when a producer renders to a producible
+  *
+  * @tparam R the type of value this formatter produces
+  */
 trait OutputFormatter[R] extends AutoCloseable {
   def startArray(name: String = ""): Unit
 

@@ -2,8 +2,11 @@ package muster
 package codec
 package json
 
+import java.io._
+
 import Constants._
 import scala.collection.mutable
+import scala.language.higherKinds
 
 object JsonRenderer {
   private final class StringJsonFormatter(protected val writer: Appendable[_], protected val spaces: Int = 0) extends JsonFormatter[String] {
@@ -24,6 +27,7 @@ object JsonRenderer {
 class JsonRenderer[T](producible: Producible[_, T], val indentSpaces: Int = 0) extends Renderer[T] {
   import JsonRenderer._
   type Formatter = OutputFormatter[T]
+
   def createFormatter: Formatter = {
     if (producible == StringProducible) new StringJsonFormatter(producible.toAppendable, indentSpaces).asInstanceOf[JsonFormatter[T]]
     else new UnitJsonFormatter(producible.toAppendable, indentSpaces).asInstanceOf[JsonFormatter[T]]
@@ -38,7 +42,7 @@ class JsonRenderer[T](producible: Producible[_, T], val indentSpaces: Int = 0) e
 
 trait JsonFormatter[T] extends OutputFormatter[T] {
 
-  protected def writer: muster.Appendable[_]
+  protected def writer: Appendable[_]
 
   protected def spaces: Int
 
@@ -50,7 +54,7 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
 
   private[this] val undefinedEraserBuffer = new mutable.StringBuilder()
 
-  private[this] var appendStrategy: muster.Appendable[_] = writer
+  private[this] var appendStrategy: Appendable[_] = writer
 
   def startArray(name: String = "") {
     writeComma(State.InArray)

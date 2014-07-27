@@ -4,6 +4,7 @@ import java.util
 import java.util.{Locale, Date}
 
 import muster.ast._
+import muster.jackson.util.ISO8601Utils
 
 import scala.annotation.implicitNotFound
 import scala.collection.generic
@@ -157,7 +158,7 @@ object Consumer {
 
   /** A Date consumer, reads ISO8601 dates that follow this pattern yyyy-MM-ddThh:mm:ss[.sss][Z|[+-]hh:mm] */
   implicit val Iso8601DateConsumer = cc[Date]({
-    case TextNode(value) => SafeSimpleDateFormat.Iso8601Formatter.parse(value)
+    case TextNode(value) => ISO8601Utils.parse(value)
     case m: NumberNodeLike[_] => new Date(m.toLong)
     case NullNode => null.asInstanceOf[Date]
   })
