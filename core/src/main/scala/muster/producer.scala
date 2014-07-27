@@ -1,5 +1,7 @@
 package muster
 
+import muster.jackson.util.ISO8601Utils
+
 import scala.annotation.implicitNotFound
 import scala.language.experimental.macros
 import scala.language.higherKinds
@@ -8,7 +10,6 @@ import java.util.Date
 import scala.reflect.ClassTag
 import java.text.DateFormat
 import scala.collection.concurrent.TrieMap
-import scala.collection.immutable
 
 
 /** Receives a value and pushes that into the output formatter
@@ -64,58 +65,71 @@ object Producer {
   }
   private[Producer] def sp[T](fn: (OutputFormatter[_], T) => Unit): Producer[T] = new SP[T](fn) {}
 
-  /** formats byte values */
+  /** serializes byte values */
   implicit object ByteProducer extends SP[Byte](_ byte _)
 
-  /** formats short values */
+  /** serializes short values */
   implicit object ShortProducer extends SP[Short](_ short _)
 
-  /** formats int values */
+  /** serializes int values */
   implicit object IntProducer extends SP[Int](_ int _)
 
-  /** formats long values */
+  /** serializes long values */
   implicit object LongProducer extends SP[Long](_ long _)
 
-  /** formats big int values */
+  /** serializes big int values */
   implicit object BigIntProducer extends SP[BigInt](_ bigInt _)
 
-  /** formats float values */
+  /** serializes float values */
   implicit object FloatProducer extends SP[Float](_ float _)
 
-  /** formats double values */
+  /** serializes double values */
   implicit object DoubleProducer extends SP[Double](_ double _)
+
+  /** serializes big decimal values */
   implicit object BigDecimalProducer extends SP[BigDecimal](_ bigDecimal _)
 
-  /** formats byte values */
+  /** serializes byte values */
   implicit object JavaByteProducer extends SP[java.lang.Byte](_ byte _)
 
-  /** formats short values */
+  /** serializes short values */
   implicit object JavaShortProducer extends SP[java.lang.Short](_ short _)
 
-  /** formats int values */
+  /** serializes int values */
   implicit object JavaIntProducer extends SP[java.lang.Integer](_ int _)
 
-  /** formats long values */
+  /** serializes long values */
   implicit object JavaLongProducer extends SP[java.lang.Long](_ long _)
 
-  /** formats big int values */
+  /** serializes big int values */
   implicit object JavaBigIntProducer extends SP[java.math.BigInteger](_ bigInt _)
 
-  /** formats float values */
+  /** serializes float values */
   implicit object JavaFloatProducer extends SP[java.lang.Float](_ float _)
 
-  /** formats double values */
+  /** serializes double values */
   implicit object JavaDoubleProducer extends SP[java.lang.Double](_ double _)
+
+  /** serializes big decimal values */
   implicit object JavaBigDecimalProducer extends SP[java.math.BigDecimal](_ bigDecimal _)
+
+  /** serializes boolean values */
   implicit object BooleanProducer extends SP[Boolean](_ boolean _)
+
+  /** serializes boolean values */
   implicit object JavaBooleanProducer extends SP[java.lang.Boolean](_ boolean _)
+
+  /** serializes string values */
   implicit object StringProducer extends SP[String](_ string _)
+
+  /** serializes symbol values */
   implicit object SymbolProducer extends SP[scala.Symbol](_ string _.name)
 
+  /** serializes map values */
   implicit def mapProducer[F[_, _] <: collection.Map[_, _], K, V](implicit keySerializer: MapKeySerializer[K], valueProducer: Producer[V]): Producer[F[K, V]] = {
     new Producer[F[K, V]] {
       def produce(value: F[K, V], formatter: OutputFormatter[_]) {
-        formatter.startObject(v.getClass.getName)
+        formatter.startObject(value.getClass.getName)
         val v = value.asInstanceOf[collection.Map[K, V]]
         v.foreach { (kv: (K, V)) =>
           formatter.startField(keySerializer.serialize(kv._1))
@@ -126,6 +140,7 @@ object Producer {
     }
   }
 
+  /** serializes map values */
   implicit def javaMapProducer[K, T](implicit keySerializer: MapKeySerializer[K], valueProducer: Producer[T]): Producer[java.util.Map[K, T]] =
     sp[java.util.Map[K, T]] { (fmt, v) =>
       fmt.startObject(v.getClass.getSimpleName)
@@ -138,7 +153,7 @@ object Producer {
       fmt.endObject()
     }
 
-
+  /** serializes array values */
   implicit def arrayProducer[T](implicit ct: ClassTag[T], valueProducer: Producer[T]): Producer[Array[T]] =
     sp[Array[T]] { (fmt, arr) =>
       fmt.startArray("Array")
@@ -146,7 +161,7 @@ object Producer {
       fmt.endArray()
     }
 
-
+  /** serializes traversable values */
   implicit def traversableProducer[C[_] <: Traversable[_], T](implicit valueProducer: Producer[T]): Producer[C[T]] =
     sp[C[T]] { (fmt, v) =>
       fmt.startArray(v.getClass.getSimpleName)
@@ -154,6 +169,7 @@ object Producer {
       fmt.endArray()
     }
 
+  /** serializes java list values */
   implicit def javaListProducer[T](implicit valueProducer: Producer[T]) =
     sp[java.util.List[T]] { (fmt, v) =>
       fmt.startArray(v.getClass.getSimpleName)
@@ -164,6 +180,7 @@ object Producer {
       fmt.endArray()
     }
 
+  /** serializes java set values */
   implicit def javaSetProducer[T](implicit valueProducer: Producer[T]) =
     sp[java.util.Set[T]] { (fmt, v) =>
       fmt.startArray(v.getClass.getSimpleName)
@@ -172,6 +189,7 @@ object Producer {
       fmt.endArray()
     }
 
+  /** serializes option values */
   implicit def optionProducer[T](implicit valueProducer: Producer[T]): Producer[Option[T]] =
     sp[Option[T]] { (fmt, v) =>
       if (v.isDefined) valueProducer.produce(v.get, fmt)
@@ -179,12 +197,26 @@ object Producer {
     }
 
   private[this] val safeFormatterPool = TrieMap.empty[String, DateFormat]
-  def dateProducer(pattern: String) = {
-    dateFromFormat(safeFormatterPool.getOrElseUpdate(pattern, new SafeSimpleDateFormat(pattern)))
-  }
-  def dateFromFormat(format: DateFormat) = sp[Date]((fmt, v) => fmt string format.format(v))
 
-  implicit val DefaultDateProducer = dateFromFormat(SafeSimpleDateFormat.Iso8601Formatter)
+  /** Creates a date producer for the specified pattern
+    * 
+    * The date producer is backed by a java.text.DateFormat but a thread-safe one
+    * @param pattern the [[java.text.SimpleDateFormat]] pattern to use
+    * @return 
+    */
+  def dateProducer(pattern: String): Producer[Date] = {
+    dateProducerFromFormat(safeFormatterPool.getOrElseUpdate(pattern, new SafeSimpleDateFormat(pattern)))
+  }
+
+  /** Creates a date producer from a date format, make sure the date format is thread safe
+    *
+    * @param format the [[java.text.DateFormat]] to use for this date producer
+    * @return the [[muster.Producer]] for a [[java.util.Date]]
+    */
+  def dateProducerFromFormat(format: DateFormat): Producer[Date] = sp[Date]((fmt, v) => fmt string format.format(v))
+
+  /** Default ISO8601 date format producer for the pattern yyyy-MM-ddThh:mm:ss[.sss][Z|[+-]hh:mm] */
+  implicit val Iso8601DateProducer: Producer[Date] = sp[Date]((fmt, v) => fmt.string(ISO8601Utils.format(v)))
 
   implicit def producer[T]: Producer[T] = macro producerImpl[T]
 

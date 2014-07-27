@@ -9,17 +9,17 @@ import scala.collection.mutable
 import scala.language.higherKinds
 
 object JsonRenderer {
-  private final class StringJsonFormatter(protected val writer: Appendable[_], protected val spaces: Int = 0) extends JsonFormatter[String] {
+  private final class StringJsonFormatter(protected val writer: Appendable[_, String], protected val spaces: Int = 0) extends JsonFormatter[String] {
     def result: String = {
       writer.flush()
-      writer.toString
+      writer.result()
     }
   }
 
-  private final class UnitJsonFormatter(protected val writer: Appendable[_], protected val spaces: Int = 0) extends JsonFormatter[Unit] {
+  private final class UnitJsonFormatter(protected val writer: Appendable[_, Unit], protected val spaces: Int = 0) extends JsonFormatter[Unit] {
     def result: Unit = {
       writer.flush()
-      ()
+      writer.result()
     }
   }
 }
@@ -29,8 +29,8 @@ class JsonRenderer[T](producible: Producible[_, T], val indentSpaces: Int = 0) e
   type Formatter = OutputFormatter[T]
 
   def createFormatter: Formatter = {
-    if (producible == StringProducible) new StringJsonFormatter(producible.toAppendable, indentSpaces).asInstanceOf[JsonFormatter[T]]
-    else new UnitJsonFormatter(producible.toAppendable, indentSpaces).asInstanceOf[JsonFormatter[T]]
+    if (producible == StringProducible) new StringJsonFormatter(producible.toAppendable.asInstanceOf[Appendable[StringBuilder, String]], indentSpaces).asInstanceOf[JsonFormatter[T]]
+    else new UnitJsonFormatter(producible.toAppendable.asInstanceOf[Appendable[java.io.Writer, Unit]], indentSpaces).asInstanceOf[JsonFormatter[T]]
   }
 
   protected def withSpaces(spaces: Int): this.type = new JsonRenderer[T](producible, spaces).asInstanceOf[this.type]
@@ -42,7 +42,7 @@ class JsonRenderer[T](producible: Producible[_, T], val indentSpaces: Int = 0) e
 
 trait JsonFormatter[T] extends OutputFormatter[T] {
 
-  protected def writer: Appendable[_]
+  protected def writer: Appendable[_, T]
 
   protected def spaces: Int
 
@@ -52,9 +52,9 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
 
   private[this] var indentLevel = 0
 
-  private[this] val undefinedEraserBuffer = new mutable.StringBuilder()
+  private[this] val undefinedEraserBuffer = new StringBuilder()
 
-  private[this] var appendStrategy: Appendable[_] = writer
+  private[this] var appendStrategy: Appendable[_, _] = writer
 
   def startArray(name: String = "") {
     writeComma(State.InArray)

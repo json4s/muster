@@ -9,7 +9,7 @@ abstract class StringRenderer extends Renderer[String] {
   def createFormatter: Formatter = new StringOutputFormatter(new StringBuilder())
 }
 
-class StringOutputFormatter(val writer: Appendable[_], quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
+class StringOutputFormatter(val writer: Appendable[_, String], quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
 
   import Constants._
 
