@@ -5,6 +5,7 @@ package json
 import java.util
 import java.util.{Date, TimeZone}
 
+import muster.util.SafeSimpleDateFormat
 import org.json4s.DefaultFormats
 import org.specs2.mutable.Specification
 

@@ -2,7 +2,7 @@ package muster
 package codec
 package json4s
 
-import muster.Constants.State
+import muster.util.State
 import org.json4s.JsonAST._
 
 import scala.collection.mutable

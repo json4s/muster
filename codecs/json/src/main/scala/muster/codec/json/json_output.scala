@@ -5,31 +5,32 @@ package json
 import java.io._
 import java.nio.ByteBuffer
 
-import Constants._
+import muster.util.State
+import muster.util.Quoter
 import scala.collection.mutable
 import scala.language.higherKinds
 
 object JsonRenderer {
-  private final class StringJsonFormatter(protected val writer: Appendable[String], protected val spaces: Int = 0) extends JsonFormatter[String] {
+  private final class StringJsonFormatter(protected val writer: util.Appendable[String], protected val spaces: Int = 0) extends JsonFormatter[String] {
     def result: String = {
       writer.flush()
       writer.result()
     }
   }
-  private final class ByteArrayJsonFormatter(protected val writer: Appendable[Array[Byte]], protected val spaces: Int = 0) extends JsonFormatter[Array[Byte]] {
+  private final class ByteArrayJsonFormatter(protected val writer: util.Appendable[Array[Byte]], protected val spaces: Int = 0) extends JsonFormatter[Array[Byte]] {
     def result: Array[Byte] = {
       writer.flush()
       writer.result()
     }
   }
-  private final class ByteBufferJsonFormatter(protected val writer: Appendable[ByteBuffer], protected val spaces: Int = 0) extends JsonFormatter[ByteBuffer] {
+  private final class ByteBufferJsonFormatter(protected val writer: util.Appendable[ByteBuffer], protected val spaces: Int = 0) extends JsonFormatter[ByteBuffer] {
     def result: ByteBuffer = {
       writer.flush()
       writer.result()
     }
   }
 
-  private final class UnitJsonFormatter(protected val writer: Appendable[Unit], protected val spaces: Int = 0) extends JsonFormatter[Unit] {
+  private final class UnitJsonFormatter(protected val writer: util.Appendable[Unit], protected val spaces: Int = 0) extends JsonFormatter[Unit] {
     def result: Unit = {
       writer.flush()
       writer.result()
@@ -43,13 +44,13 @@ class JsonRenderer[T](producible: Producible[_, T], val indentSpaces: Int = 0) e
 
   def createFormatter: Formatter = {
     if (producible == StringProducible)
-      new StringJsonFormatter(producible.toAppendable.asInstanceOf[Appendable[String]], indentSpaces).asInstanceOf[JsonFormatter[T]]
+      new StringJsonFormatter(producible.toAppendable.asInstanceOf[util.Appendable[String]], indentSpaces).asInstanceOf[JsonFormatter[T]]
     else if (producible == ByteArrayProducible)
-      new ByteArrayJsonFormatter(producible.toAppendable.asInstanceOf[Appendable[Array[Byte]]], indentSpaces).asInstanceOf[JsonFormatter[T]]
+      new ByteArrayJsonFormatter(producible.toAppendable.asInstanceOf[util.Appendable[Array[Byte]]], indentSpaces).asInstanceOf[JsonFormatter[T]]
     else if (producible == ByteBufferProducible)
-      new ByteBufferJsonFormatter(producible.toAppendable.asInstanceOf[Appendable[ByteBuffer]], indentSpaces).asInstanceOf[JsonFormatter[T]]
+      new ByteBufferJsonFormatter(producible.toAppendable.asInstanceOf[util.Appendable[ByteBuffer]], indentSpaces).asInstanceOf[JsonFormatter[T]]
     else
-      new UnitJsonFormatter(producible.toAppendable.asInstanceOf[Appendable[Unit]], indentSpaces).asInstanceOf[JsonFormatter[T]]
+      new UnitJsonFormatter(producible.toAppendable.asInstanceOf[util.Appendable[Unit]], indentSpaces).asInstanceOf[JsonFormatter[T]]
   }
 
   protected def withSpaces(spaces: Int): this.type = new JsonRenderer[T](producible, spaces).asInstanceOf[this.type]
@@ -61,7 +62,7 @@ class JsonRenderer[T](producible: Producible[_, T], val indentSpaces: Int = 0) e
 
 trait JsonFormatter[T] extends OutputFormatter[T] {
 
-  protected def writer: Appendable[T]
+  protected def writer: util.Appendable[T]
 
   protected def spaces: Int
 
@@ -73,7 +74,7 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
 
   private[this] val undefinedEraserBuffer = new StringBuilder()
 
-  private[this] var appendStrategy: Appendable[_] = writer
+  private[this] var appendStrategy: util.Appendable[_] = writer
 
   def startArray(name: String = "") {
     writeComma(State.InArray)
@@ -206,7 +207,7 @@ trait JsonFormatter[T] extends OutputFormatter[T] {
   }
 
   def startField(name: String) {
-    appendStrategy = Appendable.forString(undefinedEraserBuffer)
+    appendStrategy = util.Appendable.forString(undefinedEraserBuffer)
     writeComma(State.InObject)
     indentForPretty()
     appendStrategy.append('"')

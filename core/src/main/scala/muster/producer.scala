@@ -205,7 +205,7 @@ object Producer {
     * @return 
     */
   def dateProducer(pattern: String): Producer[Date] = {
-    dateProducerFromFormat(safeFormatterPool.getOrElseUpdate(pattern, new SafeSimpleDateFormat(pattern)))
+    dateProducerFromFormat(safeFormatterPool.getOrElseUpdate(pattern, new util.SafeSimpleDateFormat(pattern)))
   }
 
   /** Creates a date producer from a date format, make sure the date format is thread safe

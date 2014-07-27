@@ -1,8 +1,8 @@
-package muster
+package muster.util
 
-import java.io.{PrintWriter, ByteArrayOutputStream}
-import java.nio.{CharBuffer, ByteBuffer}
+import java.io.{ByteArrayOutputStream, PrintWriter}
 import java.nio.channels.WritableByteChannel
+import java.nio.{ByteBuffer, CharBuffer}
 
 object Appendable {
 
@@ -157,7 +157,10 @@ trait Appendable[T] extends AutoCloseable {
    * @return return the underlying object
    */
   def append(s: String): Appendable[T]
+  /** Append a char */
   def append(c: Char): Appendable[T]
+  /** Some appenders allow for flushing or require it, this ensures they can do so */
   def flush()
+  /** Some appenders are really builders, they get to provid their result with this */
   def result(): T
 }

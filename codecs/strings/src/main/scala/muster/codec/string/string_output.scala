@@ -2,16 +2,18 @@ package muster
 package codec
 package string
 
+import muster.util.Quoter
+
 import scala.collection.mutable
 
 abstract class StringRenderer extends Renderer[String] {
   type Formatter = StringOutputFormatter
-  def createFormatter: Formatter = new StringOutputFormatter(Appendable.forString())
+  def createFormatter: Formatter = new StringOutputFormatter(util.Appendable.forString())
 }
 
-class StringOutputFormatter(val writer: Appendable[String], quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
+class StringOutputFormatter(val writer: util.Appendable[String], quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
 
-  import Constants._
+  import muster.util.State
 
   protected val stateStack = mutable.Stack[Int]()
 
@@ -65,7 +67,7 @@ class StringOutputFormatter(val writer: Appendable[String], quoteStringWith: Str
 
   def bigInt(value: BigInt) {
     writeComma(State.InArray)
-    writer.append(value.toString)
+    writer.append(value.toString())
   }
 
   def boolean(value: Boolean) {
@@ -90,7 +92,7 @@ class StringOutputFormatter(val writer: Appendable[String], quoteStringWith: Str
 
   def bigDecimal(value: BigDecimal) {
     writeComma(State.InArray)
-    writer.append(value.toString)
+    writer.append(value.toString())
   }
 
   def writeNull() {

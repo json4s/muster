@@ -1,9 +1,10 @@
 package muster.codec.json
 
-import java.util
+import java.{util => jutil }
 import java.util.{Date, TimeZone}
 
 import muster._
+import muster.util.SafeSimpleDateFormat
 import org.json4s.DefaultFormats
 import org.specs2.mutable.Specification
 
@@ -181,7 +182,7 @@ abstract class JsonDeserializationSpec[R <% Consumable[R]](val format: InputForm
       val js = """{"name":"a thing","lst":[1,2,3,4]}"""
       val result = read[JavaListAndName](js)
       result.getName must_== "a thing"
-      val lst = new util.ArrayList[Integer]
+      val lst = new jutil.ArrayList[Integer]
       lst.add(1)
       lst.add(2)
       lst.add(3)
@@ -193,7 +194,7 @@ abstract class JsonDeserializationSpec[R <% Consumable[R]](val format: InputForm
       val js = """{"name":"a thing","set":[1,2,3,4]}"""
       val result = read[JavaSetAndName](js)
       result.getName must_== "a thing"
-      val lst = new util.HashSet[Integer]
+      val lst = new jutil.HashSet[Integer]
       lst.add(1)
       lst.add(2)
       lst.add(3)
@@ -205,7 +206,7 @@ abstract class JsonDeserializationSpec[R <% Consumable[R]](val format: InputForm
       val js = """{"name":"a thing","dict":{"one":1,"two":2}}"""
       val result = read[JavaMapAndName](js)
       result.getName must_== "a thing"
-      val dict = new util.HashMap[String, Int]()
+      val dict = new jutil.HashMap[String, Int]()
       dict.put("one", 1)
       dict.put("two", 2)
       result.getDict must_== dict
@@ -215,18 +216,18 @@ abstract class JsonDeserializationSpec[R <% Consumable[R]](val format: InputForm
       val js = """{"name":"a thing", "lst":[{"one":[1,2,3], "two":[4,5,6]}]}"""
       val result = read[JavaListOfMapOfList](js)
       result.getName must_== "a thing"
-      val dict = new util.HashMap[String, util.List[Integer]]()
-      val lst1 = new util.ArrayList[Integer]()
+      val dict = new jutil.HashMap[String, jutil.List[Integer]]()
+      val lst1 = new jutil.ArrayList[Integer]()
       lst1.add(1)
       lst1.add(2)
       lst1.add(3)
-      val lst2 = new util.ArrayList[Integer]()
+      val lst2 = new jutil.ArrayList[Integer]()
       lst2.add(4)
       lst2.add(5)
       lst2.add(6)
       dict.put("one", lst1)
       dict.put("two", lst2)
-      val lst = new util.ArrayList[util.HashMap[String, util.List[Integer]]]()
+      val lst = new jutil.ArrayList[jutil.HashMap[String, jutil.List[Integer]]]()
       lst.add(dict)
       result.getLst must_== lst
     }

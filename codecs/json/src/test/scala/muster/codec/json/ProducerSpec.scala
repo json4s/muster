@@ -2,6 +2,8 @@ package muster
 package codec
 package json
 
+import muster.util
+import muster.util.Quoter
 import org.scalacheck.{Gen, Prop}
 import org.specs2.matcher.MatchResult
 import org.specs2.{ScalaCheck, Specification}
@@ -87,7 +89,7 @@ A JSON Producer should
     (i: String) =>
       val sb = new StringBuilder()
       sb.append('"')
-      Quoter.jsonQuote(i, Appendable.forString(sb))
+      Quoter.jsonQuote(i, util.Appendable.forString(sb))
       sb.append('"')
       write(i) must_== sb.toString()
   }
@@ -122,7 +124,7 @@ A JSON Producer should
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k, Appendable.forString(sb))
+            Quoter.jsonQuote(k, util.Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append(v)
@@ -155,7 +157,7 @@ A JSON Producer should
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k, Appendable.forString(sb))
+            Quoter.jsonQuote(k, util.Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append('[')
@@ -196,7 +198,7 @@ A JSON Producer should
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k.toString, Appendable.forString(sb))
+            Quoter.jsonQuote(k.toString, util.Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append(v)
@@ -227,7 +229,7 @@ A JSON Producer should
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k.toString, Appendable.forString(sb))
+            Quoter.jsonQuote(k.toString, util.Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append('[')
@@ -266,7 +268,7 @@ A JSON Producer should
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k.toString, Appendable.forString(sb))
+            Quoter.jsonQuote(k.toString, util.Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append(v)
@@ -297,7 +299,7 @@ A JSON Producer should
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k.toString, Appendable.forString(sb))
+            Quoter.jsonQuote(k.toString, util.Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append('[')

@@ -4,6 +4,8 @@ package json
 
 import java.util.TimeZone
 
+import muster.util
+import muster.util.Quoter
 import org.scalacheck.{Gen, Prop}
 import org.specs2.matcher.MatchResult
 import org.specs2.{ScalaCheck, Specification}
@@ -104,7 +106,7 @@ abstract class JsonConsumerSpec(val json: InputFormat[Consumable[_], _ <: InputC
     (i: String) =>
       val sb = new StringBuilder()
       sb.append('"')
-      Quoter.jsonQuote(i, Appendable.forString(sb))
+      Quoter.jsonQuote(i, util.Appendable.forString(sb))
       sb.append('"')
       read[String](sb.toString()) must_== i
   }
@@ -139,7 +141,7 @@ abstract class JsonConsumerSpec(val json: InputFormat[Consumable[_], _ <: InputC
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k, Appendable.forString(sb))
+            Quoter.jsonQuote(k, util.Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append(v)
@@ -171,7 +173,7 @@ abstract class JsonConsumerSpec(val json: InputFormat[Consumable[_], _ <: InputC
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k, Appendable.forString(sb))
+            Quoter.jsonQuote(k, util.Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append('[')
@@ -210,7 +212,7 @@ abstract class JsonConsumerSpec(val json: InputFormat[Consumable[_], _ <: InputC
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k.toString, Appendable.forString(sb))
+            Quoter.jsonQuote(k.toString, util.Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append(v)
@@ -241,7 +243,7 @@ abstract class JsonConsumerSpec(val json: InputFormat[Consumable[_], _ <: InputC
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k.toString, Appendable.forString(sb))
+            Quoter.jsonQuote(k.toString, util.Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append('[')
@@ -280,7 +282,7 @@ abstract class JsonConsumerSpec(val json: InputFormat[Consumable[_], _ <: InputC
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k.toString, Appendable.forString(sb))
+            Quoter.jsonQuote(k.toString, util.Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append(v)
@@ -311,7 +313,7 @@ abstract class JsonConsumerSpec(val json: InputFormat[Consumable[_], _ <: InputC
             if (!first) sb.append(',')
             else first = false
             sb.append('"')
-            Quoter.jsonQuote(k.toString, Appendable.forString(sb))
+            Quoter.jsonQuote(k.toString, util.Appendable.forString(sb))
             sb.append('"')
             sb.append(':')
             sb.append('[')

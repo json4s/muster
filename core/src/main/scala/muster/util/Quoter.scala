@@ -1,4 +1,5 @@
 package muster
+package util
 
 object Quoter {
 

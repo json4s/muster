@@ -1,6 +1,6 @@
 package muster
 
-import java.util
+import java.{util => jutil}
 import java.util.{Locale, Date}
 
 import muster.ast._
@@ -170,9 +170,9 @@ object Consumer {
     * @param locale the locale to use for this date consumer
     * @return a [[muster.Consumer]] that produces a [[java.util.Date]]
     */
-  def dateConsumer(pattern: String, locale: Locale = SafeSimpleDateFormat.DefaultLocale) = {
+  def dateConsumer(pattern: String, locale: Locale = util.SafeSimpleDateFormat.DefaultLocale) = {
     cc[Date]({
-      case TextNode(value) => new SafeSimpleDateFormat(pattern, locale).parse(value)
+      case TextNode(value) => new util.SafeSimpleDateFormat(pattern, locale).parse(value)
       case m: NumberNodeLike[_] => new Date(m.toLong)
       case NullNode => null
     })
@@ -265,7 +265,7 @@ object Consumer {
     */
   implicit def javaMapConsumer[K, T](implicit keySerializer: MapKeySerializer[K], valueConsumer: Consumer[T]) = cc[java.util.Map[K, T]] {
     case m: ObjectNode =>
-      val lst = new util.HashMap[K, T]()
+      val lst = new jutil.HashMap[K, T]()
       m.keySet foreach { key =>
         lst.put(keySerializer.deserialize(key), valueConsumer.consume(m.readField(key)))
       }

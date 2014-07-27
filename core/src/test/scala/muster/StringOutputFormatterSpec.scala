@@ -1,5 +1,6 @@
 package muster
 
+import muster.util.{Appendable, Quoter}
 import org.specs2.matcher.MatchResult
 import org.scalacheck.Prop
 
