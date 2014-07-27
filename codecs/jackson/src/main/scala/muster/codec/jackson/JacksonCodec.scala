@@ -7,13 +7,21 @@ import java.net.URL
 import java.nio.charset.StandardCharsets
 
 import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.{JsonMappingException, JsonNode}
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper, JsonMappingException, JsonNode}
 import com.fasterxml.jackson.databind.node.MissingNode
 import muster.codec.json.JsonRenderer
 
 import scala.util.Try
 
-object JacksonCodec extends JsonRenderer(StringProducible) with JacksonInputFormat[Consumable[_]] {
+/** Provides a codec using the jackson library for dealing with json
+  *
+  * It combines a [[muster.Renderer]] with a [[muster.InputFormat]] to provide
+  * bidirectional encoding and decoding of JSON streams
+  */
+object JacksonCodec extends JsonRenderer(StringProducible) with InputFormat[Consumable[_], JacksonInputCursor[_]] {
+  val mapper: ObjectMapper = new ObjectMapper()
+  mapper.configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
+
   private def jic[T](src: T)(fn: (T) => JsonNode): JacksonInputCursor[T] = new JacksonInputCursor[T] {
     protected val node: JsonNode = Try(fn(src)).getOrElse(MissingNode.getInstance())
     val source: T = src

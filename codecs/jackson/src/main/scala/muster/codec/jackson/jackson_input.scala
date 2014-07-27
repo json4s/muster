@@ -2,15 +2,16 @@ package muster
 package codec
 package jackson
 
-import ast._
-import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper, JsonNode}
-import com.fasterxml.jackson.databind.node.{ ArrayNode => JArrayNode }
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.{ArrayNode => JArrayNode}
+import muster.ast._
+
 import scala.collection.JavaConverters._
 
 
 private object JacksonInputCursor {
 
-  final class JacksonObjectNode(parent: JsonNode) extends ObjectNode(null) {
+  private final class JacksonObjectNode(parent: JsonNode) extends ObjectNode(null) {
 
     def readField(fieldName: String): AstNode[_] = {
       val node = readFieldFromParent(fieldName)
@@ -69,7 +70,7 @@ private object JacksonInputCursor {
     def keysIterator: Iterator[String] = parent.fieldNames().asScala
   }
 
-  final class JacksonArrayNode(val source: JsonNode) extends ArrayNode(null) with JacksonInputCursor[JsonNode] {
+  private final class JacksonArrayNode(val source: JsonNode) extends ArrayNode(null) with JacksonInputCursor[JsonNode] {
     private[this] var idx = 0
 
     protected def node = {
@@ -84,7 +85,7 @@ private object JacksonInputCursor {
 
 private[jackson] trait JacksonInputCursor[R] extends InputCursor[R] {
 
-  import JacksonInputCursor._
+  import muster.codec.jackson.JacksonInputCursor._
 
   protected def node: JsonNode
 
@@ -138,14 +139,5 @@ private[jackson] trait JacksonInputCursor[R] extends InputCursor[R] {
       if (node.asBoolean()) TrueNode else FalseNode
     } else throw new MappingException("Unable to determine the type of this json")
   }
-}
-
-
-
-trait JacksonInputFormat[R] extends InputFormat[R, JacksonInputCursor[_]] {
-  val mapper: ObjectMapper = new ObjectMapper()
-  mapper.configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
-
-  def typeHintFieldName: String = "$typeName"
 }
 
