@@ -6,19 +6,29 @@ branches:
   - master
 jdk:
 - openjdk7
-notifications:
-  email:
-  - ivan@flanders.co.nz
+before_script:
+- openssl aes-256-cbc -k $SECRET -in .travis-env.enc -d -a -out .travis-env
+- ". .travis-env"
+- rm .travis-env
+- echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+- git config user.email "$GIT_EMAIL"
+- git config user.name "$GIT_NAME"
+- "./src/travis/ensure-gems.sh"
 script:
-  - ./src/travis/ensure-gems.sh
-  #- sbt ++$TRAVIS_SCALA_VERSION test:compile test
-  - sbt ++$TRAVIS_SCALA_VERSION ghpagesSynchLocal
-  - ./src/travis/deploy-gh-pages.sh
+- sbt ++$TRAVIS_SCALA_VERSION test:compile test
+- sbt ++$TRAVIS_SCALA_VERSION publishSigned
+- sbt ++$TRAVIS_SCALA_VERSION ghpagesSynchLocal
+- "./src/travis/deploy-gh-pages.sh"
 env:
   global:
   - GH_REF="github.com/json4s/muster.git"
-  - GIT_NAME="Ivan Porto Carrero"
+  - GIT_NAME="Travis CI"
+  - GIT_EMAIL="travis-ci@json4s.org"
   - SONATYPE_HOST="oss.sonatype.org"
   - SONATYPE_REALM="Sonatype Nexus Repository Manager"
-  - secure: QT2sotwurY8IE6EgVlhdvivhto8VZiiO3arWfgug2PUbGGmX5Pyso9uD9tJOi5rbHQZBdOS/QG6dNZk478cbm6PPAV6PsAHxAynZOSA/2HZw0HpEpEG20zKXku87Livr3MXRUNuKyD8CDiciZDTgEroZANKPAHYI6S6FBZR4tqo=
-  - secure: JWqgpZW4O0rx7BDSsEksk6XRVwryUPG+h0qnQ8dirJC/8HaAee01u5YT3nJYcGQ7Sdk5i7chiw/g97FMJkL3nXKm/bt1Qjl7UCLiqhQwpOkWooz6z/jXPeMNKUMhth+WVfMAXm22XGiHpVDTvWIMsXlmoyDOypF76PS5gRvH1BU=
+  - secure: Q9NApvUwOUOyJefxugMjcXrjn3k/DSVfWPnZaTxZm7t1H3HYJ9cX+3FWAl7+DoVGCS3fZ+b4lXCB5FLYobQ5U2BCfK0tMfM3dXGwWbQXwuue27Fyp2/EAkR2i1il8ERjadGBp6pwq9cb4KWyq2U1PPVG3jV9v8F6HjBA3kcKuTc=
+  - secure: Lrs6RDH6Gyu9pF3IY8RejlpbUjgl6f7JJEUBxSywN55eG4Op+CScP7XKQaBOeLgCijczqBPqv93bqsrDQ276dHb//mkJy24RNUR9rN4Ol0xkR5DqSUzxryr7AxkUThZI4DJsFCoM7v/fgDHFHjZ02CUYRPEjdNYbReLtvuxxwlw=
+  - secure: NQtP168Vw47bgfQIBbztUj7SMWek4t0rEfOaqdt8W4Pu4hMUhhJpV1a8h+fjqXU6+SzZ9XmK3jsdyVDP9yc3GKuQro8oJZ4KlHt+gsrFbEnemG8xC60Jt2Md3wKxP4bjug5X0JSYyW8VK5yyMGY+IEKOAwBXPLljbMViPNXhvD8=
+  - secure: nm5IEJrwTkGICBG24CCEptJUEiWju0NzjzfpbfbZlmdDyoYWCja56LX6U5sw5QaAEwO9yd4jH4tO0nwOwAN+IB0lcqIAUvkLsZTiG/1qOQ9ulGopj6ShgDcxpd7zhMrBxubvY0WWInB5eFrlkVtT6eTIYnFuVJa7C8D+I4rXtHg=
+notifications:
+  irc: chat.freenode.net#json4s

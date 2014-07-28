@@ -89,22 +89,25 @@ publishArtifact in Test in ThisBuild := false
 
 pomIncludeRepository in ThisBuild := { x => false }
 
-
 // root project specific settings
 
-credentials <++= (streams) map { _ => 
+val travisOrDefaultSettings = () => {
   if (sys.env.getOrElse("TRAVIS","false").toBoolean) {
-    Seq(Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", sys.env("SONATYPE_USER"), sys.env("SONATYPE_PASS")))
-  } else Seq.empty
+    Seq(
+      credentials += Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", sys.env("SONATYPE_USER"), sys.env("SONATYPE_PASS")),
+      git.remoteRepo := s"https://${sys.env("GH_TOKEN")}@github.com/json4s/muster.git",
+      useGpg := false,
+      pgpSecretRing := target.value / "secring.gpg",
+      pgpPublicRing := target.value / "pubring.gpg",
+      pgpPassphrase := sys.env.get("GPG_PASSPHRASE").map(_.toCharArray)
+    )
+  } else 
+  Seq(
+    git.remoteRepo := "git@github.com:json4s/muster.git"
+  )
 }
 
-unidocSettings
-
-site.settings
-
-ghpages.settings
-
-site.jekyllSupport()
+travisOrDefaultSettings()
 
 publishTo := None
 
@@ -114,10 +117,25 @@ publish := {}
 
 publishLocal := {}
 
+credentials <++= (streams) map { _ => 
+  if (sys.env.getOrElse("TRAVIS","false").toBoolean) {
+    Seq(Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", sys.env("SONATYPE_USER"), sys.env("SONATYPE_PASS")))
+  } else Seq.empty
+}
+
+unidocSettings
+
+UnidocKeys.unidocProjectFilter in (ScalaUnidoc, UnidocKeys.unidoc) := inAnyProject -- inProjects(caliperBenchmarks)
+
 scalacOptions in (ScalaUnidoc, UnidocKeys.unidoc) += "-Ymacro-expand:none" // 2.10 => "-Ymacro-no-expand"
 
 site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "latest/api")
 
+site.settings
+
+ghpages.settings
+
+site.jekyllSupport()
+
 GhPagesKeys.repository := target.value / "ghpages"
 
-git.remoteRepo := s"https://${sys.env("GH_TOKEN")}@github.com/json4s/muster.git"
