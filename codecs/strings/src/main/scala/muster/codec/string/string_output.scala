@@ -15,7 +15,10 @@ abstract class StringRenderer extends Renderer[String] {
 /// end_code_ref
 
 /// code_ref: string_output_formatter
-class StringOutputFormatter(val writer: util.Appendable[String], quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
+class StringOutputFormatter(
+          val writer: util.Appendable[String], 
+          quoteStringWith: String = "\"", 
+          escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
 
   import muster.util.State
 
