@@ -17,6 +17,7 @@ before_script:
 script:
 - sbt ++$TRAVIS_SCALA_VERSION test:compile test
 - sbt ++$TRAVIS_SCALA_VERSION publishSigned
+after_script:
 - sbt ++$TRAVIS_SCALA_VERSION ghpagesSynchLocal
 - "./src/travis/deploy-gh-pages.sh"
 env:

@@ -63,6 +63,8 @@ publishTo in ThisBuild <<= version { version: String =>
     Some(Opts.resolver.sonatypeStaging)
 }
 
+publishMavenStyle in ThisBuild := true
+
 homepage in ThisBuild := Some(new URL("https://github.com/json4s/muster"))
 
 startYear in ThisBuild := Some(2013)
@@ -109,13 +111,11 @@ val travisOrDefaultSettings = () => {
 
 travisOrDefaultSettings()
 
-publishTo := None
-
-publishMavenStyle := true
-
 publish := {}
 
 publishLocal := {}
+
+publishSigned := {}
 
 credentials <++= (streams) map { _ => 
   if (sys.env.getOrElse("TRAVIS","false").toBoolean) {
