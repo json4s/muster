@@ -11,7 +11,7 @@ body {
     font: 15px/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: #777;
     font-weight: 300;
-    background: #f6f6f2 url(/muster/imgs/bg-watercolor.jpg) repeat-x 50% 0px;
+    background: #f6f6f2 url(../images/bg-watercolor.jpg) repeat-x 50% 0px;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -230,7 +230,7 @@ header.backchatio hgroup>nav .btn.icon-pdf:before {
     height: 34px;
     right: 8px;
     top: 7px;
-    background-image: url(/images/button-icons/pdf.png);
+    background-image: url(//assets.backchat.io/images/button-icons/pdf.png);
     background-repeat: no-repeat;
     background-position: 95% 50%
 }
