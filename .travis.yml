@@ -17,7 +17,11 @@ before_script:
 - "cd $TRAVIS_BUILD_DIR/src/jekyll && bundle install && cd -"
 script:
 - sbt ++$TRAVIS_SCALA_VERSION test:compile test
-- sbt ++$TRAVIS_SCALA_VERSION publishSigned ghpagesPushSite
+after_success:
+#- "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION publishSigned"
+#- "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION ghpagesPushSite"
+- sbt ++$TRAVIS_SCALA_VERSION publishSigned
+- sbt ++$TRAVIS_SCALA_VERSION ghpagesPushSite
 env:
   global:
   - GH_REF="github.com/json4s/muster.git"

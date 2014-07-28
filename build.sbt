@@ -1,4 +1,6 @@
 import scala.xml.Group
+import PgpKeys._
+import MusterBuild._
 
 lazy val core = project
 
@@ -91,31 +93,18 @@ publishArtifact in Test in ThisBuild := false
 
 pomIncludeRepository in ThisBuild := { x => false }
 
+ivyLoggingLevel in (ThisBuild, update) := UpdateLogging.DownloadOnly
+
 // root project specific settings
-
-val travisOrDefaultSettings = () => {
-  if (sys.env.getOrElse("TRAVIS","false").toBoolean) {
-    Seq(
-      credentials += Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", sys.env("SONATYPE_USER"), sys.env("SONATYPE_PASS")),
-      git.remoteRepo := s"https://${sys.env("GH_TOKEN")}@github.com/json4s/muster.git",
-      useGpg := false,
-      pgpSecretRing := target.value / "secring.gpg",
-      pgpPublicRing := target.value / "pubring.gpg",
-      pgpPassphrase := sys.env.get("GPG_PASSPHRASE").map(_.toCharArray)
-    )
-  } else 
-  Seq(
-    git.remoteRepo := "git@github.com:json4s/muster.git"
-  )
-}
-
-travisOrDefaultSettings()
+travisSettings
 
 publish := {}
 
 publishLocal := {}
 
-PgpKeys.publishSigned := {}
+publishSigned := {}
+
+packagedArtifacts := Map.empty
 
 unidocSettings
 
@@ -132,4 +121,6 @@ ghpages.settings
 site.jekyllSupport()
 
 GhPagesKeys.repository := target.value / "ghpages"
+
+credentials ++= travisCredentials
 
