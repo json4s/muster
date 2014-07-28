@@ -77,3 +77,4 @@ atlassian-ide-plugin.xml
 .target
 huge.json
 
+src/jekyll/_site

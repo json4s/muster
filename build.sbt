@@ -92,11 +92,19 @@ pomIncludeRepository in ThisBuild := { x => false }
 
 // root project specific settings
 
+credentials <++= (streams) map { _ => 
+  if (sys.env.getOrElse("TRAVIS","false").toBoolean) {
+    Seq(Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", sys.env("SONATYPE_USER"), sys.env("SONATYPE_PASS")))
+  } else Seq.empty
+}
+
 unidocSettings
 
 site.settings
 
 ghpages.settings
+
+site.jekyllSupport()
 
 publishTo := None
 
@@ -110,4 +118,6 @@ scalacOptions in (ScalaUnidoc, UnidocKeys.unidoc) += "-Ymacro-expand:none" // 2.
 
 site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "latest/api")
 
-git.remoteRepo := "git@github.com:json4s/muster.git"
+GhPagesKeys.repository := target.value / "ghpages"
+
+git.remoteRepo := s"https://${sys.env("GH_TOKEN")}@github.com/json4s/muster.git"

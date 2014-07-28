@@ -7,11 +7,14 @@ import muster.util.Quoter
 
 import scala.collection.mutable
 
+/// code_ref: string_renderer
 abstract class StringRenderer extends Renderer[String] {
   type Formatter = StringOutputFormatter
   def createFormatter: Formatter = new StringOutputFormatter(util.Appendable.forString())
 }
+/// end_code_ref
 
+/// code_ref: string_output_formatter
 class StringOutputFormatter(val writer: util.Appendable[String], quoteStringWith: String = "\"", escapeSpecialChars: Boolean = true) extends OutputFormatter[String] {
 
   import muster.util.State
@@ -130,3 +133,4 @@ class StringOutputFormatter(val writer: util.Appendable[String], quoteStringWith
   }
 
 }
+/// end_code_ref
