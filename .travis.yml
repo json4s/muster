@@ -19,7 +19,8 @@ script:
 - sbt ++$TRAVIS_SCALA_VERSION test:compile test
 after_success:
 - "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION publishSigned"
-- "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION ghpagesPushSite"
+- "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION ghpagesSynchLocal"
+- "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION ./src/travis/deploy-gh-pages.sh"
 env:
   global:
   - GH_REF="github.com/json4s/muster.git"
