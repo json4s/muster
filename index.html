@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <title>Muster by json4s</title>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/syntax.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/print.css" media="print" />
 
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 
-    <title>Muster by json4s</title>
+    
   </head>
 
   <body>
@@ -28,46 +29,35 @@
     <div id="content-wrapper">
       <div class="inner clearfix">
         <section id="main-content">
-          <h1>
-<a name="muster" class="anchor" href="#muster"><span class="octicon octicon-link"></span></a>Muster</h1>
+          <h1 id="muster">Muster</h1>
 
 <p>A library for macro based serializers to different formats.
 It uses scala macros so no reflection is involved and it will generate code at compile time
-that kind of looks like it would have been handwritten.  It is written with the idea of extension, so it's easy to
+that kind of looks like it would have been handwritten.  It is written with the idea of extension, so it&#39;s easy to
 add your own formats.</p>
 
 <p>You can find the <a href="https://github.com/json4s/muster/wiki">documentation on the wiki</a></p>
 
-<h2>
-<a name="getting-the-library" class="anchor" href="#getting-the-library"><span class="octicon octicon-link"></span></a>Getting the library</h2>
+<h2 id="getting-the-library">Getting the library</h2>
 
 <p>This only works with scala 2.11.
 The library is published to maven central so you can get it with:</p>
-
-<pre><code>libraryDependencies += "org.json4s" %% "muster-codec-jawn" % "0.2.0"
-libraryDependencies += "org.json4s" %% "muster-codec-jackson" % "0.2.0"
-</code></pre>
-
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-jawn"</span> <span class="o">%</span> <span class="s">"0.2.0"</span>
+<span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-jackson"</span> <span class="o">%</span> <span class="s">"0.2.0"</span>
+</code></pre></div>
 <p>Bring your own AST (BYA):</p>
-
-<pre><code>libraryDependencies += "org.json4s" %% "muster-codec-json4s" % "0.2.0"
-</code></pre>
-
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-json4s"</span> <span class="o">%</span> <span class="s">"0.2.0"</span>
+</code></pre></div>
 <p>Prettier case class for debugging:</p>
-
-<div class="highlight highlight-scala"><pre><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-string"</span> <span class="o">%</span> <span class="s">"0.2.0"</span>
-</pre></div>
-
-<h2>
-<a name="how-does-it-work" class="anchor" href="#how-does-it-work"><span class="octicon octicon-link"></span></a>How does it work?</h2>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-string"</span> <span class="o">%</span> <span class="s">"0.2.0"</span>
+</code></pre></div>
+<h2 id="how-does-it-work?">How does it work?</h2>
 
 <p>You can find the <a href="https://github.com/json4s/muster/wiki">documentation on the wiki</a>
 The idea is that things work a little bit like this:</p>
 
-<h3>
-<a name="writing" class="anchor" href="#writing"><span class="octicon octicon-link"></span></a>Writing</h3>
-
-<div class="highlight highlight-scala"><pre><span class="k">case</span> <span class="k">class</span> <span class="nc">Person</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Long</span><span class="o">,</span> <span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">age</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span>
+<h3 id="writing">Writing</h3>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">case</span> <span class="k">class</span> <span class="nc">Person</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Long</span><span class="o">,</span> <span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">age</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span>
 <span class="k">val</span> <span class="n">person</span> <span class="k">=</span> <span class="nc">Person</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="s">"Luke"</span><span class="o">,</span> <span class="mi">38</span><span class="o">)</span>
 
 <span class="k">import</span> <span class="nn">muster.codec.jawn._</span>
@@ -76,98 +66,99 @@ The idea is that things work a little bit like this:</p>
 <span class="nc">JsonFormat</span><span class="o">.</span><span class="nc">Pretty</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">)</span>
 
 <span class="k">import</span> <span class="nn">muster.codec.jawn.api._</span>
-<span class="n">person</span><span class="o">.</span><span class="n">asJson</span> <span class="c1">// calls: JsonFormat.from(person) and produces {"id":1,"name":"Luke","age":38}</span>
-<span class="n">person</span><span class="o">.</span><span class="n">asPrettyJson</span> <span class="cm">/* calls: JsonFormat.Pretty.from(person) and produces</span>
-<span class="cm">                       {</span>
-<span class="cm">                         "id":1,</span>
-<span class="cm">                         "name":</span>
-<span class="cm">                         "Luke",</span>
-<span class="cm">                         "age":38</span>
-<span class="cm">                       } */</span>
+<span class="n">person</span><span class="o">.</span><span class="n">asJson</span> <span class="c1">// calls: JsonFormat.from(person) and produces {"id":1,"name":"Luke","age":38}
+</span><span class="n">person</span><span class="o">.</span><span class="n">asPrettyJson</span> <span class="cm">/* calls: JsonFormat.Pretty.from(person) and produces
+                       {
+                         "id":1,
+                         "name":
+                         "Luke",
+                         "age":38
+                       } */</span>
 
 
 <span class="k">import</span> <span class="nn">muster.codec.json4s._</span>
-<span class="c1">// decompose to a Json4s AST</span>
-<span class="nc">JValueFormat</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">)</span>
+<span class="c1">// decompose to a Json4s AST
+</span><span class="nc">JValueFormat</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">)</span>
 
 <span class="k">import</span> <span class="nn">muster.codec.json4s.api._</span>
 <span class="n">person</span><span class="o">.</span><span class="n">asJValue</span>
 
 
-<span class="c1">// Serialize Json4s AST's</span>
-<span class="k">import</span> <span class="nn">muster.codec.json4s._</span>
+<span class="c1">// Serialize Json4s AST's
+</span><span class="k">import</span> <span class="nn">muster.codec.json4s._</span>
 <span class="nc">JsonFormat</span><span class="o">.</span><span class="n">into</span><span class="o">(</span><span class="k">new</span> <span class="nc">File</span><span class="o">(</span><span class="s">"jvalues.json"</span><span class="o">)).</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">.</span><span class="n">asJValue</span><span class="o">)</span>
 <span class="nc">JsonFormat</span><span class="o">.</span><span class="nc">Pretty</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">.</span><span class="n">asJValue</span><span class="o">)</span>
 
-<span class="c1">// Prettier string formatting of case classes</span>
-<span class="k">import</span> <span class="nn">muster.codec.string._</span>
+<span class="c1">// Prettier string formatting of case classes
+</span><span class="k">import</span> <span class="nn">muster.codec.string._</span>
 <span class="nc">StringFormat</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">)</span>
 
 <span class="k">import</span> <span class="nn">muster.codec.string.api._</span>
 <span class="n">person</span><span class="o">.</span><span class="n">asString</span> 
-<span class="c1">// calls muster.codec.string.api.StringFormat.from(person) </span>
-<span class="c1">// and produces Person(id: 1, name: "Luke", age: 38)</span>
+<span class="c1">// calls muster.codec.string.api.StringFormat.from(person) 
+// and produces Person(id: 1, name: "Luke", age: 38)
+</span>
 
-
-</pre></div>
-
-<h3>
-<a name="reading" class="anchor" href="#reading"><span class="octicon octicon-link"></span></a>Reading</h3>
+</code></pre></div>
+<h3 id="reading">Reading</h3>
 
 <p>Similarly reading can be achieved with</p>
-
-<div class="highlight highlight-scala"><pre><span class="c1">// Extract a person from a json stream</span>
-<span class="k">import</span> <span class="nn">muster.codec.jawn._</span>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="c1">// Extract a person from a json stream
+</span><span class="k">import</span> <span class="nn">muster.codec.jawn._</span>
 <span class="nc">JsonFormat</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">Person</span><span class="o">](</span><span class="cm">/* file | string | reader | byte array | input stream | URL */</span> <span class="n">input</span><span class="o">)</span>
 
-<span class="c1">// Extract a person from a Json4s AST</span>
-<span class="k">import</span> <span class="nn">muster.codec.json4s._</span>
+<span class="c1">// Extract a person from a Json4s AST
+</span><span class="k">import</span> <span class="nn">muster.codec.json4s._</span>
 <span class="nc">JValueFormat</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">Person</span><span class="o">](</span><span class="n">personJValue</span><span class="o">)</span>
 
-<span class="c1">// Parse a source to a Json4s AST</span>
-<span class="k">import</span> <span class="nn">muster.codec.json4s._</span>
+<span class="c1">// Parse a source to a Json4s AST
+</span><span class="k">import</span> <span class="nn">muster.codec.json4s._</span>
 <span class="nc">JsonFormat</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">JValue</span><span class="o">](</span><span class="cm">/* file | string | reader | byte array | input stream | URL */</span> <span class="n">input</span><span class="o">)</span>
-</pre></div>
+</code></pre></div>
+<h2 id="what&#39;s-inside?">What&#39;s inside?</h2>
 
-<h2>
-<a name="whats-inside" class="anchor" href="#whats-inside"><span class="octicon octicon-link"></span></a>What's inside?</h2>
-
-<p>Seamless integration with the Json4s AST, it can be used to extract objects from and decompose objects to json4s AST's.
-It can be used to parse Json4s AST's </p>
+<p>Seamless integration with the Json4s AST, it can be used to extract objects from and decompose objects to json4s AST&#39;s.
+It can be used to parse Json4s AST&#39;s </p>
 
 <p>Currently muster supports JSON through parsing with jackson or jawn and it can extract the following things:</p>
 
-<p>Object mapping features:</p>
+<p>Object mapping features:
+* Primitive values like String, Int, Date
+* All scala collections
+* Scala maps with string keys
+* Java collections like java.util.List and java.util.Set
+* Java maps (that implement java.util.Map)
+* Java classes with bean getter/setters
+* Scala classes with public vars
+* Scala classes with java style getter/setter methods
+* Scala case classes
+* Classes initialized through a constructor only
+* Classes with type parameters
+* Support for maps with different keys than String
+* Allows choosing between different option treatments for formats that support omission instead of null</p>
 
-<ul>
-<li>Primitive values like String, Int, Date</li>
-<li>All scala collections</li>
-<li>Scala maps with string keys</li>
-<li>Java collections like java.util.List and java.util.Set</li>
-<li>Java maps (that implement java.util.Map)</li>
-<li>Java classes with bean getter/setters</li>
-<li>Scala classes with public vars</li>
-<li>Scala classes with java style getter/setter methods</li>
-<li>Scala case classes</li>
-<li>Classes initialized through a constructor only</li>
-<li>Classes with type parameters</li>
-<li>Support for maps with different keys than String</li>
-<li>Allows choosing between different option treatments for formats that support omission instead of null</li>
-</ul><p>Possibly added next:</p>
+<p>Possibly added next:
+* Support for scala enums
+* Support for java enums
+* Support for renaming fields 
+* Support for using a map as an input source
+* Support for serializing and deserializing from mongodb
+* Provide a way to use custom producibles
+* Provide a way to use custom consumables
+* Support for common annotations like @JsonProperty and so on to provide overrides for behavior</p>
 
-<ul>
-<li>Support for scala enums</li>
-<li>Support for java enums</li>
-<li>Support for renaming fields </li>
-<li>Support for using a map as an input source</li>
-<li>Support for serializing and deserializing from mongodb</li>
-<li>Provide a way to use custom producibles</li>
-<li>Provide a way to use custom consumables</li>
-<li>Support for common annotations like @JsonProperty and so on to provide overrides for behavior</li>
-</ul>
         </section>
 
         <aside id="sidebar">
+          <a href="/muster/" class="button">
+            Home
+          </a>
+          
+          <a href="/muster/docs" class="button">
+            <small>read the</small>
+            Docs
+          </a>
+          
           <a href="https://github.com/json4s/muster/zipball/master" class="button">
             <small>Download</small>
             .zip file
@@ -177,7 +168,7 @@ It can be used to parse Json4s AST's </p>
             .tar.gz file
           </a>
 
-          <p class="repo-owner"><a href="https://github.com/json4s/muster"></a> is maintained by <a href="https://github.com/json4s">json4s</a>.</p>
+          <p class="repo-owner"><a href="https://github.com/json4s/muster"></a> is maintained by <a href="https://github.com/casualjim">casualjim</a>.</p>
 
           <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
         </aside>

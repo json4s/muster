@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Muster by json4s</title>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/syntax.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/print.css" media="print" />
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Muster</h1>
+        <h2>A library for macro based serializers to many different formats</h2>
+        <a href="https://github.com/json4s/muster" class="button"><small>View project on</small>GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h2 id="jackson-codec">Jackson Codec</h2>
+
+<p>Muster has an integration with jackson for parsing json. You can get muster-codec-jackson from maven central. Check the <a href="https://github.com/json4s/muster/releases">releases page</a> for the latest version.</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-json"</span> <span class="o">%</span> <span class="s">"latest"</span> <span class="c1">// Comes as a transitive dependency
+</span><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-jackson"</span> <span class="o">%</span> <span class="s">"latest"</span>
+</code></pre></div>
+<p>In the examples we&#39;ll use this case class</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">case</span> <span class="k">class</span> <span class="nc">Person</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Long</span><span class="o">,</span> <span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">age</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">person</span> <span class="k">=</span> <span class="nc">Person</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="s">"Luke"</span><span class="o">,</span> <span class="mi">38</span><span class="o">)</span>
+</code></pre></div>
+<h3 id="deserializing">Deserializing</h3>
+
+<p>To extract an object from a json stream you make use of the JacksonCodec.</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+<span class="k">import</span> <span class="nn">muster.codec.jackson._</span>
+
+<span class="nc">JacksonCodec</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">Person</span><span class="o">](</span><span class="k">new</span> <span class="nc">File</span><span class="o">(</span><span class="s">"luke.json"</span><span class="o">))</span>
+<span class="nc">JacksonCodec</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">Person</span><span class="o">](</span><span class="s">"""{"id":1,"name":"Luke","age":38}"""</span><span class="o">)</span>
+<span class="nc">JacksonCodec</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">Person</span><span class="o">](</span><span class="k">new</span> <span class="nc">URL</span><span class="o">(</span><span class="s">"http://somewhere.com/luke.json"</span><span class="o">))</span>
+</code></pre></div>
+<p>The example shows getting json from a file, a string and a url. You can also provide it with a byte array or an input stream.</p>
+
+<h3 id="serializing">Serializing</h3>
+
+<p>To serialize an object to json you also use the JacksonCodec.</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+<span class="k">import</span> <span class="nn">muster.codec.jackson._</span>
+
+<span class="nc">JacksonCodec</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">)</span>
+</code></pre></div>
+<p>The example above produces</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span><span class="s2">"id"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="s2">"name"</span><span class="p">:</span><span class="s2">"Luke"</span><span class="p">,</span><span class="s2">"age"</span><span class="p">:</span><span class="mi">38</span><span class="p">}</span><span class="w">
+</span></code></pre></div><div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+<span class="k">import</span> <span class="nn">muster.codec.jackson._</span>
+
+<span class="nc">JacksonCodec</span><span class="o">.</span><span class="nc">Pretty</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">)</span>
+</code></pre></div>
+<p>The example above produces</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span><span class="w">
+  </span><span class="s2">"id"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Luke"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"age"</span><span class="p">:</span><span class="mi">38</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>You don&#39;t have to serialize to strings you can also serialize to files etc.</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+<span class="k">import</span> <span class="nn">muster.codec.jackson._</span>
+
+<span class="nc">JacksonCodec</span><span class="o">.</span><span class="n">into</span><span class="o">(</span><span class="k">new</span> <span class="nc">File</span><span class="o">(</span><span class="s">"luke.json"</span><span class="o">)).</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">)</span>
+</code></pre></div>
+<p>The example above produces a file with the json for the person.
+There is a little bit of optional syntactic sugar the comes with the jackson integration</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+<span class="k">import</span> <span class="nn">muster.codec.jackson._</span>
+<span class="k">import</span> <span class="nn">muster.codec.jackson.api._</span>
+
+<span class="n">person</span><span class="o">.</span><span class="n">asJson</span>
+</code></pre></div>
+<p>The example above calls: <code>JacksonCodec.from(person)</code> and produces </p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span><span class="s2">"id"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="s2">"name"</span><span class="p">:</span><span class="s2">"Luke"</span><span class="p">,</span><span class="s2">"age"</span><span class="p">:</span><span class="mi">38</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>To make it output pretty printed json:</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+<span class="k">import</span> <span class="nn">muster.codec.jackson._</span>
+<span class="k">import</span> <span class="nn">muster.codec.jackson.api._</span>
+
+<span class="n">person</span><span class="o">.</span><span class="n">asPrettyJson</span> 
+</code></pre></div>
+<p>The example above calls: JacksonCodec.Pretty.from(person) and produces</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span><span class="w">
+  </span><span class="s2">"id"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Luke"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"age"</span><span class="p">:</span><span class="mi">38</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+        </section>
+
+        <aside id="sidebar">
+          <a href="/muster/" class="button">
+            Home
+          </a>
+          
+          <a href="/muster/docs" class="button">
+            <small>read the</small>
+            Docs
+          </a>
+          
+          <a href="https://github.com/json4s/muster/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/json4s/muster/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/json4s/muster"></a> is maintained by <a href="https://github.com/casualjim">casualjim</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>

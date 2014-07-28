@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Muster by json4s</title>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/syntax.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/print.css" media="print" />
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Muster</h1>
+        <h2>A library for macro based serializers to many different formats</h2>
+        <a href="https://github.com/json4s/muster" class="button"><small>View project on</small>GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1 id="custom-serializers">Custom serializers</h1>
+
+<p>Muster works with a system of type classes and a custom deserializer is an implementation of a <code>muster.input.Consumer[T]</code> trait.
+Similarly custom serializers are an implementtation of a <code>muster.output.Producer[T]</code> trait.</p>
+
+<p>If you want to learn more about the internals of muster, check out the <a href="extending.html">extending muster</a> doc.</p>
+
+<p>The functionality described on this page is provided by muster-core. You can get muster-core from maven central.
+Check the <a href="https://github.com/json4s/muster/releases">releases page</a> for the latest version.</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-core"</span> <span class="o">%</span> <span class="s">"latest"</span>
+</code></pre></div>
+<h3 id="serializers">Serializers</h3>
+
+<p>A deserializer is an implementation of <code>muster.output.Producer[T]</code></p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+
+<span class="k">trait</span> <span class="nc">Producer</span><span class="o">[</span><span class="kt">T</span><span class="o">]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="n">produce</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">T</span><span class="o">,</span> <span class="n">formatter</span><span class="k">:</span> <span class="kt">OutputFormatter</span><span class="o">[</span><span class="k">_</span><span class="o">])</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>In this case the <code>formatter</code> property provides a mechanism for rendering the provided <code>value</code>. As an example lets define a custom serializer for a person case class.</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Address</span><span class="o">(</span><span class="n">firstLine</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">secondLine</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">],</span> <span class="n">postcode</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">state</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">country</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Person</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Int</span><span class="o">,</span> <span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">addresses</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Address</span><span class="o">])</span>
+
+<span class="k">implicit</span> <span class="k">object</span> <span class="nc">PersonProducer</span> <span class="k">extends</span> <span class="nc">Producer</span><span class="o">[</span><span class="kt">Person</span><span class="o">]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="n">produce</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">Person</span><span class="o">,</span> <span class="n">formatter</span><span class="k">:</span> <span class="kt">OutputFormatter</span><span class="o">[</span><span class="k">_</span><span class="o">])</span> <span class="o">{</span>
+    <span class="n">formatter</span><span class="o">.</span><span class="n">startObject</span><span class="o">()</span>
+
+    <span class="n">formatter</span><span class="o">.</span><span class="n">startField</span><span class="o">(</span><span class="s">"id"</span><span class="o">)</span>
+    <span class="n">formatter</span><span class="o">.</span><span class="n">int</span><span class="o">(</span><span class="n">value</span><span class="o">.</span><span class="n">id</span><span class="o">)</span>
+
+    <span class="n">formatter</span><span class="o">.</span><span class="n">startField</span><span class="o">(</span><span class="s">"name"</span><span class="o">)</span>
+    <span class="n">formatter</span><span class="o">.</span><span class="n">string</span><span class="o">(</span><span class="n">person</span><span class="o">.</span><span class="n">name</span><span class="o">)</span>
+
+    <span class="k">val</span> <span class="n">arrProducer</span> <span class="k">=</span> <span class="n">implicitly</span><span class="o">[</span><span class="kt">Producer</span><span class="o">[</span><span class="kt">Seq</span><span class="o">[</span><span class="kt">Address</span><span class="o">]]]</span>
+    <span class="n">arrProducer</span><span class="o">.</span><span class="n">produce</span><span class="o">(</span><span class="n">value</span><span class="o">.</span><span class="n">addresses</span><span class="o">,</span> <span class="n">formatter</span><span class="o">)</span>
+
+    <span class="n">formatter</span><span class="o">.</span><span class="n">endObject</span><span class="o">()</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>For this example writing the <code>id</code> and <code>name</code> property are pretty straightforward. And by implicitly resolving the undefined address producer the compiler will generate a version of a Producer[Address] that would do the exact same thing as in the example for the name property.</p>
+
+<p>The macro for the Seq producer generates code that looks like this:</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">formatter</span><span class="o">.</span><span class="n">startArray</span><span class="o">()</span>
+<span class="n">value</span><span class="o">.</span><span class="n">addresses</span> <span class="n">foreach</span> <span class="o">(</span><span class="n">implicitly</span><span class="o">[</span><span class="kt">Producer</span><span class="o">[</span><span class="kt">Address</span><span class="o">]].</span><span class="n">produce</span><span class="o">(</span><span class="k">_</span><span class="o">,</span> <span class="n">formatter</span><span class="o">))</span>
+<span class="n">formatter</span><span class="o">.</span><span class="n">endArray</span><span class="o">()</span>
+</code></pre></div>
+<h3 id="deserializers">Deserializers</h3>
+
+<p>A serializer is an implementation of <code>muster.Consumer[T]</code></p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+
+<span class="k">trait</span> <span class="nc">Consumer</span><span class="o">[</span><span class="kt">S</span><span class="o">]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="n">consume</span><span class="o">(</span><span class="n">node</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">])</span><span class="k">:</span> <span class="kt">S</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>In this case we get an ast node representation as <code>node</code> and we need to turn it into type <code>S</code>. As an example we&#39;ll provide a custom deserializer for the person case class</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+
+<span class="k">implicit</span> <span class="k">object</span> <span class="nc">PersonConsumer</span> <span class="k">extends</span> <span class="nc">Consumer</span><span class="o">[</span><span class="kt">Person</span><span class="o">]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="n">consume</span><span class="o">(</span><span class="n">node</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">])</span><span class="k">:</span> <span class="kt">Person</span> <span class="o">=</span> <span class="n">node</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="n">obj</span><span class="k">:</span> <span class="kt">ObjectNode</span> <span class="o">=&gt;</span> 
+      <span class="k">val</span> <span class="n">addressesConsumer</span> <span class="k">=</span> <span class="n">implicitly</span><span class="o">[</span><span class="kt">Consumer</span><span class="o">[</span><span class="kt">Seq</span><span class="o">[</span><span class="kt">Address</span><span class="o">]]]</span>
+      <span class="nc">Person</span><span class="o">(</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">readIntField</span><span class="o">(</span><span class="s">"id"</span><span class="o">),</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">readStringField</span><span class="o">(</span><span class="s">"name"</span><span class="o">),</span>
+        <span class="n">addressesConsumer</span><span class="o">.</span><span class="n">consume</span><span class="o">(</span><span class="n">obj</span><span class="o">.</span><span class="n">readArrayField</span><span class="o">(</span><span class="s">"addresses"</span><span class="o">))</span>
+      <span class="o">)</span>
+    <span class="k">case</span> <span class="n">n</span> <span class="k">=&gt;</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">MappingException</span><span class="o">(</span><span class="n">s</span><span class="s">"Can't convert a ${n.getClass} to a Person"</span><span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>This example makes use of the shortest notation for writing a custom deserializer. First the addresses consumer is implictly resolved, like in the serializer example, this will get a version of <code>Seq[Consumer[Address]]</code> generated by the compiler. Then reading the fields is relatively straight forward.</p>
+
+<p>The code the macro generates for the extraction of the <code>Seq</code> kind of looks like this: </p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">node</span> <span class="k">match</span> <span class="o">{</span>
+  <span class="k">case</span> <span class="n">arr</span><span class="k">:</span> <span class="kt">ArrayNode</span> <span class="o">=&gt;</span>
+    <span class="k">val</span> <span class="n">addresses</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">.</span><span class="n">newBuilder</span><span class="o">[</span><span class="kt">Address</span><span class="o">]</span>
+    <span class="k">val</span> <span class="n">addressesConsumer</span> <span class="k">=</span> <span class="n">implicitly</span><span class="o">[</span><span class="kt">Consumer</span><span class="o">[</span><span class="kt">Address</span><span class="o">]]</span>
+    <span class="k">while</span><span class="o">(</span><span class="n">arr</span><span class="o">.</span><span class="n">hasNextNode</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">addresses</span> <span class="o">+=</span> <span class="n">addressesConsumer</span><span class="o">.</span><span class="n">consume</span><span class="o">(</span><span class="n">arr</span><span class="o">.</span><span class="n">readObject</span><span class="o">())</span>
+    <span class="o">}</span>
+    <span class="n">addresses</span><span class="o">.</span><span class="n">result</span><span class="o">()</span>
+  <span class="k">case</span> <span class="n">n</span> <span class="k">=&gt;</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">MappingException</span><span class="o">(</span><span class="s">"Can't read array from ${n.getClass}"</span><span class="o">)</span>
+<span class="o">}</span>
+</code></pre></div>
+        </section>
+
+        <aside id="sidebar">
+          <a href="/muster/" class="button">
+            Home
+          </a>
+          
+          <a href="/muster/docs" class="button">
+            <small>read the</small>
+            Docs
+          </a>
+          
+          <a href="https://github.com/json4s/muster/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/json4s/muster/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/json4s/muster"></a> is maintained by <a href="https://github.com/casualjim">casualjim</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>

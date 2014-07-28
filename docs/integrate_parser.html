@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Muster by json4s</title>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/syntax.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/print.css" media="print" />
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Muster</h1>
+        <h2>A library for macro based serializers to many different formats</h2>
+        <a href="https://github.com/json4s/muster" class="button"><small>View project on</small>GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h2 id="integrating-a-parser">Integrating a parser</h2>
+
+<p>For integrating your parser into muster you need to provide an implementation of an input cursor.  The steps below explains how the jawn parser was integrated. </p>
+
+<p>In the case of jawn you need to provide a facade from jawn to the muster AST so that jawn parses directly to the AST node we expect.
+This facade functions as our entry point into the muster AST. </p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">implicit</span> <span class="k">object</span> <span class="nc">jawnFacade</span> <span class="k">extends</span> <span class="nc">_root_</span><span class="o">.</span><span class="n">jawn</span><span class="o">.</span><span class="nc">MutableFacade</span><span class="o">[</span><span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">jarray</span><span class="o">(</span><span class="n">vs</span><span class="k">:</span> <span class="kt">ArrayBuffer</span><span class="o">[</span><span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]])</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">JawnArrayNode</span><span class="o">(</span><span class="n">vs</span><span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">jobject</span><span class="o">(</span><span class="n">vs</span><span class="k">:</span> <span class="kt">mutable.Map</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]])</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">JawnObjectNode</span><span class="o">(</span><span class="n">vs</span><span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">jint</span><span class="o">(</span><span class="n">s</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Ast</span><span class="o">.</span><span class="nc">NumberNode</span><span class="o">(</span><span class="n">s</span><span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">jfalse</span><span class="o">()</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Ast</span><span class="o">.</span><span class="nc">FalseNode</span>
+
+  <span class="k">def</span> <span class="n">jnum</span><span class="o">(</span><span class="n">s</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Ast</span><span class="o">.</span><span class="nc">NumberNode</span><span class="o">(</span><span class="n">s</span><span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">jnull</span><span class="o">()</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Ast</span><span class="o">.</span><span class="nc">NullNode</span>
+
+  <span class="k">def</span> <span class="n">jtrue</span><span class="o">()</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Ast</span><span class="o">.</span><span class="nc">TrueNode</span>
+
+  <span class="k">def</span> <span class="n">jstring</span><span class="o">(</span><span class="n">s</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Ast</span><span class="o">.</span><span class="nc">TextNode</span><span class="o">(</span><span class="n">s</span><span class="o">)</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>This facade will be used in the <code>JawnInputCursor</code> where you use the jawn parser to parse to the consumables into an AST cursor. </p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">class</span> <span class="nc">JawnInputCursor</span><span class="o">(</span><span class="k">val</span> <span class="n">source</span><span class="k">:</span> <span class="kt">Consumable</span><span class="o">[</span><span class="k">_</span><span class="o">])</span> <span class="k">extends</span> <span class="nc">JawnInputCursorBase</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="n">parsed</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">p</span> <span class="k">=</span> <span class="nc">_root_</span><span class="o">.</span><span class="n">jawn</span><span class="o">.</span><span class="nc">Parser</span>
+    <span class="n">source</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">StringConsumable</span><span class="o">(</span><span class="n">src</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">p</span><span class="o">.</span><span class="n">parseFromString</span><span class="o">(</span><span class="n">src</span><span class="o">).</span><span class="n">getOrElse</span><span class="o">(</span><span class="nc">UndefinedNode</span><span class="o">)</span>
+      <span class="k">case</span> <span class="nc">FileConsumable</span><span class="o">(</span><span class="n">src</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">p</span><span class="o">.</span><span class="n">parseFromFile</span><span class="o">(</span><span class="n">src</span><span class="o">).</span><span class="n">getOrElse</span><span class="o">(</span><span class="nc">UndefinedNode</span><span class="o">)</span>
+      <span class="k">case</span> <span class="nc">InputStreamConsumable</span><span class="o">(</span><span class="n">src</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">p</span><span class="o">.</span><span class="n">parseFromChannel</span><span class="o">(</span><span class="nc">Channels</span><span class="o">.</span><span class="n">newChannel</span><span class="o">(</span><span class="n">src</span><span class="o">)).</span><span class="n">getOrElse</span><span class="o">(</span><span class="nc">UndefinedNode</span><span class="o">)</span>
+      <span class="k">case</span> <span class="nc">ByteArrayConsumable</span><span class="o">(</span><span class="n">src</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">p</span><span class="o">.</span><span class="n">parseFromByteBuffer</span><span class="o">(</span><span class="nc">ByteBuffer</span><span class="o">.</span><span class="n">wrap</span><span class="o">(</span><span class="n">src</span><span class="o">)).</span><span class="n">getOrElse</span><span class="o">(</span><span class="nc">UndefinedNode</span><span class="o">)</span>
+      <span class="k">case</span> <span class="nc">URLConsumable</span><span class="o">(</span><span class="n">src</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="o">{</span>
+        <span class="k">val</span> <span class="n">strm</span> <span class="k">=</span> <span class="n">src</span><span class="o">.</span><span class="n">openConnection</span><span class="o">().</span><span class="n">getInputStream</span>
+        <span class="k">try</span> <span class="o">{</span>
+          <span class="n">p</span><span class="o">.</span><span class="n">parseFromChannel</span><span class="o">(</span><span class="nc">Channels</span><span class="o">.</span><span class="n">newChannel</span><span class="o">(</span><span class="n">strm</span><span class="o">)).</span><span class="n">getOrElse</span><span class="o">(</span><span class="nc">UndefinedNode</span><span class="o">)</span>
+        <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+          <span class="n">strm</span><span class="o">.</span><span class="n">close</span><span class="o">()</span>
+        <span class="o">}</span>
+      <span class="o">}</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>This <code>JawnInputCursor</code> is an implementation of <code>JawnInputCursorBase</code>. Each of the cursors provides a method that returns an untyped muster AST node. </p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">sealed</span> <span class="k">trait</span> <span class="nc">JawnInputCursorBase</span> <span class="k">extends</span> <span class="nc">InputCursor</span><span class="o">[</span><span class="kt">Consumable</span><span class="o">[</span><span class="k">_</span><span class="o">]]</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">parsed</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]</span>
+
+  <span class="k">def</span> <span class="n">readStringOpt</span><span class="o">()</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">TextNode</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">parsed</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">NullNode</span> <span class="o">|</span> <span class="nc">UndefinedNode</span> <span class="k">=&gt;</span> <span class="nc">None</span>
+      <span class="k">case</span> <span class="n">node</span><span class="k">:</span> <span class="kt">TextNode</span> <span class="o">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="n">node</span><span class="o">)</span>
+      <span class="k">case</span> <span class="n">node</span> <span class="k">=&gt;</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">MappingException</span><span class="o">(</span><span class="n">s</span><span class="s">"Expected a string but found a ${node.getClass.getSimpleName}"</span><span class="o">)</span>
+    <span class="o">}</span>
+
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">readBooleanOpt</span><span class="o">()</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">BoolNode</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">parsed</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">NullNode</span> <span class="o">|</span> <span class="nc">UndefinedNode</span> <span class="k">=&gt;</span> <span class="nc">None</span>
+      <span class="k">case</span> <span class="n">node</span><span class="k">:</span> <span class="kt">BoolNode</span> <span class="o">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="n">node</span><span class="o">)</span>
+      <span class="k">case</span> <span class="n">node</span> <span class="k">=&gt;</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">MappingException</span><span class="o">(</span><span class="n">s</span><span class="s">"Expected a boolean but found a ${node.getClass.getSimpleName}"</span><span class="o">)</span>
+    <span class="o">}</span>
+
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">readArrayOpt</span><span class="o">()</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">ArrayNode</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">parsed</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">NullNode</span> <span class="o">|</span> <span class="nc">UndefinedNode</span> <span class="k">=&gt;</span> <span class="nc">None</span>
+      <span class="k">case</span> <span class="n">node</span><span class="k">:</span> <span class="kt">ArrayNode</span> <span class="o">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="n">node</span><span class="o">)</span>
+      <span class="k">case</span> <span class="n">node</span> <span class="k">=&gt;</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">MappingException</span><span class="o">(</span><span class="n">s</span><span class="s">"Expected an array but found a ${node.getClass.getSimpleName}"</span><span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">readNumberOpt</span><span class="o">()</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">NumberNode</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">parsed</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">NullNode</span> <span class="o">|</span> <span class="nc">UndefinedNode</span> <span class="k">=&gt;</span> <span class="nc">None</span>
+      <span class="k">case</span> <span class="n">node</span><span class="k">:</span> <span class="kt">NumberNode</span> <span class="o">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="n">node</span><span class="o">)</span>
+      <span class="k">case</span> <span class="n">node</span><span class="k">:</span> <span class="kt">TextNode</span> <span class="o">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="nc">NumberNode</span><span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="o">))</span>
+      <span class="k">case</span> <span class="n">node</span> <span class="k">=&gt;</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">MappingException</span><span class="o">(</span><span class="n">s</span><span class="s">"Expected a number but found a ${node.getClass.getSimpleName}"</span><span class="o">)</span>
+    <span class="o">}</span>
+
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">readObjectOpt</span><span class="o">()</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">ObjectNode</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">parsed</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">NullNode</span> <span class="o">|</span> <span class="nc">UndefinedNode</span> <span class="k">=&gt;</span> <span class="nc">None</span>
+      <span class="k">case</span> <span class="n">node</span><span class="k">:</span> <span class="kt">ObjectNode</span> <span class="o">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="n">node</span><span class="o">)</span>
+      <span class="k">case</span> <span class="n">node</span> <span class="k">=&gt;</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">MappingException</span><span class="o">(</span><span class="n">s</span><span class="s">"Expected an object but found a ${node.getClass.getSimpleName}"</span><span class="o">)</span>
+    <span class="o">}</span>
+
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">nextNode</span><span class="o">()</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]</span> <span class="k">=</span> <span class="n">parsed</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>The <code>JawnInputCursor</code> exists because its implementation is shared between the <code>JawnInputCursor</code> and the <code>JawnArrayNode</code>
+A <code>JawnArrayNode</code> iterates over all the nodes in the provided array and provides </p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">class</span> <span class="nc">JawnArrayNode</span><span class="o">(</span><span class="n">array</span><span class="k">:</span> <span class="kt">mutable.ArrayBuffer</span><span class="o">[</span><span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]])</span> <span class="k">extends</span> <span class="nc">ArrayNode</span><span class="o">(</span><span class="kc">null</span><span class="o">)</span> <span class="k">with</span> <span class="nc">JawnInputCursorBase</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="n">source</span><span class="k">:</span> <span class="kt">Consumable</span><span class="o">[</span><span class="k">_</span><span class="o">]</span> <span class="k">=</span> <span class="kc">null</span>
+
+  <span class="k">val</span> <span class="n">iter</span> <span class="k">=</span> <span class="n">array</span><span class="o">.</span><span class="n">iterator</span>
+
+  <span class="k">def</span> <span class="n">parsed</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]</span> <span class="k">=</span> <span class="n">iter</span><span class="o">.</span><span class="n">next</span><span class="o">()</span>
+
+  <span class="k">override</span> <span class="k">def</span> <span class="n">hasNextNode</span><span class="k">:</span> <span class="kt">Boolean</span> <span class="o">=</span> <span class="n">iter</span><span class="o">.</span><span class="n">hasNext</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>You still need to provide an implementation of an <code>AstCursor</code> for reading objects. This is the <code>muster.Ast.ObjectNode</code></p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">class</span> <span class="nc">JawnObjectNode</span><span class="o">(</span><span class="n">values</span><span class="k">:</span> <span class="kt">mutable.Map</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]])</span> <span class="k">extends</span> <span class="nc">ObjectNode</span><span class="o">(</span><span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">readArrayFieldOpt</span><span class="o">(</span><span class="n">fieldName</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">ArrayNode</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">values</span> <span class="n">get</span> <span class="n">fieldName</span> <span class="n">flatMap</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">NullNode</span> <span class="o">|</span> <span class="nc">UndefinedNode</span> <span class="k">=&gt;</span> <span class="nc">None</span>
+      <span class="k">case</span> <span class="n">node</span><span class="k">:</span> <span class="kt">ArrayNode</span> <span class="o">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="n">node</span><span class="o">)</span>
+      <span class="k">case</span> <span class="n">node</span> <span class="k">=&gt;</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">MappingException</span><span class="o">(</span><span class="n">s</span><span class="s">"Expected an array field but found a ${node.getClass.getSimpleName}"</span><span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">readObjectFieldOpt</span><span class="o">(</span><span class="n">fieldName</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">ObjectNode</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="o">(</span><span class="n">fieldName</span><span class="o">)</span> <span class="n">flatMap</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">NullNode</span> <span class="o">|</span> <span class="nc">UndefinedNode</span> <span class="k">=&gt;</span> <span class="nc">None</span>
+      <span class="k">case</span> <span class="n">node</span><span class="k">:</span> <span class="kt">ObjectNode</span> <span class="o">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="n">node</span><span class="o">)</span>
+      <span class="k">case</span> <span class="n">node</span> <span class="k">=&gt;</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">MappingException</span><span class="o">(</span><span class="n">s</span><span class="s">"Expected an object field but found a ${node.getClass.getSimpleName}"</span><span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">readField</span><span class="o">(</span><span class="n">fieldName</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">AstNode</span><span class="o">[</span><span class="k">_</span><span class="o">]</span> <span class="k">=</span>
+    <span class="n">values</span><span class="o">.</span><span class="n">getOrElse</span><span class="o">(</span><span class="n">fieldName</span><span class="o">,</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">MappingException</span><span class="o">(</span><span class="s">"Unable to determine the type of this json"</span><span class="o">))</span>
+
+  <span class="k">def</span> <span class="n">readNumberFieldOpt</span><span class="o">(</span><span class="n">fieldName</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">NumberNode</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">values</span> <span class="n">get</span> <span class="n">fieldName</span> <span class="n">flatMap</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">NullNode</span> <span class="o">|</span> <span class="nc">UndefinedNode</span> <span class="k">=&gt;</span> <span class="nc">None</span>
+      <span class="k">case</span> <span class="n">node</span><span class="k">:</span> <span class="kt">NumberNode</span> <span class="o">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="n">node</span><span class="o">)</span>
+      <span class="k">case</span> <span class="n">node</span><span class="k">:</span> <span class="kt">TextNode</span> <span class="o">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="nc">NumberNode</span><span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="o">))</span>
+      <span class="k">case</span> <span class="n">node</span> <span class="k">=&gt;</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">MappingException</span><span class="o">(</span><span class="n">s</span><span class="s">"Expected a number field but found a ${node.getClass.getSimpleName}"</span><span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">readStringFieldOpt</span><span class="o">(</span><span class="n">fieldName</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">TextNode</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">values</span> <span class="n">get</span> <span class="n">fieldName</span> <span class="n">flatMap</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">NullNode</span> <span class="o">|</span> <span class="nc">UndefinedNode</span> <span class="k">=&gt;</span> <span class="nc">None</span>
+      <span class="k">case</span> <span class="n">node</span><span class="k">:</span> <span class="kt">TextNode</span> <span class="o">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="n">node</span><span class="o">)</span>
+      <span class="k">case</span> <span class="n">node</span> <span class="k">=&gt;</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">MappingException</span><span class="o">(</span><span class="n">s</span><span class="s">"Expected a string field but found a ${node.getClass.getSimpleName}"</span><span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">readBooleanFieldOpt</span><span class="o">(</span><span class="n">fieldName</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">BoolNode</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">values</span> <span class="n">get</span> <span class="n">fieldName</span> <span class="n">flatMap</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">NullNode</span> <span class="o">|</span> <span class="nc">UndefinedNode</span> <span class="k">=&gt;</span> <span class="nc">None</span>
+      <span class="k">case</span> <span class="n">m</span><span class="k">:</span> <span class="kt">BoolNode</span> <span class="o">=&gt;</span> <span class="nc">Some</span><span class="o">(</span><span class="n">m</span><span class="o">)</span>
+      <span class="k">case</span> <span class="n">m</span> <span class="k">=&gt;</span> <span class="k">throw</span> <span class="k">new</span> <span class="nc">MappingException</span><span class="o">(</span><span class="n">s</span><span class="s">"Expected a boolean field but found a ${m.getClass.getSimpleName}"</span><span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">keysIterator</span><span class="k">:</span> <span class="kt">Iterator</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="n">values</span><span class="o">.</span><span class="n">keysIterator</span>
+
+  <span class="k">def</span> <span class="n">keySet</span><span class="k">:</span> <span class="kt">Set</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="n">values</span><span class="o">.</span><span class="n">keySet</span><span class="o">.</span><span class="n">toSet</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>This class turns a json object from the stream into an ast. It starts by extending <code>muster.ObjectNode(null)</code> and not passing it a parent cursor in this case. Objects from Jawn in the way we use jawn are greedy and so we have the materialized AST already by implementing the parsing facade from earlier.</p>
+
+        </section>
+
+        <aside id="sidebar">
+          <a href="/muster/" class="button">
+            Home
+          </a>
+          
+          <a href="/muster/docs" class="button">
+            <small>read the</small>
+            Docs
+          </a>
+          
+          <a href="https://github.com/json4s/muster/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/json4s/muster/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/json4s/muster"></a> is maintained by <a href="https://github.com/casualjim">casualjim</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>

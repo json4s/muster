@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Muster by json4s</title>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/syntax.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/print.css" media="print" />
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Muster</h1>
+        <h2>A library for macro based serializers to many different formats</h2>
+        <a href="https://github.com/json4s/muster" class="button"><small>View project on</small>GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1 id="custom-renderer">Custom Renderer</h1>
+
+<p>A custom output format is used to turn a rendered AST into a stream or serialized format like a string or an array of bytes.</p>
+
+<p>This example will explain the roles of the classes involved in rendering a muster AST to a stream, string,...</p>
+
+<p>To provide a custom renderer you need to provide a formatter first. Below is the code for the JValueFormatter</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">class</span> <span class="nc">JValueOutputFormatter</span> <span class="k">extends</span> <span class="nc">OutputFormatter</span><span class="o">[</span><span class="kt">JValue</span><span class="o">]</span> <span class="o">{</span>
+
+  <span class="k">private</span><span class="o">[</span><span class="kt">this</span><span class="o">]</span> <span class="k">val</span> <span class="n">stateStack</span> <span class="k">=</span> <span class="n">mutable</span><span class="o">.</span><span class="nc">Stack</span><span class="o">[</span><span class="kt">Int</span><span class="o">]()</span>
+  <span class="k">private</span><span class="o">[</span><span class="kt">this</span><span class="o">]</span> <span class="k">def</span> <span class="n">state</span> <span class="k">=</span> <span class="n">stateStack</span><span class="o">.</span><span class="n">headOption</span> <span class="n">getOrElse</span> <span class="nc">State</span><span class="o">.</span><span class="nc">None</span>
+  <span class="k">private</span><span class="o">[</span><span class="kt">this</span><span class="o">]</span> <span class="k">val</span> <span class="n">arrStack</span><span class="k">:</span> <span class="kt">mutable.Stack</span><span class="o">[</span><span class="kt">mutable.ArrayBuffer</span><span class="o">[</span><span class="kt">JValue</span><span class="o">]]</span> <span class="k">=</span>
+    <span class="n">mutable</span><span class="o">.</span><span class="nc">Stack</span><span class="o">[</span><span class="kt">ArrayBuffer</span><span class="o">[</span><span class="kt">JValue</span><span class="o">]]()</span>
+  <span class="k">private</span><span class="o">[</span><span class="kt">this</span><span class="o">]</span> <span class="k">val</span> <span class="n">objStack</span><span class="k">:</span> <span class="kt">mutable.Stack</span><span class="o">[</span><span class="kt">mutable.ArrayBuffer</span><span class="o">[</span><span class="kt">JField</span><span class="o">]]</span> <span class="k">=</span>
+    <span class="n">mutable</span><span class="o">.</span><span class="nc">Stack</span><span class="o">[</span><span class="kt">mutable.ArrayBuffer</span><span class="o">[</span><span class="kt">JField</span><span class="o">]]()</span>
+  <span class="k">private</span><span class="o">[</span><span class="kt">this</span><span class="o">]</span> <span class="k">val</span> <span class="n">fieldNameStack</span><span class="k">:</span> <span class="kt">mutable.Stack</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="n">mutable</span><span class="o">.</span><span class="nc">Stack</span><span class="o">[</span><span class="kt">String</span><span class="o">]()</span>
+
+  <span class="k">private</span><span class="o">[</span><span class="kt">this</span><span class="o">]</span> <span class="k">var</span> <span class="nc">_res</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">JValue</span><span class="o">]</span> <span class="k">=</span> <span class="nc">None</span>
+
+  <span class="k">def</span> <span class="n">startArray</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="n">stateStack</span> <span class="n">push</span> <span class="nc">State</span><span class="o">.</span><span class="nc">ArrayStarted</span>
+    <span class="n">arrStack</span> <span class="n">push</span> <span class="nc">ArrayBuffer</span><span class="o">.</span><span class="n">empty</span><span class="o">[</span><span class="kt">JValue</span><span class="o">]</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">endArray</span><span class="o">()</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="n">stateStack</span><span class="o">.</span><span class="n">pop</span><span class="o">()</span>
+    <span class="k">val</span> <span class="n">arr</span> <span class="k">=</span> <span class="n">arrStack</span><span class="o">.</span><span class="n">pop</span><span class="o">()</span>
+    <span class="n">writeValue</span><span class="o">(</span><span class="nc">JArray</span><span class="o">(</span><span class="n">arr</span><span class="o">.</span><span class="n">toList</span><span class="o">))</span>
+    <span class="n">arr</span><span class="o">.</span><span class="n">clear</span><span class="o">()</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">startObject</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">""</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="n">stateStack</span> <span class="n">push</span> <span class="nc">State</span><span class="o">.</span><span class="nc">ObjectStarted</span>
+    <span class="n">objStack</span> <span class="n">push</span> <span class="nc">ArrayBuffer</span><span class="o">.</span><span class="n">empty</span><span class="o">[</span><span class="kt">JField</span><span class="o">]</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">endObject</span><span class="o">()</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="n">stateStack</span><span class="o">.</span><span class="n">pop</span><span class="o">()</span>
+    <span class="k">val</span> <span class="n">obj</span> <span class="k">=</span> <span class="n">objStack</span><span class="o">.</span><span class="n">pop</span><span class="o">()</span>
+    <span class="n">writeValue</span><span class="o">(</span><span class="nc">JObject</span><span class="o">(</span><span class="n">obj</span><span class="o">.</span><span class="n">toList</span><span class="o">))</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">clear</span><span class="o">()</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">string</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">writeValue</span><span class="o">(</span><span class="nc">JString</span><span class="o">(</span><span class="n">value</span><span class="o">))</span>
+
+  <span class="k">def</span> <span class="n">byte</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">Byte</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">writeValue</span><span class="o">(</span><span class="nc">JInt</span><span class="o">(</span><span class="n">value</span><span class="o">))</span>
+
+  <span class="k">def</span> <span class="n">int</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">writeValue</span><span class="o">(</span><span class="nc">JInt</span><span class="o">(</span><span class="n">value</span><span class="o">))</span>
+
+  <span class="k">def</span> <span class="n">long</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">Long</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">writeValue</span><span class="o">(</span><span class="nc">JInt</span><span class="o">(</span><span class="n">value</span><span class="o">))</span>
+
+  <span class="k">def</span> <span class="n">bigInt</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">BigInt</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">writeValue</span><span class="o">(</span><span class="nc">JInt</span><span class="o">(</span><span class="n">value</span><span class="o">))</span>
+
+  <span class="k">def</span> <span class="n">boolean</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">Boolean</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">writeValue</span><span class="o">(</span><span class="nc">JBool</span><span class="o">(</span><span class="n">value</span><span class="o">))</span>
+
+  <span class="k">def</span> <span class="n">short</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">Short</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">writeValue</span><span class="o">(</span><span class="nc">JInt</span><span class="o">(</span><span class="n">value</span><span class="o">))</span>
+
+  <span class="k">def</span> <span class="n">float</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">Float</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">writeValue</span><span class="o">(</span><span class="nc">JDouble</span><span class="o">(</span><span class="n">value</span><span class="o">))</span>
+
+  <span class="k">def</span> <span class="n">double</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">Double</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">writeValue</span><span class="o">(</span><span class="nc">JDouble</span><span class="o">(</span><span class="n">value</span><span class="o">))</span>
+
+  <span class="k">def</span> <span class="n">bigDecimal</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">BigDecimal</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">writeValue</span><span class="o">(</span><span class="nc">JDecimal</span><span class="o">(</span><span class="n">value</span><span class="o">))</span>
+
+  <span class="k">def</span> <span class="n">startField</span><span class="o">(</span><span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">state</span> <span class="o">==</span> <span class="nc">State</span><span class="o">.</span><span class="nc">ObjectStarted</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">fieldNameStack</span> <span class="n">push</span> <span class="n">name</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="k">private</span><span class="o">[</span><span class="kt">this</span><span class="o">]</span> <span class="k">def</span> <span class="n">writeValue</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">JValue</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span><span class="o">(</span><span class="n">state</span> <span class="o">==</span> <span class="nc">State</span><span class="o">.</span><span class="nc">ObjectStarted</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">objStack</span><span class="o">.</span><span class="n">head</span> <span class="o">+=</span> <span class="n">fieldNameStack</span><span class="o">.</span><span class="n">pop</span><span class="o">()</span> <span class="o">-&gt;</span> <span class="n">value</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">state</span> <span class="o">==</span> <span class="nc">State</span><span class="o">.</span><span class="nc">ArrayStarted</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">arrStack</span><span class="o">.</span><span class="n">head</span> <span class="o">+=</span> <span class="n">value</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+      <span class="nc">_res</span> <span class="k">=</span> <span class="nc">Some</span><span class="o">(</span><span class="n">value</span><span class="o">)</span>
+    <span class="o">}</span>
+
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">writeNull</span><span class="o">()</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">writeValue</span><span class="o">(</span><span class="nc">JNull</span><span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">undefined</span><span class="o">()</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="n">writeValue</span><span class="o">(</span><span class="nc">JNothing</span><span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">result</span><span class="k">:</span> <span class="kt">JValue</span> <span class="o">=</span>
+    <span class="nc">_res</span> <span class="n">getOrElse</span> <span class="o">(</span><span class="k">throw</span> <span class="k">new</span> <span class="nc">IllegalStateException</span><span class="o">(</span><span class="n">s</span><span class="s">"Can't turn ${_res} into an org.json4s.JsonAST.JValue"</span><span class="o">))</span>
+
+  <span class="k">def</span> <span class="n">close</span><span class="o">()</span> <span class="o">{</span>
+    <span class="n">arrStack</span><span class="o">.</span><span class="n">clear</span><span class="o">()</span>
+    <span class="n">objStack</span><span class="o">.</span><span class="n">clear</span><span class="o">()</span>
+    <span class="n">stateStack</span><span class="o">.</span><span class="n">clear</span><span class="o">()</span>
+    <span class="n">fieldNameStack</span><span class="o">.</span><span class="n">clear</span><span class="o">()</span>
+    <span class="nc">_res</span> <span class="k">=</span> <span class="nc">None</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>This class uses stacks to keep track of nested objects and a stack of states to indicate what it it is currently building. The most important method in this class is the writeValue method which produces the result value at the end of the effort.
+The formatter class is the one that does all the work. A renderer uses a formatter to write to a consumable.</p>
+
+<p>The renderer itself is quite simple</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">class</span> <span class="nc">JValueRenderer</span> <span class="k">extends</span> <span class="nc">Renderer</span><span class="o">[</span><span class="kt">JValue</span><span class="o">]</span> <span class="o">{</span>
+  <span class="k">import</span> <span class="nn">muster.codec.json4s.JValueRenderer._</span>
+  <span class="k">type</span> <span class="kt">Formatter</span> <span class="o">=</span> <span class="nc">OutputFormatter</span><span class="o">[</span><span class="kt">JValue</span><span class="o">]</span>
+
+  <span class="k">def</span> <span class="n">createFormatter</span><span class="k">:</span> <span class="kt">Formatter</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">JValueOutputFormatter</span><span class="o">().</span><span class="n">asInstanceOf</span><span class="o">[</span><span class="kt">OutputFormatter</span><span class="o">[</span><span class="kt">JValue</span><span class="o">]]</span>
+<span class="o">}</span>
+</code></pre></div>
+        </section>
+
+        <aside id="sidebar">
+          <a href="/muster/" class="button">
+            Home
+          </a>
+          
+          <a href="/muster/docs" class="button">
+            <small>read the</small>
+            Docs
+          </a>
+          
+          <a href="https://github.com/json4s/muster/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/json4s/muster/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/json4s/muster"></a> is maintained by <a href="https://github.com/casualjim">casualjim</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>

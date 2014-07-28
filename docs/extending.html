@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Muster by json4s</title>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/syntax.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/muster/stylesheets/print.css" media="print" />
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Muster</h1>
+        <h2>A library for macro based serializers to many different formats</h2>
+        <a href="https://github.com/json4s/muster" class="button"><small>View project on</small>GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1 id="extending-muster">Extending muster</h1>
+
+<p>The overall design of muster is quite simple, and focusses on getting the job done properly. It is a library that works at compile time, so it generates type classes ad-hoc if the compiler can&#39;t resolve one first. This type class mechanism is the way to provide custom functionality like custom serialization or deserialization of a particular type. When the type class can&#39;t be resolved it will let you know with a friendly compiler error message. </p>
+
+<p>Muster is designed as an AST adapter. So it has its own bridging AST that serves as a bridge between various parsers, writers and AST&#39;s. This allows muster to support BSON, JSON, strings, custom byte based codecs like length delimited. In some cases this bridging AST is virtualized, because it only materializes one or a few nodes at a time instead of the entire stream. </p>
+
+<h3 id="serialization">Serialization</h3>
+
+<p>Muster provides an interface that is pretty much a <a href="https://github.com/json4s/muster/blob/master/core/src/main/scala/muster/output.scala#L6-L44">builder</a>. Streaming writers can be fit into this as being builders that build <code>Unit</code>.  It&#39;s not a clean cut builder because it has a close method, this allows for a java.io.Writer to be closed when the job is done. </p>
+
+<p>Those builders are called output formatters and are used by producers to write values onto a target like a file output stream. So the goal of those builders it to produce a value which is built piecemeal by a <a href="https://github.com/json4s/muster/blob/master/core/src/main/scala/muster/producer.scala#L226-L228">producer</a>.<br>
+That value is defined by the builder. A producers produces values into a <a href="https://github.com/json4s/muster/blob/master/core/src/main/scala/muster/producible.scala#L22-L38">producible</a>. </p>
+
+<p>This allows for writing to streams, byte arrays, strings and anything you can define a builder for. Part of an AST integration is providing a builder for that ast type for example.</p>
+
+<h3 id="deserialization">Deserialization</h3>
+
+<p>Muster provides an interface that is pretty much a <a href="https://github.com/json4s/muster/blob/master/core/src/main/scala/muster/input.scala#L509-L573">reader</a>, and in muster that is called an <code>AstCursor</code>.  These cursors read values and turn them into the bridging AST nodes.
+So a cursor provides an abstraction over the parsers of various formats. An AstCursor gets its values from a <a href="https://github.com/json4s/muster/blob/master/core/src/main/scala/muster/consumable.scala#L5-L10">consumable</a> and gives them to a <a href="https://github.com/json4s/muster/blob/master/core/src/main/scala/muster/consumer.scala#L14-L16">consumer</a> who creates an object instance of the requested type.</p>
+
+<h3 id="examples">Examples</h3>
+
+<ul>
+<li><a href="integrate_parser.html">Integrating a parser</a></li>
+<li><a href="custom_renderer.html">Writing your renderer</a></li>
+<li><a href="integrate_ast.html">Integrating an AST</a></li>
+</ul>
+
+        </section>
+
+        <aside id="sidebar">
+          <a href="/muster/" class="button">
+            Home
+          </a>
+          
+          <a href="/muster/docs" class="button">
+            <small>read the</small>
+            Docs
+          </a>
+          
+          <a href="https://github.com/json4s/muster/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/json4s/muster/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/json4s/muster"></a> is maintained by <a href="https://github.com/casualjim">casualjim</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
