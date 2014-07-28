@@ -1,7 +1,7 @@
 safe:        false
 encoding:    "utf-8"
 url:         http://localhost:4000/
-baseurl:     /
+baseurl:     
 
 muster_version: 0.2.0
 json4s_version: 3.2.10
