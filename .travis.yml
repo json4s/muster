@@ -13,13 +13,11 @@ before_script:
 - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
 - git config user.email "$GIT_EMAIL"
 - git config user.name "$GIT_NAME"
-- "./src/travis/ensure-gems.sh"
+- cp $TRAVIS_BUILD_DIR/README.md $TRAVIS_BUILD_DIR/src/jekyll/_includes/content.md
+- "cd $TRAVIS_BUILD_DIR/src/jekyll && bundle install && cd -"
 script:
 - sbt ++$TRAVIS_SCALA_VERSION test:compile test
-- sbt ++$TRAVIS_SCALA_VERSION publishSigned
-after_script:
-- sbt ++$TRAVIS_SCALA_VERSION ghpagesSynchLocal
-- "./src/travis/deploy-gh-pages.sh"
+- sbt ++$TRAVIS_SCALA_VERSION publishSigned ghpagesPushSite
 env:
   global:
   - GH_REF="github.com/json4s/muster.git"
@@ -32,4 +30,4 @@ env:
   - secure: NQtP168Vw47bgfQIBbztUj7SMWek4t0rEfOaqdt8W4Pu4hMUhhJpV1a8h+fjqXU6+SzZ9XmK3jsdyVDP9yc3GKuQro8oJZ4KlHt+gsrFbEnemG8xC60Jt2Md3wKxP4bjug5X0JSYyW8VK5yyMGY+IEKOAwBXPLljbMViPNXhvD8=
   - secure: nm5IEJrwTkGICBG24CCEptJUEiWju0NzjzfpbfbZlmdDyoYWCja56LX6U5sw5QaAEwO9yd4jH4tO0nwOwAN+IB0lcqIAUvkLsZTiG/1qOQ9ulGopj6ShgDcxpd7zhMrBxubvY0WWInB5eFrlkVtT6eTIYnFuVJa7C8D+I4rXtHg=
 notifications:
-  irc: chat.freenode.net#json4s
+  irc: "chat.freenode.net#json4s"

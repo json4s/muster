@@ -115,13 +115,7 @@ publish := {}
 
 publishLocal := {}
 
-publishSigned := {}
-
-credentials <++= (streams) map { _ => 
-  if (sys.env.getOrElse("TRAVIS","false").toBoolean) {
-    Seq(Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", sys.env("SONATYPE_USER"), sys.env("SONATYPE_PASS")))
-  } else Seq.empty
-}
+PgpKeys.publishSigned := {}
 
 unidocSettings
 
