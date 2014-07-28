@@ -58,6 +58,8 @@ packageOptions in ThisBuild <+= (name, version, organization) map {
     )
 }
 
+credentials in ThisBuild ++= travisCredentials
+
 publishTo in ThisBuild <<= version { version: String =>
   if (version.trim.endsWith("SNAPSHOT"))
     Some(Opts.resolver.sonatypeSnapshots)
@@ -122,5 +124,4 @@ site.jekyllSupport()
 
 GhPagesKeys.repository := target.value / "ghpages"
 
-credentials ++= travisCredentials
 

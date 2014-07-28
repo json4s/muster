@@ -14,14 +14,14 @@ before_script:
 - git config user.email "$GIT_EMAIL"
 - git config user.name "$GIT_NAME"
 - cp $TRAVIS_BUILD_DIR/README.md $TRAVIS_BUILD_DIR/src/jekyll/_includes/content.md
-- "cd $TRAVIS_BUILD_DIR/src/jekyll && bundle install && cd -"
+#- "cd $TRAVIS_BUILD_DIR/src/jekyll && bundle install && cd -"
 script:
-- sbt ++$TRAVIS_SCALA_VERSION test:compile test
-after_success:
-#- "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION publishSigned"
-#- "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION ghpagesPushSite"
+# - sbt ++$TRAVIS_SCALA_VERSION test:compile test
 - sbt ++$TRAVIS_SCALA_VERSION publishSigned
 - sbt ++$TRAVIS_SCALA_VERSION ghpagesPushSite
+after_success:
+# - "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION publishSigned"
+# - "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION ghpagesPushSite"
 env:
   global:
   - GH_REF="github.com/json4s/muster.git"
