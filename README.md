@@ -7,7 +7,7 @@ It uses scala macros so no reflection is involved and it will generate code at c
 that kind of looks like it would have been handwritten.  It is written with the idea of extension, so it's easy to
 add your own formats.
 
-You can find the [documentation on the site](https://muster.json4s.org/docs)
+You can find the [documentation on the site](http://muster.json4s.org/docs)
 
 ## Getting the library
 
@@ -33,7 +33,7 @@ libraryDependencies += "org.json4s" %% "muster-codec-string" % "0.2.0"
 
 ## How does it work?
 
-You can find the [documentation on the site](https://muster.json4s.org/docs)
+You can find the [documentation on the site](http://muster.json4s.org/docs)
 The idea is that things work a little bit like this:
 
 ### Writing
