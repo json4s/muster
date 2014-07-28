@@ -5,7 +5,7 @@ It uses scala macros so no reflection is involved and it will generate code at c
 that kind of looks like it would have been handwritten.  It is written with the idea of extension, so it's easy to
 add your own formats.
 
-You can find the [documentation on the wiki](https://github.com/json4s/muster/wiki)
+You can find the [documentation on the site](https://json4s.github.com/muster/)
 
 ## Getting the library
 
