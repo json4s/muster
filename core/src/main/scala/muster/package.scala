@@ -5,7 +5,7 @@
   * that kind of looks like it would have been handwritten.  It is written with the idea of extension, so it's easy to
   * add your own formats.
   *
-  * You can find [[https://github.com/json4s/muster/wiki more documentation on the wiki]]
+  * You can find [[https://muster.json4s.org/docs/ more documentation on the wiki]]
   *
   * Getting the library
   *
