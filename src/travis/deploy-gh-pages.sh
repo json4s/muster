@@ -1,6 +1,7 @@
 #!/bin/sh
 
 cd $TRAVIS_BUILD_DIR/target/ghpages
+cp -r ../jekyll/* .
 git config user.name "${GIT_NAME}"
 git config user.email "${GIT_EMAIL}"
 git add .

@@ -20,6 +20,7 @@ redcarpet:
 permalink:   date
 
 exclude     : ["Gemfile", "Gemfile.lock", "Rakefile"]
+include     : ["*.jpg"]
 
 title       : "Muster"
 sub_title   : "Fast serialization for classes in scala"
