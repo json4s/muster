@@ -1,6 +1,4 @@
 import scala.xml.Group
-import PgpKeys._
-import MusterBuild._
 
 lazy val core = project
 
@@ -58,7 +56,12 @@ packageOptions in ThisBuild <+= (name, version, organization) map {
     )
 }
 
-credentials in ThisBuild ++= travisCredentials
+credentials in ThisBuild ++= ((sys.env.get("SONATYPE_USER"), sys.env.get("SONATYPE_PASS")) match {
+  case (Some(user), Some(pass)) =>
+    Seq(Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", user, pass))
+  case _ =>
+    Seq.empty[Credentials]
+})
 
 publishTo in ThisBuild <<= version { version: String =>
   if (version.trim.endsWith("SNAPSHOT"))
@@ -98,13 +101,24 @@ pomIncludeRepository in ThisBuild := { x => false }
 ivyLoggingLevel in (ThisBuild, update) := UpdateLogging.DownloadOnly
 
 // root project specific settings
-travisSettings
+if (sys.env.getOrElse("TRAVIS","false").toBoolean) {
+  Seq(
+    git.remoteRepo := s"https://${sys.env("GH_TOKEN")}@github.com/json4s/muster.git",
+    useGpg := false,
+    pgpSecretRing := target.value / "secring.gpg",
+    pgpPublicRing := target.value / "pubring.gpg",
+    pgpPassphrase := sys.env.get("GPG_PASSPHRASE").map(_.toCharArray)
+  )
+} else 
+Seq(
+  git.remoteRepo := "git@github.com:json4s/muster.git"
+)
 
 publish := {}
 
 publishLocal := {}
 
-publishSigned := {}
+PgpKeys.publishSigned := {}
 
 packagedArtifacts := Map.empty
 
