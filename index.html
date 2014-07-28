@@ -31,29 +31,31 @@
         <section id="main-content">
           <h1 id="muster">Muster</h1>
 
+<p><a href="https://travis-ci.org/json4s/muster"><img src="https://travis-ci.org/json4s/muster.svg?branch=master" alt="Build Status"></a></p>
+
 <p>A library for macro based serializers to different formats.
 It uses scala macros so no reflection is involved and it will generate code at compile time
 that kind of looks like it would have been handwritten.  It is written with the idea of extension, so it&#39;s easy to
 add your own formats.</p>
 
-<p>You can find the <a href="https://github.com/json4s/muster/wiki">documentation on the wiki</a></p>
+<p>You can find the <a href="https://json4s.github.com/muster/">documentation on the site</a></p>
 
 <h2 id="getting-the-library">Getting the library</h2>
 
 <p>This only works with scala 2.11.
 The library is published to maven central so you can get it with:</p>
-<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-jawn"</span> <span class="o">%</span> <span class="s">"0.2.0"</span>
-<span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-jackson"</span> <span class="o">%</span> <span class="s">"0.2.0"</span>
+<div class="highlight"><pre><code class="language-" data-lang="">libraryDependencies += "org.json4s" %% "muster-codec-jawn" % "0.2.0"
+libraryDependencies += "org.json4s" %% "muster-codec-jackson" % "0.2.0"
 </code></pre></div>
 <p>Bring your own AST (BYA):</p>
-<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-json4s"</span> <span class="o">%</span> <span class="s">"0.2.0"</span>
+<div class="highlight"><pre><code class="language-" data-lang="">libraryDependencies += "org.json4s" %% "muster-codec-json4s" % "0.2.0"
 </code></pre></div>
 <p>Prettier case class for debugging:</p>
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-string"</span> <span class="o">%</span> <span class="s">"0.2.0"</span>
 </code></pre></div>
 <h2 id="how-does-it-work?">How does it work?</h2>
 
-<p>You can find the <a href="https://github.com/json4s/muster/wiki">documentation on the wiki</a>
+<p>You can find the <a href="https://json4s.github.com/muster/">documentation on the site</a>
 The idea is that things work a little bit like this:</p>
 
 <h3 id="writing">Writing</h3>
