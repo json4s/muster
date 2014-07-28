@@ -10,9 +10,10 @@ notifications:
   email:
   - ivan@flanders.co.nz
 script:
-- sbt ++$TRAVIS_SCALA_VERSION test:compile test
-- sbt ++$TRAVIS_SCALA_VERSION ghpagesSynchLocal
-- ./src/travis/deploy-gh-pages.sh
+  - ./src/travis/ensure-gems.sh
+  #- sbt ++$TRAVIS_SCALA_VERSION test:compile test
+  - sbt ++$TRAVIS_SCALA_VERSION ghpagesSynchLocal
+  - ./src/travis/deploy-gh-pages.sh
 env:
   global:
   - GH_REF="github.com/json4s/muster.git"
