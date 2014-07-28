@@ -1,25 +1,27 @@
 # Muster
 
+[![Build Status](https://travis-ci.org/json4s/muster.svg?branch=master)](https://travis-ci.org/json4s/muster)
+
 A library for macro based serializers to different formats.
 It uses scala macros so no reflection is involved and it will generate code at compile time
 that kind of looks like it would have been handwritten.  It is written with the idea of extension, so it's easy to
 add your own formats.
 
-You can find the [documentation on the wiki](https://github.com/json4s/muster/wiki)
+You can find the [documentation on the site](https://json4s.github.com/muster/)
 
 ## Getting the library
 
 This only works with scala 2.11.
 The library is published to maven central so you can get it with:
 
-```scala
+```
 libraryDependencies += "org.json4s" %% "muster-codec-jawn" % "0.2.0"
 libraryDependencies += "org.json4s" %% "muster-codec-jackson" % "0.2.0"
 ```
 
 Bring your own AST (BYA):
 
-```scala
+```
 libraryDependencies += "org.json4s" %% "muster-codec-json4s" % "0.2.0"
 ```
 
@@ -31,7 +33,7 @@ libraryDependencies += "org.json4s" %% "muster-codec-string" % "0.2.0"
 
 ## How does it work?
 
-You can find the [documentation on the wiki](https://github.com/json4s/muster/wiki)
+You can find the [documentation on the site](https://json4s.github.com/muster/)
 The idea is that things work a little bit like this:
 
 ### Writing
@@ -130,3 +132,4 @@ Possibly added next:
 * Provide a way to use custom producibles
 * Provide a way to use custom consumables
 * Support for common annotations like @JsonProperty and so on to provide overrides for behavior
+

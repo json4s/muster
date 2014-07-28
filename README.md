@@ -1,5 +1,7 @@
 # Muster
 
+[![Build Status](https://travis-ci.org/json4s/muster.svg?branch=master)](https://travis-ci.org/json4s/muster)
+
 A library for macro based serializers to different formats.
 It uses scala macros so no reflection is involved and it will generate code at compile time
 that kind of looks like it would have been handwritten.  It is written with the idea of extension, so it's easy to
@@ -31,7 +33,7 @@ libraryDependencies += "org.json4s" %% "muster-codec-string" % "0.2.0"
 
 ## How does it work?
 
-You can find the [documentation on the wiki](https://github.com/json4s/muster/wiki)
+You can find the [documentation on the site](https://json4s.github.com/muster/)
 The idea is that things work a little bit like this:
 
 ### Writing
