@@ -11,16 +11,15 @@ before_script:
 - ". .travis-env"
 - rm .travis-env
 - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
-- git config user.email "$GIT_EMAIL"
-- git config user.name "$GIT_NAME"
+- git config --global user.email "$GIT_EMAIL"
+- git config --global user.name "$GIT_NAME"
 - cp $TRAVIS_BUILD_DIR/README.md $TRAVIS_BUILD_DIR/src/jekyll/_includes/content.md
 - "cd $TRAVIS_BUILD_DIR/src/jekyll && bundle install && cd -"
 script:
-#- sbt ++$TRAVIS_SCALA_VERSION test:compile test
-- sbt ++$TRAVIS_SCALA_VERSION ghpagesPushSite
+- sbt ++$TRAVIS_SCALA_VERSION test:compile test
 after_success:
-# - "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION publishSigned"
-# - "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION ghpagesPushSite"
+- "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION publishSigned"
+- "test $TRAVIS_PULL_REQUEST == 'false' && test $TRAVIS_BRANCH == 'master' && sbt ++$TRAVIS_SCALA_VERSION ghpagesPushSite"
 env:
   global:
   - GH_REF="github.com/json4s/muster.git"
