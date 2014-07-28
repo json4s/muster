@@ -35,7 +35,7 @@ module Jekyll
       return "No code matched the key #{@item} in #{@file}" unless code
 
       lexer = Rouge::Lexer.find(File.extname(@file)).aliases[0]
-      formatter = Rouge::Formatters::HTML.new(opts.merge(line_numbers: true))
+      formatter = Rouge::Formatters::HTML.new(opts.merge(line_numbers: true, wrap: true))
       highlighted = formatter.format(lexer.lex(source)) #Pygments.highlight(code, :lexer => lexer, :options => { :style => "default", :encoding => 'utf-8'})
       add_code_tags(highlighted, lexer)
     end

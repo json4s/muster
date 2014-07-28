@@ -14,14 +14,14 @@ You can find the [documentation on the site](https://json4s.github.com/muster/)
 This only works with scala 2.11.
 The library is published to maven central so you can get it with:
 
-```
+```scala
 libraryDependencies += "org.json4s" %% "muster-codec-jawn" % "0.2.0"
 libraryDependencies += "org.json4s" %% "muster-codec-jackson" % "0.2.0"
 ```
 
 Bring your own AST (BYA):
 
-```
+```scala
 libraryDependencies += "org.json4s" %% "muster-codec-json4s" % "0.2.0"
 ```
 
@@ -109,6 +109,7 @@ It can be used to parse Json4s AST's
 Currently muster supports JSON through parsing with jackson or jawn and it can extract the following things:
 
 Object mapping features:
+
 * Primitive values like String, Int, Date
 * All scala collections
 * Scala maps with string keys
@@ -124,6 +125,7 @@ Object mapping features:
 * Allows choosing between different option treatments for formats that support omission instead of null
 
 Possibly added next:
+
 * Support for scala enums
 * Support for java enums
 * Support for renaming fields 
