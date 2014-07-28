@@ -1,0 +1,24 @@
+language: scala
+scala:
+- 2.11.1
+branches:
+  only:
+  - master
+jdk:
+- openjdk7
+notifications:
+  email:
+  - ivan@flanders.co.nz
+script:
+- sbt ++$TRAVIS_SCALA_VERSION test:compile test
+- sbt ++$TRAVIS_SCALA_VERSION publishSigned
+- sbt ++$TRAVIS_SCALA_VERSION ghpagesSynchLocal
+- ./src/travis/deploy-gh-pages.sh
+env:
+  global:
+  - GH_REF="github.com/json4s/muster.git"
+  - GIT_NAME="Ivan Porto Carrero"
+  - SONATYPE_HOST="oss.sonatype.org"
+  - SONATYPE_REALM="Sonatype Nexus Repository Manager"
+  - secure: QT2sotwurY8IE6EgVlhdvivhto8VZiiO3arWfgug2PUbGGmX5Pyso9uD9tJOi5rbHQZBdOS/QG6dNZk478cbm6PPAV6PsAHxAynZOSA/2HZw0HpEpEG20zKXku87Livr3MXRUNuKyD8CDiciZDTgEroZANKPAHYI6S6FBZR4tqo=
+  - secure: JWqgpZW4O0rx7BDSsEksk6XRVwryUPG+h0qnQ8dirJC/8HaAee01u5YT3nJYcGQ7Sdk5i7chiw/g97FMJkL3nXKm/bt1Qjl7UCLiqhQwpOkWooz6z/jXPeMNKUMhth+WVfMAXm22XGiHpVDTvWIMsXlmoyDOypF76PS5gRvH1BU=
