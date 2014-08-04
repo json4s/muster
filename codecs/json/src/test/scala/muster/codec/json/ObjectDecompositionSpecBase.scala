@@ -23,6 +23,9 @@ abstract class ObjectDecompositionSpecBase[R](format: Renderer[R]) extends Speci
   def write[T:Producer](value: T): R = format.from(value)
   def parse(s: String): R
   def astString(s: String): R
+  def optionOmitted(): R = {
+    parse("""{"one":1}""")
+  }
 
   "A JsValue decomposer" should {
 
@@ -72,8 +75,7 @@ abstract class ObjectDecompositionSpecBase[R](format: Renderer[R]) extends Speci
 
     "write a very simple case class with an option field omitted" in {
       import OptionOverride.optionProducer
-      val js = parse(s"""{"one":1}""")
-      write(WithOption(1, None)) must_== js
+      write(WithOption(1, None)) must_== optionOmitted()
     }
 
     "write list of simple case classes" in {
