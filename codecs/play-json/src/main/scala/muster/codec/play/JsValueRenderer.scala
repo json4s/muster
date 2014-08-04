@@ -30,7 +30,7 @@ object JsValueRenderer {
     def endArray(): Unit = {
       stateStack.pop()
       val arr = arrStack.pop()
-      writeValue(JsArray(arr))
+      writeValue(JsArray(arr.toVector))
       arr.clear()
     }
 
@@ -42,7 +42,7 @@ object JsValueRenderer {
     def endObject(): Unit = {
       stateStack.pop()
       val obj = objStack.pop()
-      writeValue(JsObject(obj))
+      writeValue(JsObject(obj.toVector))
       obj.clear()
     }
 
@@ -83,14 +83,20 @@ object JsValueRenderer {
 
     }
 
-    def writeNull(): Unit = writeValue(JsNull)
+    def writeNull(): Unit = {
+      writeValue(JsNull)
+    }
 
-    def undefined(): Unit = writeValue(JsUndefined(""))
+    def undefined(): Unit = {
+      fieldNameStack.pop()
+    }
 
-    def result: JsValue =
-      _res getOrElse (throw new IllegalStateException(s"Can't turn ${_res} into an org.json4s.JsonAST.JsValue"))
+    def result: JsValue = {
+      _res getOrElse (throw new IllegalStateException(s"Can't turn ${_res} into a play.api.libs.json.JsValue"))
+    }
 
     def close() {
+      println(s"closing $getClass")
       arrStack.clear()
       objStack.clear()
       stateStack.clear()
