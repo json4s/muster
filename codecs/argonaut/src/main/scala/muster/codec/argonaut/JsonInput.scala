@@ -10,9 +10,11 @@ object ArgonautInputCursor {
 
   private final class JsonObjectNode(parent: Map[JsonField, Json]) extends ObjectNode(null) {
 
+    private type ANode = AstNode[_]
     def readField(fieldName: String): AstNode[_] = {
-      parent.get(fieldName).fold(UndefinedNode.asInstanceOf[AstNode[_]]) { node => 
-        node.fold(
+      val opt = parent.get(fieldName)
+      if (opt.isDefined) {
+        opt.get.fold(
           NullNode,
           b => if (b) TrueNode else FalseNode,
           n => DoubleNode(n),
@@ -20,7 +22,7 @@ object ArgonautInputCursor {
           arr => new JsonArrayNode(arr),
           obj => new JsonObjectNode(obj.toMap)
         )
-      }
+      } else UndefinedNode
     }
 
     def readArrayFieldOpt(fieldName: String): Option[ArrayNode] = {
@@ -101,7 +103,7 @@ object ArgonautInputCursor {
   }
 
 }
-private[json4s] trait ArgonautInputCursor[R] extends InputCursor[R] {
+private[argonaut] trait ArgonautInputCursor[R] extends InputCursor[R] {
 
   import ArgonautInputCursor._
 

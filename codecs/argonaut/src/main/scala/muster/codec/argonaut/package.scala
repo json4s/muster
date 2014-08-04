@@ -25,11 +25,11 @@ package object argonaut {
       case n: NumberNode => jNumber(n.toDouble)
       case TextNode(s) => jString(s)
       case node: ArrayNode =>
-        val bldr = List.newBuilder[Json]
+        val bldr = ArrayBuffer.empty[Json]
         while (node.hasNextNode) {
           bldr += consume(node.nextNode())
         }
-        JArray(bldr.result())
+        Json.array(bldr:_*)
       case node: ObjectNode =>
         val bldr = ArrayBuffer.empty[(Json.JsonField, Json)]
         val flds = node.keysIterator

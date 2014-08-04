@@ -376,13 +376,13 @@ case class NumberNode(value: String) extends AstNode[String] with NumberNodeLike
 
   def toBigDecimal = BigDecimal(value)
 
-  def toByteAst = ByteNode(value.toByte)
+  def toByteAst = ByteNode(value.toDouble.toByte)
 
-  def toShortAst = ShortNode(value.toShort)
+  def toShortAst = ShortNode(value.toDouble.toShort)
 
-  def toIntAst = IntNode(value.toInt)
+  def toIntAst = IntNode(value.toDouble.toInt)
 
-  def toLongAst = LongNode(value.toLong)
+  def toLongAst = LongNode(value.toDouble.toLong)
 
   def toBigIntAst = BigIntNode(BigInt(value))
 
