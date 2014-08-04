@@ -49,62 +49,62 @@
         <p>This project is maintained by <a href="http://flanders.co.nz">casualjim</a></p>
       </header>
       <section>
-        <h1 id="play-json-codec">Play Json Codec</h1>
+        <h1 id="argonaut-codec">Argonaut Codec</h1>
 
-<p>Muster has an integration with play-json for parsing json. You can get muster-codec-play-json from maven central. Check the <a href="https://github.com/json4s/muster/releases">releases page</a> for the latest version.</p>
+<p>Muster has an integration with argonaut for parsing json. You can get muster-codec-argonaut from maven central. Check the <a href="https://github.com/json4s/muster/releases">releases page</a> for the latest version.</p>
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-json"</span> <span class="o">%</span> <span class="s">"latest"</span> <span class="c1">// Comes as a transitive dependency
-</span><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-play-json"</span> <span class="o">%</span> <span class="s">"latest"</span>
+</span><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-argonaut"</span> <span class="o">%</span> <span class="s">"latest"</span>
 </code></pre></div>
 <p>In the examples we&#39;ll use this case class</p>
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">case</span> <span class="k">class</span> <span class="nc">Person</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Long</span><span class="o">,</span> <span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">age</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span>
 <span class="k">val</span> <span class="n">person</span> <span class="k">=</span> <span class="nc">Person</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="s">"Luke"</span><span class="o">,</span> <span class="mi">38</span><span class="o">)</span>
-<span class="k">val</span> <span class="n">personJsValue</span><span class="k">:</span> <span class="kt">JsValue</span> <span class="o">=</span> <span class="nc">JsObject</span><span class="o">(</span><span class="nc">Seq</span><span class="o">(</span><span class="s">"id"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="s">"name"</span> <span class="o">-&gt;</span> <span class="nc">JsString</span><span class="o">(</span><span class="s">"Luke"</span><span class="o">),</span> <span class="s">"age"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">38</span><span class="o">)))</span>
+<span class="k">val</span> <span class="n">personJson</span><span class="k">:</span> <span class="kt">Json</span> <span class="o">=</span> <span class="nc">JsObject</span><span class="o">(</span><span class="nc">Seq</span><span class="o">(</span><span class="s">"id"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="s">"name"</span> <span class="o">-&gt;</span> <span class="nc">JsString</span><span class="o">(</span><span class="s">"Luke"</span><span class="o">),</span> <span class="s">"age"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">38</span><span class="o">)))</span>
 </code></pre></div>
 <h3 id="deserializing">Deserializing</h3>
 
-<p>To extract an object from a json ast you make use of the PlayJsonCodec.</p>
+<p>To extract an object from a json ast you make use of the ArgonautCodec.</p>
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
-<span class="k">import</span> <span class="nn">muster.codec.play._</span>
+<span class="k">import</span> <span class="nn">muster.codec.argonaut._</span>
 
-<span class="nc">PlayJsonCodec</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">Person</span><span class="o">](</span><span class="n">personJsValue</span><span class="o">)</span>
+<span class="nc">ArgonautCodec</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">Person</span><span class="o">](</span><span class="n">personJson</span><span class="o">)</span>
 </code></pre></div>
 <p>You can also make use of a parser and generate <code>JsValues</code></p>
 
-<p>For example extracting a JsValue with the jawn parser</p>
+<p>For example extracting a Json value with the jawn parser</p>
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
-<span class="k">import</span> <span class="nn">muster.codec.play._</span>
+<span class="k">import</span> <span class="nn">muster.codec.argonaut._</span>
 <span class="k">import</span> <span class="nn">muster.codec.jawn._</span>
-<span class="nc">JawnCodec</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">JsValue</span><span class="o">](</span><span class="s">"""{"id":1,"name":"Luke","age":38}"""</span><span class="o">)</span>
-<span class="nc">JawnCodec</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">JsValue</span><span class="o">](</span><span class="k">new</span> <span class="nc">URL</span><span class="o">(</span><span class="s">"http://somewhere.com/luke.json"</span><span class="o">))</span>
+<span class="nc">JawnCodec</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">Json</span><span class="o">](</span><span class="s">"""{"id":1,"name":"Luke","age":38}"""</span><span class="o">)</span>
+<span class="nc">JawnCodec</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">Json</span><span class="o">](</span><span class="k">new</span> <span class="nc">URL</span><span class="o">(</span><span class="s">"http://somewhere.com/luke.json"</span><span class="o">))</span>
 </code></pre></div>
 <p>The example shows getting json from a file, a string and a url. You can also provide it with a byte array or an input stream.</p>
 
 <h3 id="serializing">Serializing</h3>
 
-<p>To serialize an object to json you also use the PlayJsonCodec.</p>
+<p>To serialize an object to json you also use the ArgonautCodec.</p>
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
-<span class="k">import</span> <span class="nn">muster.codec.play._</span>
+<span class="k">import</span> <span class="nn">muster.codec.argonaut._</span>
 
-<span class="nc">PlayJsonCodec</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">)</span>
+<span class="nc">ArgonautCodec</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">)</span>
 </code></pre></div>
 <p>The example above produces</p>
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="nc">JsObject</span><span class="o">(</span><span class="nc">Seq</span><span class="o">(</span><span class="s">"id"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="s">"name"</span> <span class="o">-&gt;</span> <span class="nc">JsString</span><span class="o">(</span><span class="s">"Luke"</span><span class="o">),</span> <span class="s">"age"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">38</span><span class="o">)))</span>
 </code></pre></div>
 <p>You don&#39;t have to serialize to strings you can also serialize to files etc.</p>
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
-<span class="k">import</span> <span class="nn">muster.codec.play._</span>
+<span class="k">import</span> <span class="nn">muster.codec.argonaut._</span>
 
-<span class="nc">PlayJsonCodec</span><span class="o">.</span><span class="n">into</span><span class="o">(</span><span class="k">new</span> <span class="nc">File</span><span class="o">(</span><span class="s">"luke.json"</span><span class="o">)).</span><span class="n">from</span><span class="o">(</span><span class="n">personJsValue</span><span class="o">)</span>
+<span class="nc">ArgonautCodec</span><span class="o">.</span><span class="n">into</span><span class="o">(</span><span class="k">new</span> <span class="nc">File</span><span class="o">(</span><span class="s">"luke.json"</span><span class="o">)).</span><span class="n">from</span><span class="o">(</span><span class="n">personJsValue</span><span class="o">)</span>
 </code></pre></div>
 <p>The example above produces a file with the json for the person.
-There is a little bit of optional syntactic sugar the comes with the play json integration</p>
+There is a little bit of optional syntactic sugar the comes with the argonaut integration</p>
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
-<span class="k">import</span> <span class="nn">muster.codec.play._</span>
-<span class="k">import</span> <span class="nn">muster.codec.play.api._</span>
+<span class="k">import</span> <span class="nn">muster.codec.argonaut._</span>
+<span class="k">import</span> <span class="nn">muster.codec.argonaut.api._</span>
 
 <span class="n">person</span><span class="o">.</span><span class="n">asJsValue</span>
 </code></pre></div>
-<p>The example above calls: <code>PlayJsonCodec.from(person)</code> and produces </p>
+<p>The example above calls: <code>ArgonautCodec.from(person)</code> and produces </p>
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="nc">JsObject</span><span class="o">(</span><span class="nc">Seq</span><span class="o">(</span><span class="s">"id"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="s">"name"</span> <span class="o">-&gt;</span> <span class="nc">JsString</span><span class="o">(</span><span class="s">"Luke"</span><span class="o">),</span> <span class="s">"age"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">38</span><span class="o">)))</span>
 </code></pre></div>
       </section>
