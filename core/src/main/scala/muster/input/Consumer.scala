@@ -310,7 +310,7 @@ object Consumer {
     */
   implicit def consumer[T]: Consumer[T] = macro consumerImpl[T]
 
-  def consumerImpl[T: c.WeakTypeTag](c: blackbox.Context): c.Expr[Consumer[T]] = {
+  def consumerImpl[T: c.WeakTypeTag](c: Context): c.Expr[Consumer[T]] = {
     import c.universe._
 
     val primitiveMap =
@@ -333,7 +333,8 @@ object Consumer {
     val nullNodeDefault = reify(NullNode).tree
 
     def buildValue(_tpe: Type, reader: c.Expr[Any], methodSuffix: String = "", args: List[Tree] = Nil, default: Tree = nullNodeDefault): (Tree, Tree) = {
-      val tpe = _tpe.dealias
+      // TODO: put in separate file for 2.10, 2.11 support, was _tpe.dealias
+      val tpe = _tpe.normalize
       val t = appliedType(weakTypeOf[Consumer[Any]].typeConstructor, tpe :: Nil)
       c.inferImplicitValue(t) match {
         case EmptyTree => c.abort(c.enclosingPosition, s"Couldn't find a muster.input.Consumer[${t.typeSymbol.name.decodedName.toString}], try bringing an implicit value for ${tpe.typeSymbol.name.decodedName.toString} in scope by importing one or defining one.")
@@ -342,17 +343,17 @@ object Consumer {
           val rdrOpt: Tree = {
             if (helper.isPrimitive(tpe)) {
               val nm = primitiveMap(tpe)
-              Apply(Select(reader.tree, TermName(s"read${nm}${methodSuffix}Opt")), args)
+              Apply(Select(reader.tree, newTermName(s"read${nm}${methodSuffix}Opt")), args)
             } else if (helper.isOption(tpe)) {
               val agType = helper.resolveInnerOptionType(tpe)
               val nm = primitiveMap(agType)
-              Apply(Select(reader.tree, TermName(s"read${nm}${methodSuffix}Opt")), args)
+              Apply(Select(reader.tree, newTermName(s"read${nm}${methodSuffix}Opt")), args)
             } else if (helper.isSeq(tpe) || helper.isSet(tpe))
-              Apply(Select(reader.tree, TermName(s"readArray${methodSuffix}Opt")), args)
+              Apply(Select(reader.tree, newTermName(s"readArray${methodSuffix}Opt")), args)
             else if (helper.isEnum(tpe)) {
-              Apply(Select(reader.tree, TermName(s"readString${methodSuffix}Opt")), args)
+              Apply(Select(reader.tree, newTermName(s"readString${methodSuffix}Opt")), args)
             } else
-              Apply(Select(reader.tree, TermName(s"readObject${methodSuffix}Opt")), args)
+              Apply(Select(reader.tree, newTermName(s"readObject${methodSuffix}Opt")), args)
           }
 
           (rdrOpt, resolved)
@@ -362,24 +363,24 @@ object Consumer {
     def setterDef(returnType: Type, reader: c.Expr[Any], fieldName: Tree, defVal: Tree = EmptyTree): Tree = {
       val t = appliedType(weakTypeOf[Consumer[Any]].typeConstructor, returnType :: Nil)
       val (definition, resolved) = buildValue(returnType, reader, "Field", List(fieldName), defVal)
-      val fn = c.freshName("consumer$")
-      val vn = TermName(fn)
+      val fn = c.fresh("consumer$")
+      val vn = newTermName(fn)
       val v = ValDef(Modifiers(), vn, TypeTree(t), resolved)
-      val cn = c.freshName("node$")
+      val cn = c.fresh("node$")
 
       defVal match {
         case EmptyTree =>
-          val noDefault = Apply(Select(definition, TermName("getOrElse")), nullNodeDefault :: Nil)
-          val ce = c.Expr[AstNode[_]](Ident(TermName(cn)))
-          val ct: Tree = ValDef(Modifiers(), TermName(cn), TypeTree(weakTypeOf[AstNode[_]]), noDefault)
-          Block(v :: ct :: Nil, Apply(Select(Ident(vn), TermName("consume")), ce.tree :: Nil))
+          val noDefault = Apply(Select(definition, newTermName("getOrElse")), nullNodeDefault :: Nil)
+          val ce = c.Expr[AstNode[_]](Ident(newTermName(cn)))
+          val ct: Tree = ValDef(Modifiers(), newTermName(cn), TypeTree(weakTypeOf[AstNode[_]]), noDefault)
+          Block(v :: ct :: Nil, Apply(Select(Ident(vn), newTermName("consume")), ce.tree :: Nil))
         case defTree =>
-          val ce = c.Expr[Option[AstNode[_]]](Ident(TermName(cn)))
-          val ct: Tree = ValDef(Modifiers(), TermName(cn), TypeTree(weakTypeOf[Option[AstNode[_]]]), definition)
+          val ce = c.Expr[Option[AstNode[_]]](Ident(newTermName(cn)))
+          val ct: Tree = ValDef(Modifiers(), newTermName(cn), TypeTree(weakTypeOf[Option[AstNode[_]]]), definition)
           //          val cons = Apply(Select(Ident(vn), TermName("consume")), ce.tree :: Nil)
           val res = reify(
             ce.splice match {
-              case Some(n) => c.Expr(Apply(Select(Ident(vn), TermName("consume")), Ident(TermName("n")) :: Nil)).splice
+              case Some(n) => c.Expr(Apply(Select(Ident(vn), newTermName("consume")), Ident(newTermName("n")) :: Nil)).splice
               case _ => c.Expr(defTree).splice
             })
           Block(v :: ct :: Nil, res.tree)
@@ -401,7 +402,7 @@ object Consumer {
               !(sym.isParamWithDefault || sym.typeSignature <:< typeOf[Option[_]])
             }
 
-            val expr = c.Expr[Set[String]](Apply(Select(Ident(TermName("Set")), TermName("apply")),
+            val expr = c.Expr[Set[String]](Apply(Select(Ident(newTermName("Set")), newTermName("apply")),
               ctors.flatten.filter(isRequired).map(sym => Literal(Constant(sym.name.decodedName.toString)))
             ))
 
@@ -416,11 +417,11 @@ object Consumer {
 
 
 
-          val ctors: List[MethodSymbol] = tpe.member(termNames.CONSTRUCTOR)
+          val ctors: List[MethodSymbol] = tpe.member(nme.CONSTRUCTOR)
             .asTerm.alternatives // List of constructors
             .map(_.asMethod) // method symbols
-            .sortBy(-_.paramLists.flatten.size)
-          val ifExprsAndParams = ctors.map(ctor => ctorCheckingExpr(ctor.paramLists)).zip(ctors.map(_.asMethod.paramLists))
+            .sortBy(-_.paramss.flatten.size)
+          val ifExprsAndParams = ctors.map(ctor => ctorCheckingExpr(ctor.paramss)).zip(ctors.map(_.asMethod.paramss))
 
           ifElseTreeBuilder(ifExprsAndParams)
         }
@@ -433,14 +434,14 @@ object Consumer {
               // Change out the types if it has type parameters
               val pTpe = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
               val fieldName = Literal(Constant(pSym.name.decodedName.toString))
-              val pTnm = TermName(pSym.name.decodedName.toString)
+              val pTnm = newTermName(pSym.name.decodedName.toString)
 
               // If param has defaults, try to find the val in map, or call
               // default evaluation from its companion object
               // is the sym.companionSymbol.isTerm the best way to check for NoSymbol?
               // is there a way to get teh default values for the overloaded constructors?
-              val tree = if (pSym.asTerm.isParamWithDefault && sym.companion.isTerm) {
-                val defVal = Select(Ident(sym.companion), TermName("$lessinit$greater$default$" + (index + 1).toString))
+              val tree = if (pSym.asTerm.isParamWithDefault && sym.companionSymbol.isTerm) {
+                val defVal = Select(Ident(sym.companionSymbol), newTermName("$lessinit$greater$default$" + (index + 1).toString))
                 //                val defValG = Apply(Select(New(weakTypeOf[ConstantNode[_]])))
                 setterDef(pTpe, reader, fieldName, defVal)
               } else {
@@ -449,13 +450,13 @@ object Consumer {
               (ValDef(Modifiers(), pTnm, TypeTree(pTpe), tree), Ident(pTnm))
           })
 
-          Block(params.flatMap(_.map(_._1)), params.foldLeft(Select(New(Ident(sym)), termNames.CONSTRUCTOR): Tree) { (ct, args) =>
+          Block(params.flatMap(_.map(_._1)), params.foldLeft(Select(New(Ident(sym)), nme.CONSTRUCTOR): Tree) { (ct, args) =>
             Apply(ct, args.map(_._2))
           })
         }
 
-        val on = c.freshName("consumed$")
-        val ot = TermName(on)
+        val on = c.fresh("consumed$")
+        val ot = newTermName(on)
         val otr: Tree = ValDef(Modifiers(), ot, TypeTree(tpe), pickConstructorTree(reify(reader.splice.keySet)))
 
         val setterBlocks: List[Tree] = {
@@ -464,7 +465,7 @@ object Consumer {
             val stripped = pSym.name.decodedName.toString.replaceFirst("^set", "").replaceFirst("_=$", "")
             val name = if (needsLower) stripped(0).toLower + stripped.substring(1) else stripped
             val paramType = {
-              val tp = pSym.asMethod.paramLists.head.head
+              val tp = pSym.asMethod.paramss.head.head
               tp.typeSignatureIn(tpe)
             }
             Apply(Select(Ident(ot), pSym.name), setterDef(paramType, reader, Literal(Constant(name))) :: Nil)
@@ -484,7 +485,7 @@ object Consumer {
       new Consumer[T] {
         def consume(node: AstNode[_]): T = {
           node match {
-            case obj: ObjectNode => c.Expr[T](buildObject(thisType, c.Expr[ObjectNode](Ident(TermName("obj"))))).splice
+            case obj: ObjectNode => c.Expr[T](buildObject(thisType, c.Expr[ObjectNode](Ident(newTermName("obj"))))).splice
             case NullNode | UndefinedNode => null.asInstanceOf[T]
             case x => throw new MappingException(s"Got a ${x.getClass.getSimpleName} and expected an ObjectNode")
           }

@@ -9,7 +9,7 @@
   *
   * Getting the library
   *
-  * This only works with scala 2.11.
+  * This works with scala 2.10 and up.
   * Check the [[https://github.com/json4s/muster/releases releases page]] for the latest version.
   * The library is published to maven central so you can get it with:
   *

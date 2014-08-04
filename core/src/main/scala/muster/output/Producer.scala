@@ -178,23 +178,30 @@ object Producer {
 
   implicit def producer[T]: Producer[T] = macro producerImpl[T]
 
-  def producerImpl[T: c.WeakTypeTag](c: blackbox.Context): c.Expr[Producer[T]] = {
+  def producerImpl[T: c.WeakTypeTag](c: Context): c.Expr[Producer[T]] = {
     import c.universe._
     val helper = new Helper[c.type](c)
-    val tpe = weakTypeOf[T].dealias
+    // TODO: put in separate helper for 2.10, 2.11 differences, was weakTypeOf[T].dealias
+    val tpe = weakTypeOf[T].normalize
 
     def buildObject(target: Tree, formatter: Tree): Tree = {
       val TypeRef(_, sym: Symbol, _) = tpe
       val fields = helper.getGetters(tpe)
        val fieldTrees = fields map { fld =>
-        val tt = fld.asMethod.typeSignatureIn(tpe).resultType
+        // TODO: put in separate helper for 2.10, 2.11 differences, was fld.asMethod.typeSignatureIn(tpe).resultType
+        val tt = fld.asMethod.typeSignatureIn(tpe) match {
+          case NullaryMethodType(rtpe) => rtpe
+          case MethodType(_, ret) => ret
+          case PolyType(_, rtpe) => rtpe
+          case rtpe => rtpe
+        }
         val on = fld.name.decodedName.toString.trim
         val needsLower = on.startsWith("get")
         val stripped = on.replaceFirst("^get", "")
         val fieldName = if (needsLower) stripped(0).toLower + stripped.substring(1) else stripped
         val fieldPath = Select(target, fld.asTerm.name)
         // TODO: Add field renaming strategy
-        val startFieldExpr = Apply(Select(formatter, TermName("startField")), Literal(Constant(fieldName)) :: Nil)
+        val startFieldExpr = Apply(Select(formatter, newTermName("startField")), Literal(Constant(fieldName)) :: Nil)
 
         val pTpe = appliedType(weakTypeOf[Producer[Any]], tt::Nil)
         val fVal: List[Tree] = c.inferImplicitValue(pTpe) match {
@@ -203,23 +210,23 @@ object Producer {
             // error returns unit
             c.abort(c.enclosingPosition, s"Couldn't find an implicit $pTpe, try defining one or bringing one into scope")
           case x =>
-            val pn = c.freshName("producer$")
-            val ptn = TermName(pn)
+            val pn = c.fresh("producer$")
+            val ptn = newTermName(pn)
             val pv: Tree = ValDef(Modifiers(), ptn, TypeTree(pTpe), x)
-            val fn = c.freshName("value$")
-            val ftn = TermName(fn)
+            val fn = c.fresh("value$")
+            val ftn = newTermName(fn)
             val fv: Tree = ValDef(Modifiers(), ftn, TypeTree(tt), fieldPath)
-            val write: Tree = Apply(Select(Ident(ptn), TermName("produce")), Ident(ftn) :: formatter :: Nil)
+            val write: Tree = Apply(Select(Ident(ptn), newTermName("produce")), Ident(ftn) :: formatter :: Nil)
             fv :: pv ::  write :: Nil
         }
         startFieldExpr :: fVal
       }
       Block(
         Apply(
-          Select(formatter, TermName("startObject")),
+          Select(formatter, newTermName("startObject")),
           Literal(Constant(sym.name.decodedName.toString))::Nil) ::
         fieldTrees.reverse.flatten,
-        Apply(Select(formatter, TermName("endObject")), Nil))
+        Apply(Select(formatter, newTermName("endObject")), Nil))
 
     }
 
@@ -228,7 +235,7 @@ object Producer {
       reify {
         new Producer[T] {
           def produce(value: T, formatter: OutputFormatter[_]): Unit = {
-            c.Expr(buildObject(Ident(TermName("value")), Ident(TermName("formatter")))).splice
+            c.Expr(buildObject(Ident(newTermName("value")), Ident(newTermName("formatter")))).splice
           }
         }
       }
@@ -276,7 +283,7 @@ object Producer {
   *
   * @tparam T the type of value this producer knows about
   */
-@implicitNotFound("Couldn't find a producer for ${T}. Try importing muster._ or to implement a muster.Consumable")
+@implicitNotFound("Couldn't find a producer for ${T}. Try importing muster._ or to implement a muster.Producer")
 trait Producer[T] {
   def produce(value: T, formatter: OutputFormatter[_])
 }

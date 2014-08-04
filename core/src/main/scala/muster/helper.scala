@@ -7,7 +7,7 @@ import java.sql.Timestamp
 import scala.annotation.tailrec
 
 /** A utility class for the generator macros */
-class Helper[C <: blackbox.Context](val c: C) {
+class Helper[C <: Context](val c: C) {
   import c.universe._
 
   private val primitiveTypes = Set[Type](c.typeOf[String], c.typeOf[Int], c.typeOf[Long], c.typeOf[Double],
@@ -25,7 +25,7 @@ class Helper[C <: blackbox.Context](val c: C) {
   def isEnum(tpe: c.Type) = tpe <:< c.typeOf[Enumeration#Value]
 
   def caseClassFields(tpe: c.universe.Type): Seq[Symbol] = {
-    tpe.decls.toVector.filter {
+    tpe.declarations.toVector.filter {
       v =>
         if (v.isTerm) {
           val t = v.asTerm
@@ -80,11 +80,11 @@ class Helper[C <: blackbox.Context](val c: C) {
     v.isTerm && v.asTerm.isMethod && v.isPublic &&
       (v.asTerm.asMethod.isSetter || v.asTerm.name.decodedName.toString.startsWith("set")) &&
       varNames.exists(vn => s"set${vn.capitalize}" == methodName || s"${vn}_=" == methodName) &&
-      v.asMethod.paramLists.flatten.length == 1
+      v.asMethod.paramss.flatten.length == 1
   }
 
   def getSetters(tpe: Type): List[Symbol] = {
-    val ctorParams = tpe.member(termNames.CONSTRUCTOR).asTerm.alternatives.map(_.asMethod.paramLists.flatten.map(_.name)).flatten.toSet
+    val ctorParams = tpe.member(nme.CONSTRUCTOR).asTerm.alternatives.map(_.asMethod.paramss.flatten.map(_.name)).flatten.toSet
     val varNames = vars(tpe).filter(sym => sym.asTerm.isProtected || sym.asTerm.isPrivate && !ctorParams(sym.name)).map(_.name.decodedName.toString.trim).toSet
     (tpe.members filter (isJavaOrScalaSetter(varNames, _))).toList
   }
@@ -94,18 +94,18 @@ class Helper[C <: blackbox.Context](val c: C) {
     v.isTerm && v.asTerm.isMethod && v.isPublic &&
       (v.asTerm.asMethod.isGetter || v.asTerm.name.decodedName.toString.startsWith("get")) &&
       varNames.exists(vn => s"get${vn.capitalize}" == methodName || vn == methodName) &&
-      v.asMethod.paramLists.flatten.length == 0
+      v.asMethod.paramss.flatten.length == 0
   }
 
   def getGetters(tpe: Type): List[Symbol] = {
-    val ctorParams = tpe.member(termNames.CONSTRUCTOR).asTerm.alternatives.map(_.asMethod.paramLists.flatten.map(_.name)).flatten.toSet
+    val ctorParams = tpe.member(nme.CONSTRUCTOR).asTerm.alternatives.map(_.asMethod.paramss.flatten.map(_.name)).flatten.toSet
     val valNames = vals(tpe).filterNot(sym => sym.asTerm.isProtected || sym.asTerm.isPrivate ).map(_.name.decodedName.toString.trim).toSet
     val varNames = vars(tpe).filter(sym => sym.asTerm.isProtected || sym.asTerm.isPrivate).map(_.name.decodedName.toString.trim).toSet
     (tpe.members filter (isJavaOrScalaGetter(varNames ++ valNames ++ ctorParams.map(_.decodedName.toString.trim), _))).toList
   }
 
   def enumValues(tpe: Type): List[Symbol] = {
-    tpe.member(TermName("Value")).asTerm.alternatives.headOption.fold(List.empty[Symbol])({ vt =>
+    tpe.member(newTermName("Value")).asTerm.alternatives.headOption.fold(List.empty[Symbol])({ vt =>
       val valueType = vt.asMethod.returnType
       tpe.members.filter(sym => !sym.isMethod && sym.typeSignature.baseType(valueType.typeSymbol) =:= valueType).toList
     })

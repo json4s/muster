@@ -11,7 +11,7 @@ You can find the [documentation on the site](http://muster.json4s.org/docs)
 
 ## Getting the library
 
-This only works with scala 2.11.
+This works with scala 2.10 and up.
 The library is published to maven central so you can get it with:
 
 ```scala
