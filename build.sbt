@@ -14,9 +14,13 @@ lazy val strings = project in file("codecs/strings") dependsOn (core % "compile-
 
 lazy val playJson = project in file("codecs/play-json") dependsOn (core % "compile->compile;test->test", json % "compile->compile;test->test")
 
-lazy val caliperBenchmarks = project in file("benchmarks/caliper") dependsOn (core % "compile->compile;test->test", jackson % "compile->compile;test->test", json4s % "compile->compile;test->test", jawn % "compile->compile;test->test", strings % "compile->compile;test->test")
+lazy val argonaut = project in file("codecs/argonaut") dependsOn (core % "compile->compile;test->test", json % "compile->compile;test->test")
+
+lazy val caliperBenchmarks = project in file("benchmarks/caliper") dependsOn (core % "compile->compile;test->test", jackson % "compile->compile;test->test", json4s % "compile->compile;test->test", playJson % "compile->compile;test->test", argonaut % "compile->compile;test->test", jawn % "compile->compile;test->test", strings % "compile->compile;test->test")
 
 scalaVersion in ThisBuild := "2.11.1"
+
+crossScalaVersions in ThisBuild := Seq("2.10.4", "2.11.1")
 
 name := "muster"
 
