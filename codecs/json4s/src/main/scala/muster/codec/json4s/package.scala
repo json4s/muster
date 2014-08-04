@@ -49,8 +49,7 @@ package object json4s {
       case JInt(i) => formatter.bigInt(i)
       case JDecimal(d) => formatter.bigDecimal(d)
       case JDouble(d) => formatter.double(d)
-      case JBool(true) => formatter.boolean(value = true)
-      case JBool(false) => formatter.boolean(value = false)
+      case JBool(v) => formatter.boolean(value = v)
       case JArray(values) =>
         formatter.startArray()
         values foreach (jv => produce(jv, formatter))

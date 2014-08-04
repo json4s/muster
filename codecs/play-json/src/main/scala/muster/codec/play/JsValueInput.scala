@@ -6,9 +6,9 @@ import ast._
 import input._
 import _root_.play.api.libs.json._
 
-object Json4sInputCursor {
+object PlayJsonInputCursor {
 
-  private final class Json4sObjectNode(parent: JsObject) extends ObjectNode(null) {
+  private final class PlayJsonObjectNode(parent: JsObject) extends ObjectNode(null) {
     private[this] val fields: Map[String, JsValue] = parent.value.toMap
 
     def readField(fieldName: String): AstNode[_] = {
@@ -20,7 +20,7 @@ object Json4sInputCursor {
         case JsBoolean(true) => TrueNode
         case JsBoolean(false) => FalseNode
         case node: JsArray => new JsArrayNode(node)
-        case node: JsObject => new Json4sObjectNode(node)
+        case node: JsObject => new PlayJsonObjectNode(node)
       }
     }
 
@@ -31,15 +31,15 @@ object Json4sInputCursor {
       readFieldFromParent(fieldName) match {
         case JsNull | _: JsUndefined => None
         case node: JsArray => Some(new JsArrayNode(node))
-        case node => throw new MappingException(s"Expected an array field but found a ${node.getClass.getSimpleName}")
+        case node => throw new MappingException(s"Expected an array field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 
     def readObjectFieldOpt(fieldName: String): Option[ObjectNode] = {
       readFieldFromParent(fieldName) match {
         case JsNull | _: JsUndefined => None
-        case node: JsObject => Some(new Json4sObjectNode(node))
-        case node => throw new MappingException(s"Expected an object field but found a ${node.getClass.getSimpleName}")
+        case node: JsObject => Some(new PlayJsonObjectNode(node))
+        case node => throw new MappingException(s"Expected an object field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 
@@ -47,7 +47,7 @@ object Json4sInputCursor {
       readFieldFromParent(fieldName) match {
         case JsNull | _: JsUndefined => None
         case JsString(s) => Some(TextNode(s))
-        case node => throw new MappingException(s"Expected a string field but found a ${node.getClass.getSimpleName}")
+        case node => throw new MappingException(s"Expected a string field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 
@@ -56,7 +56,7 @@ object Json4sInputCursor {
         case JsNull | _: JsUndefined => None
         case JsBoolean(true) => Some(TrueNode)
         case JsBoolean(false) => Some(FalseNode)
-        case node => throw new MappingException(s"Expected a boolean field but found a ${node.getClass.getSimpleName}")
+        case node => throw new MappingException(s"Expected a boolean field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 
@@ -65,7 +65,7 @@ object Json4sInputCursor {
         case JsNull | _: JsUndefined => None
         case JsNumber(i) => Some(NumberNode(i.toString()))
         case JsString(s) => Some(NumberNode(s))
-        case node => throw new MappingException(s"Expected a number field but found a ${node.getClass.getSimpleName}")
+        case node => throw new MappingException(s"Expected a number field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 
@@ -75,16 +75,16 @@ object Json4sInputCursor {
     def keysIterator: Iterator[String] = fields.keysIterator
   }
 
-  private final class JsArrayNode(val source: JsArray) extends ArrayNode(null) with Json4sInputCursor[JsArray] {
+  private final class JsArrayNode(val source: JsArray) extends ArrayNode(null) with PlayJsonInputCursor[JsArray] {
     private[this] val iter = source.value.iterator
     protected def node = iter.next()
     override def hasNextNode: Boolean = iter.hasNext
   }
 
 }
-private[play] trait Json4sInputCursor[R] extends InputCursor[R] {
+private[play] trait PlayJsonInputCursor[R] extends InputCursor[R] {
 
-  import Json4sInputCursor._
+  import PlayJsonInputCursor._
 
   protected def node: JsValue
 
@@ -99,7 +99,7 @@ private[play] trait Json4sInputCursor[R] extends InputCursor[R] {
   def readObjectOpt(): Option[ObjectNode] = {
     this.node match {
       case JsNull | _: JsUndefined => None
-      case node: JsObject => Some(new Json4sObjectNode(node))
+      case node: JsObject => Some(new PlayJsonObjectNode(node))
       case node => throw new MappingException(s"Expected an object value but found a ${node.getClass.getSimpleName}")
     }
   }
@@ -139,7 +139,7 @@ private[play] trait Json4sInputCursor[R] extends InputCursor[R] {
       case JsBoolean(true) => TrueNode
       case JsBoolean(false) => FalseNode
       case node: JsArray => new JsArrayNode(node)
-      case node: JsObject => new Json4sObjectNode(node)
+      case node: JsObject => new PlayJsonObjectNode(node)
     }
   }
 }

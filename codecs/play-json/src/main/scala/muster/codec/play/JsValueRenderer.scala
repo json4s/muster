@@ -88,7 +88,9 @@ object JsValueRenderer {
     }
 
     def undefined(): Unit = {
-      fieldNameStack.pop()
+      if (state == State.ObjectStarted) {
+        fieldNameStack.pop()
+      }
     }
 
     def result: JsValue = {

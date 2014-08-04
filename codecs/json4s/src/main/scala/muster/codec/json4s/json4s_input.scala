@@ -33,7 +33,7 @@ object Json4sInputCursor {
       readFieldFromParent(fieldName) match {
         case JNull | JNothing => None
         case node: JArray => Some(new JArrayNode(node))
-        case node => throw new MappingException(s"Expected an array field but found a ${node.getClass.getSimpleName}")
+        case node => throw new MappingException(s"Expected an array field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 
@@ -41,7 +41,7 @@ object Json4sInputCursor {
       readFieldFromParent(fieldName) match {
         case JNull | JNothing => None
         case node: JObject => Some(new Json4sObjectNode(node))
-        case node => throw new MappingException(s"Expected an object field but found a ${node.getClass.getSimpleName}")
+        case node => throw new MappingException(s"Expected an object field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 
@@ -49,7 +49,7 @@ object Json4sInputCursor {
       readFieldFromParent(fieldName) match {
         case JNull | JNothing => None
         case JString(s) => Some(TextNode(s))
-        case node => throw new MappingException(s"Expected a string field but found a ${node.getClass.getSimpleName}")
+        case node => throw new MappingException(s"Expected a string field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 
@@ -58,7 +58,7 @@ object Json4sInputCursor {
         case JNull | JNothing => None
         case JBool(true) => Some(TrueNode)
         case JBool(false) => Some(FalseNode)
-        case node => throw new MappingException(s"Expected a boolean field but found a ${node.getClass.getSimpleName}")
+        case node => throw new MappingException(s"Expected a boolean field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 
@@ -69,7 +69,7 @@ object Json4sInputCursor {
         case JDecimal(d) => Some(NumberNode(d.toString()))
         case JDouble(d) => Some(NumberNode(d.toString))
         case JString(s) => Some(NumberNode(s))
-        case node => throw new MappingException(s"Expected a number field but found a ${node.getClass.getSimpleName}")
+        case node => throw new MappingException(s"Expected a number field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 

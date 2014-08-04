@@ -24,7 +24,7 @@ private object JacksonInputCursor {
       else if (node.isNumber) NumberNode(node.asText())
       else if (node.isBoolean) {
         if (node.asBoolean()) TrueNode else FalseNode
-      } else throw new MappingException("Unable to determine the type of this json")
+      } else throw new MappingException(s"Unable to determine the type of this json for $fieldName")
     }
 
     private[this] def readFieldFromParent(name: String): JsonNode = if (parent.has(name)) parent.get(name) else com.fasterxml.jackson.databind.node.NullNode.getInstance()
@@ -33,28 +33,28 @@ private object JacksonInputCursor {
       val node = readFieldFromParent(fieldName)
       if (node.isNull || node.isMissingNode) None
       else if (node.isArray) Some(new JacksonArrayNode(node))
-      else throw new MappingException(s"Expected an array field but found a ${node.getClass.getSimpleName}")
+      else throw new MappingException(s"Expected an array field for $fieldName but found a ${node.getClass.getSimpleName}")
     }
 
     def readObjectFieldOpt(fieldName: String): Option[ObjectNode] = {
       val node = readFieldFromParent(fieldName)
       if (node.isNull || node.isMissingNode) None
       else if (node.isObject) Some(new JacksonObjectNode(node))
-      else throw new MappingException(s"Expected an object field but found a ${node.getClass.getSimpleName}")
+      else throw new MappingException(s"Expected an object field for $fieldName but found a ${node.getClass.getSimpleName}")
     }
 
     def readStringFieldOpt(fieldName: String): Option[TextNode] = {
       val node = readFieldFromParent(fieldName)
       if (node.isNull || node.isMissingNode) None
       else if (node.isTextual) Some(TextNode(node.asText()))
-      else throw new MappingException(s"Expected a string field but found a ${node.getClass.getSimpleName}")
+      else throw new MappingException(s"Expected a string field for $fieldName but found a ${node.getClass.getSimpleName}")
     }
 
     def readBooleanFieldOpt(fieldName: String): Option[BoolNode] = {
       val node = readFieldFromParent(fieldName)
       if (node.isNull || node.isMissingNode) None
       else if (node.isBoolean) Some(if (node.asBoolean()) TrueNode else FalseNode)
-      else throw new MappingException(s"Expected a boolean field but found a ${node.getClass.getSimpleName}")
+      else throw new MappingException(s"Expected a boolean field for $fieldName but found a ${node.getClass.getSimpleName}")
     }
 
     def readNumberFieldOpt(fieldName: String): Option[NumberNode] = {
@@ -62,7 +62,7 @@ private object JacksonInputCursor {
       if (node.isNull || node.isMissingNode) None
       else if (node.isTextual) Some(NumberNode(node.asText()))
       else if (node.isNumber) Some(NumberNode(node.asText()))
-      else throw new MappingException(s"Expected a number field but found a ${node.getClass.getSimpleName}")
+      else throw new MappingException(s"Expected a number field for $fieldName but found a ${node.getClass.getSimpleName}")
     }
 
 

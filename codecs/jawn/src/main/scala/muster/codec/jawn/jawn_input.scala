@@ -23,7 +23,7 @@ private[jawn] object JawnInputCursor {
       values get fieldName flatMap {
         case NullNode | UndefinedNode => None
         case node: ArrayNode => Some(node)
-        case node => throw new MappingException(s"Expected an array field but found a ${node.getClass.getSimpleName}")
+        case node => throw new MappingException(s"Expected an array field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 
@@ -31,19 +31,19 @@ private[jawn] object JawnInputCursor {
       values.get(fieldName) flatMap {
         case NullNode | UndefinedNode => None
         case node: ObjectNode => Some(node)
-        case node => throw new MappingException(s"Expected an object field but found a ${node.getClass.getSimpleName}")
+        case node => throw new MappingException(s"Expected an object field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 
     def readField(fieldName: String): AstNode[_] =
-      values.getOrElse(fieldName, throw new MappingException("Unable to determine the type of this json"))
+      values.getOrElse(fieldName, throw new MappingException(s"Unable to determine the type of this json for $fieldName"))
 
     def readNumberFieldOpt(fieldName: String): Option[NumberNode] = {
       values get fieldName flatMap {
         case NullNode | UndefinedNode => None
         case node: NumberNode => Some(node)
         case node: TextNode => Some(NumberNode(node.value))
-        case node => throw new MappingException(s"Expected a number field but found a ${node.getClass.getSimpleName}")
+        case node => throw new MappingException(s"Expected a number field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 
@@ -51,7 +51,7 @@ private[jawn] object JawnInputCursor {
       values get fieldName flatMap {
         case NullNode | UndefinedNode => None
         case node: TextNode => Some(node)
-        case node => throw new MappingException(s"Expected a string field but found a ${node.getClass.getSimpleName}")
+        case node => throw new MappingException(s"Expected a string field for $fieldName but found a ${node.getClass.getSimpleName}")
       }
     }
 
@@ -59,7 +59,7 @@ private[jawn] object JawnInputCursor {
       values get fieldName flatMap {
         case NullNode | UndefinedNode => None
         case m: BoolNode => Some(m)
-        case m => throw new MappingException(s"Expected a boolean field but found a ${m.getClass.getSimpleName}")
+        case m => throw new MappingException(s"Expected a boolean field for $fieldName but found a ${m.getClass.getSimpleName}")
       }
     }
 
