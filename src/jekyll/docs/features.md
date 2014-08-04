@@ -17,6 +17,7 @@ In addition to parsing json it provides integration with several json asts, and 
 ### Supported ASTs
 
 * [Json4s](json4s_codec.html)
+* [Play Json](play_json_codec.html)
 
 ### Object mapping features
 

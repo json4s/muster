@@ -21,9 +21,13 @@ libraryDependencies += "org.json4s" %% "muster-codec-jackson" % "0.2.0"
 
 Bring your own AST (BYA):
 
+For Json4s: 
+
 ```scala
 libraryDependencies += "org.json4s" %% "muster-codec-json4s" % "0.2.0"
 ```
+
+For Play Json:
 
 ```scala
 libraryDependencies += "org.json4s" %% "muster-codec-play-json" % "0.3.0-SNAPSHOT" // Not yet published
@@ -64,14 +68,14 @@ person.asPrettyJson /* calls: JsonFormat.Pretty.from(person) and produces
 
 import muster.codec.json4s._
 // decompose to a Json4s AST
-JValueFormat.from(person)
+Json4sFormat.from(person)
 
 import muster.codec.json4s.api._
 person.asJValue
 
 
 // Serialize Json4s AST's
-import muster.codec.json4s._
+import muster.codec.json4s.api._
 JsonFormat.into(new File("jvalues.json")).from(person.asJValue)
 JsonFormat.Pretty.from(person.asJValue)
 
