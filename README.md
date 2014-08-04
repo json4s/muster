@@ -15,8 +15,8 @@ This only works with scala 2.11.
 The library is published to maven central so you can get it with:
 
 ```scala
-libraryDependencies += "org.json4s" %% "muster-codec-jawn" % "0.2.0"
-libraryDependencies += "org.json4s" %% "muster-codec-jackson" % "0.2.0"
+libraryDependencies += "org.json4s" %% "muster-codec-jawn" % "0.3.0"
+libraryDependencies += "org.json4s" %% "muster-codec-jackson" % "0.3.0"
 ```
 
 Bring your own AST (BYA):
@@ -24,19 +24,26 @@ Bring your own AST (BYA):
 For Json4s: 
 
 ```scala
-libraryDependencies += "org.json4s" %% "muster-codec-json4s" % "0.2.0"
+libraryDependencies += "org.json4s" %% "muster-codec-json4s" % "0.3.0"
 ```
 
 For Play Json:
 
 ```scala
-libraryDependencies += "org.json4s" %% "muster-codec-play-json" % "0.3.0-SNAPSHOT" // Not yet published
+libraryDependencies += "org.json4s" %% "muster-codec-play-json" % "0.3.0"
 ```
+
+For Argonaut:
+
+```scala
+libraryDependencies += "org.json4s" %% "muster-codec-argonaut" % "0.3.0" 
+```
+
 
 Prettier case class for debugging:
 
 ```scala
-libraryDependencies += "org.json4s" %% "muster-codec-string" % "0.2.0"
+libraryDependencies += "org.json4s" %% "muster-codec-string" % "0.3.0"
 ```
 
 ## How does it work?

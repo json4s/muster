@@ -18,6 +18,7 @@ It requires no extra code for serializing and uses macros to generate serializer
   * [Jackson Codec](jackson_codec.html)
   * [Json4s Codec](json4s_codec.html)
   * [Play Json Codec](play_json_codec.html)
+  * [Argonaut Codec](argonaut_codec.html)
 * [Extending muster](extending.html)
   * [Integrate a parser example](integrate_parser.html)
   * [Provide a custom output format](custom_renderer.html)

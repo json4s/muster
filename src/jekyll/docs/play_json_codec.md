@@ -1,9 +1,9 @@
 ---
 layout: default
 ---
-# Json4s Codec
+# Play Json Codec
 
-Muster has an integration with json4s for parsing json. You can get muster-codec-json4s from maven central. Check the [releases page](https://github.com/json4s/muster/releases) for the latest version.
+Muster has an integration with play-json for parsing json. You can get muster-codec-play-json from maven central. Check the [releases page](https://github.com/json4s/muster/releases) for the latest version.
 
 ```scala
 libraryDependencies += "org.json4s" %% "muster-codec-json" % "latest" // Comes as a transitive dependency
@@ -70,7 +70,7 @@ PlayJsonCodec.into(new File("luke.json")).from(personJsValue)
 ```
 
 The example above produces a file with the json for the person.
-There is a little bit of optional syntactic sugar the comes with the json4s integration
+There is a little bit of optional syntactic sugar the comes with the play json integration
 
 ```scala
 import muster._
