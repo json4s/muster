@@ -68,8 +68,12 @@ The library is published to maven central so you can get it with:</p>
 <span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-jackson"</span> <span class="o">%</span> <span class="s">"0.2.0"</span>
 </code></pre></div>
 <p>Bring your own AST (BYA):</p>
+
+<p>For Json4s: </p>
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-json4s"</span> <span class="o">%</span> <span class="s">"0.2.0"</span>
-</code></pre></div><div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-play-json"</span> <span class="o">%</span> <span class="s">"0.3.0-SNAPSHOT"</span> <span class="c1">// Not yet published
+</code></pre></div>
+<p>For Play Json:</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-play-json"</span> <span class="o">%</span> <span class="s">"0.3.0-SNAPSHOT"</span> <span class="c1">// Not yet published
 </span></code></pre></div>
 <p>Prettier case class for debugging:</p>
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-string"</span> <span class="o">%</span> <span class="s">"0.2.0"</span>
@@ -101,14 +105,14 @@ The idea is that things work a little bit like this:</p>
 
 <span class="k">import</span> <span class="nn">muster.codec.json4s._</span>
 <span class="c1">// decompose to a Json4s AST
-</span><span class="nc">JValueFormat</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">)</span>
+</span><span class="nc">Json4sFormat</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">)</span>
 
 <span class="k">import</span> <span class="nn">muster.codec.json4s.api._</span>
 <span class="n">person</span><span class="o">.</span><span class="n">asJValue</span>
 
 
 <span class="c1">// Serialize Json4s AST's
-</span><span class="k">import</span> <span class="nn">muster.codec.json4s._</span>
+</span><span class="k">import</span> <span class="nn">muster.codec.json4s.api._</span>
 <span class="nc">JsonFormat</span><span class="o">.</span><span class="n">into</span><span class="o">(</span><span class="k">new</span> <span class="nc">File</span><span class="o">(</span><span class="s">"jvalues.json"</span><span class="o">)).</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">.</span><span class="n">asJValue</span><span class="o">)</span>
 <span class="nc">JsonFormat</span><span class="o">.</span><span class="nc">Pretty</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">.</span><span class="n">asJValue</span><span class="o">)</span>
 
