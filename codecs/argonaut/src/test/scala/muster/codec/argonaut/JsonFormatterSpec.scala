@@ -115,7 +115,7 @@ A Json Formatter should
     read[Double](jst) must_== jst.numberOrZero
   }
   val bigdecimalProp = Prop.forAll(jdecimalGen) { jst =>
-    read[BigDecimal](jst) must_== jst.numberOrZero
+    read[BigDecimal](jst) must_== BigDecimal(jst.numberOrZero)
   }
 
   val stringListProp = Prop.forAll(stringListGen) { jst =>
