@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Muster</title>
+    
+    <link rel="stylesheet" href="/stylesheets/backchatio.css?129475">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script type="text/javascript">
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-240612-8', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+  </head>
+  <body>
+    <header class="backchatio">
+      <!-- <nav>
+        <div class="centered">
+          <a href="https://github.com/casualjim">
+            <img src="" alt=" casualjim" height="50" width="180" />
+          </a>
+        </div>
+      </nav> -->
+      <hgroup>
+        <h1><strong>Muster</strong> by json4s</h1>
+        <h2><strong>Fast serialization</strong> for classes in scala</h2>
+      </hgroup>
+    </header>
+    <article class="wrapper">
+      <header id="sidebar" class="fixed-sidebar">
+        <h2><a href="/">Muster</a><!-- <a href="http://travis-ci.org/json4s/muster"><img src="https://secure.travis-ci.org/json4s/muster.png?branch=master" alt="Build Status" /></a> --></h2>
+        <p>Fast serialization for classes in scala</p>
+        <p class="view"><a href="https://github.com/json4s/muster">View the Project on GitHub <small>json4s/muster</small></a></p>
+        <p class="view"><a href="/docs">Read the docs <small>user guide</small></a></p>
+        <ul>
+          <li><a href="https://github.com/json4s/muster">View On <strong>GitHub</strong></a></li>
+          <li><a href="/latest/api/#muster">API docs <strong>Scala</strong></a></li>
+          <li><a href="https://github.com/json4s/muster/issues">Submit an <strong>issue</strong></a></li>
+        </ul>
+        <p>This project is maintained by <a href="http://flanders.co.nz">casualjim</a></p>
+      </header>
+      <section>
+        <h1 id="json4s-codec">Json4s Codec</h1>
+
+<p>Muster has an integration with json4s for parsing json. You can get muster-codec-json4s from maven central. Check the <a href="https://github.com/json4s/muster/releases">releases page</a> for the latest version.</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-json"</span> <span class="o">%</span> <span class="s">"latest"</span> <span class="c1">// Comes as a transitive dependency
+</span><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"org.json4s"</span> <span class="o">%%</span> <span class="s">"muster-codec-play-json"</span> <span class="o">%</span> <span class="s">"latest"</span>
+</code></pre></div>
+<p>In the examples we&#39;ll use this case class</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">case</span> <span class="k">class</span> <span class="nc">Person</span><span class="o">(</span><span class="n">id</span><span class="k">:</span> <span class="kt">Long</span><span class="o">,</span> <span class="n">name</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">age</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">person</span> <span class="k">=</span> <span class="nc">Person</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="s">"Luke"</span><span class="o">,</span> <span class="mi">38</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">personJsValue</span><span class="k">:</span> <span class="kt">JsValue</span> <span class="o">=</span> <span class="nc">JsObject</span><span class="o">(</span><span class="nc">Seq</span><span class="o">(</span><span class="s">"id"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="s">"name"</span> <span class="o">-&gt;</span> <span class="nc">JsString</span><span class="o">(</span><span class="s">"Luke"</span><span class="o">),</span> <span class="s">"age"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">38</span><span class="o">)))</span>
+</code></pre></div>
+<h3 id="deserializing">Deserializing</h3>
+
+<p>To extract an object from a json ast you make use of the PlayJsonCodec.</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+<span class="k">import</span> <span class="nn">muster.codec.play._</span>
+
+<span class="nc">PlayJsonCodec</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">Person</span><span class="o">](</span><span class="n">personJsValue</span><span class="o">)</span>
+</code></pre></div>
+<p>You can also make use of a parser and generate <code>JsValues</code></p>
+
+<p>For example extracting a JsValue with the jawn parser</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+<span class="k">import</span> <span class="nn">muster.codec.play._</span>
+<span class="k">import</span> <span class="nn">muster.codec.jawn._</span>
+<span class="nc">JawnCodec</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">JsValue</span><span class="o">](</span><span class="s">"""{"id":1,"name":"Luke","age":38}"""</span><span class="o">)</span>
+<span class="nc">JawnCodec</span><span class="o">.</span><span class="n">as</span><span class="o">[</span><span class="kt">JsValue</span><span class="o">](</span><span class="k">new</span> <span class="nc">URL</span><span class="o">(</span><span class="s">"http://somewhere.com/luke.json"</span><span class="o">))</span>
+</code></pre></div>
+<p>The example shows getting json from a file, a string and a url. You can also provide it with a byte array or an input stream.</p>
+
+<h3 id="serializing">Serializing</h3>
+
+<p>To serialize an object to json you also use the PlayJsonCodec.</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+<span class="k">import</span> <span class="nn">muster.codec.play._</span>
+
+<span class="nc">PlayJsonCodec</span><span class="o">.</span><span class="n">from</span><span class="o">(</span><span class="n">person</span><span class="o">)</span>
+</code></pre></div>
+<p>The example above produces</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="nc">JsObject</span><span class="o">(</span><span class="nc">Seq</span><span class="o">(</span><span class="s">"id"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="s">"name"</span> <span class="o">-&gt;</span> <span class="nc">JsString</span><span class="o">(</span><span class="s">"Luke"</span><span class="o">),</span> <span class="s">"age"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">38</span><span class="o">)))</span>
+</code></pre></div>
+<p>You don&#39;t have to serialize to strings you can also serialize to files etc.</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+<span class="k">import</span> <span class="nn">muster.codec.play._</span>
+
+<span class="nc">PlayJsonCodec</span><span class="o">.</span><span class="n">into</span><span class="o">(</span><span class="k">new</span> <span class="nc">File</span><span class="o">(</span><span class="s">"luke.json"</span><span class="o">)).</span><span class="n">from</span><span class="o">(</span><span class="n">personJsValue</span><span class="o">)</span>
+</code></pre></div>
+<p>The example above produces a file with the json for the person.
+There is a little bit of optional syntactic sugar the comes with the json4s integration</p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">import</span> <span class="nn">muster._</span>
+<span class="k">import</span> <span class="nn">muster.codec.play._</span>
+<span class="k">import</span> <span class="nn">muster.codec.play.api._</span>
+
+<span class="n">person</span><span class="o">.</span><span class="n">asJsValue</span>
+</code></pre></div>
+<p>The example above calls: <code>PlayJsonCodec.from(person)</code> and produces </p>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="nc">JsObject</span><span class="o">(</span><span class="nc">Seq</span><span class="o">(</span><span class="s">"id"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="s">"name"</span> <span class="o">-&gt;</span> <span class="nc">JsString</span><span class="o">(</span><span class="s">"Luke"</span><span class="o">),</span> <span class="s">"age"</span> <span class="o">-&gt;</span> <span class="nc">JsNumber</span><span class="o">(</span><span class="mi">38</span><span class="o">)))</span>
+</code></pre></div>
+      </section>
+      
+    </article>
+    <script src="/javascripts/scale.fix.js"></script>
+    <script src="/javascripts/fixed-sidebar.js"></script>
+  </body>
+</html>
