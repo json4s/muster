@@ -13,4 +13,5 @@ Muster supports several json parsers and scala json ASTs.
 ## Json ASTs
 
 * Json4s | [Usage](json4s_codec.html) | [Github](https://github.com/json4s/json4s)
+* PlayJson | [Usage](play_json_codec.html) | [Github](https://github.com/playframework/playframework)
 

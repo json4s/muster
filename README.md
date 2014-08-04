@@ -25,6 +25,10 @@ Bring your own AST (BYA):
 libraryDependencies += "org.json4s" %% "muster-codec-json4s" % "0.2.0"
 ```
 
+```scala
+libraryDependencies += "org.json4s" %% "muster-codec-play-json" % "0.3.0-SNAPSHOT" // Not yet published
+```
+
 Prettier case class for debugging:
 
 ```scala

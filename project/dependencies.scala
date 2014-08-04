@@ -11,4 +11,7 @@ object Dependencies {
   val JacksonDatabind          = "com.fasterxml.jackson.core" %  "jackson-databind"       % "2.4.1.3"
   val JsonSmart                = "net.minidev"                %  "json-smart"             % "2.0-RC3"
   def scalaReflect(sv: String) = "org.scala-lang"             %  "scala-reflect"          % sv
+  val Argonaut                 = "io.argonaut"                %% "argonaut"               % "6.0.4"
+  val PlayJson                 = "com.typesafe.play"          %% "play-json"              % "2.3.2"
+
 }
