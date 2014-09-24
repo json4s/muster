@@ -1,5 +1,6 @@
 import cappi.Plugin.cappiSettings
 import cappi.Keys._
+import Dependencies._
 
 
 name := "muster-caliper-benchmarks"
@@ -17,3 +18,5 @@ publish := {}
 publishLocal := {}
 
 PgpKeys.publishSigned := {}
+
+libraryDependencies += JacksonScala % "test"

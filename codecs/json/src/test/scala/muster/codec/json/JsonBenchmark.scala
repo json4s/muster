@@ -15,6 +15,9 @@ object Benchmarks {
   val json = Source.fromInputStream(getClass.getResourceAsStream("/larger.json")).mkString // 1.2Mb
   val jsonGen = Gen.single("larger.json")(json)
 
+  val tinyJson = Source.fromInputStream(getClass.getResourceAsStream("/tiny.json")).mkString
+  val twoCKJson = Source.fromInputStream(getClass.getResourceAsStream("/200k.json")).mkString
+
 }
 
 trait CursorBench extends PerformanceTest.Quickbenchmark {

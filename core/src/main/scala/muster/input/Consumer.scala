@@ -433,6 +433,8 @@ object Consumer {
             case (pSym, index) =>
               // Change out the types if it has type parameters
               val pTpe = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+
+              // TODO: Rename field here
               val fieldName = Literal(Constant(pSym.name.decodedName.toString))
               val pTnm = newTermName(pSym.name.decodedName.toString)
 
