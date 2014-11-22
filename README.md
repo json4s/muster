@@ -1,5 +1,7 @@
 # Muster
 
+***I've stopped doing scala, so this project is not going anywhere. feel free to adopt it***
+
 [![Build Status](https://travis-ci.org/json4s/muster.svg?branch=master)](https://travis-ci.org/json4s/muster)
 
 A library for macro based serializers to different formats.
