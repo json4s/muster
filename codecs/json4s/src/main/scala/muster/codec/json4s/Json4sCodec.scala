@@ -11,4 +11,9 @@ object Json4sCodec extends JValueRenderer with InputFormat[Consumable[JValue], J
       override def hasNextNode: Boolean = false
       protected def node = source
   }
+
+  implicit def musterJson4sDSLSerializer[T](f: T)(implicit evidence:Producer[T]): JValue = {
+    Json4sCodec.from(f)
+  }
+  
 }
