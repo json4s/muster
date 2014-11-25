@@ -8,7 +8,7 @@ branches:
 jdk:
 - openjdk7
 before_script:
-- openssl -aes-256-cbc -k $SECRET -in .travis-env.enc -d -a -out .travis-env
+- openssl aes-256-cbc -k $SECRET -in .travis-env.enc -d -a -out .travis-env
 - ". .travis-env"
 - rm .travis-env
 - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
